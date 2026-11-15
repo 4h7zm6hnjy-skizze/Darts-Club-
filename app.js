@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.3.2 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.4.0 */
 'use strict';
-const APP_VERSION = '1.3.2';
+const APP_VERSION = '1.4.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
