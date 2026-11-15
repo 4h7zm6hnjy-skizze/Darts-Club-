@@ -1,7 +1,7 @@
 /* Offline service worker. Bump CACHE_NAME in each release. */
-const CACHE_NAME = 'juergen-dartkasse-static-1.3.0';
-const CORE = ['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./version.json'];
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE))));
+const CACHE_NAME = 'juergen-dartkasse-static-1.3.1';
+const CORE = ['./','./index.html','./styles.css?v=1.3.1','./app.js?v=1.3.1','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./version.json'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('juergen-dartkasse-static-')&&k!==CACHE_NAME).map(k=>caches.delete(k)))),self.clients.claim()])));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});
 self.addEventListener('fetch',event=>{
@@ -12,7 +12,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
   if(req.mode==='navigate'){
-    event.respondWith(fetch(req).then(response=>{if(response.ok){const clone=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put('./index.html',clone));}return response;}).catch(()=>caches.match('./index.html')));
+    event.respondWith(fetch(req,{cache:'no-store'}).then(response=>{if(response.ok){const clone=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put('./index.html',clone));}return response;}).catch(()=>caches.match('./index.html')));
     return;
   }
   event.respondWith(caches.match(req).then(cached=>cached||fetch(req)));

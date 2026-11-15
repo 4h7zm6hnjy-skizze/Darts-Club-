@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.3.0 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.3.1 */
 'use strict';
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -341,8 +341,22 @@ function renderSettings(){ $('basePrice').value=inputMoney(state.settings.baseCe
 function renderPricePreview(){ let v=parseMoney($('basePrice').value); if(v===null)v=0; if($('previewSingle'))$('previewSingle').textContent=euro(v); if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} pro anderem Spieler`; }
 function semverParts(v){return String(v).split('.').map(x=>Number(x)||0);} function newer(remote,local){const a=semverParts(remote),b=semverParts(local); for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true; if((a[i]||0)<(b[i]||0))return false;} return false;}
 function markUpdateAvailable(){$('updateBanner').hidden=false; $('installUpdate').hidden=false; $('updateStatus').textContent='Eine neue Version wurde heruntergeladen und kann installiert werden. Deine lokalen Daten bleiben erhalten.';}
-function installAvailableUpdate(){ if(registration?.waiting){reloadAfterUpdate=true; registration.waiting.postMessage({type:'SKIP_WAITING'}); return;} toast('Noch kein fertiges Update verfügbar. Bitte erneut prüfen.'); }
-async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} gemeldet. Sobald der Download abgeschlossen ist, erscheint „Update installieren“.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
+function installAvailableUpdate(){
+  if(registration?.waiting){reloadAfterUpdate=true; registration.waiting.postMessage({type:'SKIP_WAITING'}); return;}
+  forceUpdateNow();
+}
+async function forceUpdateNow(){
+  if(!navigator.onLine){toast('Ohne Internet kann keine neue Version geladen werden.');return;}
+  const status=$('updateStatus');
+  status.textContent='Lade App-Dateien erneut. Gespeicherte Daten bleiben erhalten …';
+  try { if(registration) await registration.update(); }
+  catch(err){ /* Older Safari can reject update checks. Direct page reload still works. */ }
+  const u=new URL(location.href);
+  u.searchParams.set('app-refresh',APP_VERSION);
+  u.searchParams.set('timestamp',String(Date.now()));
+  location.replace(u.href);
+}
+async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
   document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>goView(el.dataset.view)));
@@ -364,7 +378,7 @@ function setupEvents(){
   $('cashExport').addEventListener('click',exportCSV); $('exportCsvSettings').addEventListener('click',exportCSV);
   $('basePrice').addEventListener('input',renderPricePreview); $('savePrices').addEventListener('click',savePrices);
   $('importBackup').addEventListener('click',()=>$('backupFile').click()); $('backupFile').addEventListener('change',e=>restoreBackup(e.target.files[0])); $('restorePrevious').addEventListener('click',restorePrevious);
-  $('checkUpdate').addEventListener('click',checkForUpdate); $('installUpdate').addEventListener('click',installAvailableUpdate); $('bannerInstall').addEventListener('click',installAvailableUpdate);
+  $('forceUpdate').addEventListener('click',forceUpdateNow); $('checkUpdate').addEventListener('click',checkForUpdate); $('installUpdate').addEventListener('click',installAvailableUpdate); $('bannerInstall').addEventListener('click',installAvailableUpdate);
   window.addEventListener('online',()=>{$('networkStatus').textContent='Online / offlinefähig';}); window.addEventListener('offline',()=>{$('networkStatus').textContent='Gerade offline';});
 }
 

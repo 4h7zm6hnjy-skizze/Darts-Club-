@@ -1,26 +1,20 @@
-# Jürgen Dartkasse – Update 1.3.0
+# Jürgen Dartkasse – Update 1.3.1 / Safari-Reparatur
 
-Update für das bestehende GitHub-Pages-Repository `4h7zm6hnjy-skizze/Darts-Club-`.
+Dieses Paket ersetzt nur die sechs Programmdateien `index.html`, `app.js`, `styles.css`, `sw.js`, `version.json` und `README.md` im bestehenden Repository `4h7zm6hnjy-skizze/Darts-Club-`.
 
-## Änderungen
-- Spieler können jetzt als **abwesend** markiert werden.
-- Abwesende Spieler können nicht als Werfer ausgewählt werden.
-- **Wichtig:** Bei einem **perfekten Jürgen** bekommen weiterhin **alle anderen gespeicherten Spieler** ihren Punkt – auch wenn sie abwesend markiert sind.
-- Ganz oben gibt es jetzt zwei Champion-Bereiche:
-  - **Undisputed Darts Champion**
-  - **Summerslam Champion**
-- Für beide Champion-Plätze kann ein **Name** und ein **Bild** gespeichert werden. Auf iPhone/iPad öffnet der Bild-Button die Fotoauswahl bzw. Kamera-/Mediathek-Auswahl des Systems.
-- Jeder Spieler hat jetzt zusätzliche **Monats- und Jahresstatistiken**.
-- Das Layout wurde stärker im **Dart-Stil** gestaltet.
+## Problem
+Die iPhone-Web-App kann nach Veröffentlichung einer neuen Version in Safari / als Home-Bildschirm-App noch alte JavaScript- oder CSS-Dateien aus dem lokalen Service-Worker-Cache verwenden. Dann zeigt sie weiterhin v1.2.1, obwohl GitHub die neue Version meldet.
 
-## Sichere Aktualisierung
-1. In der bisher installierten App unter **Mehr → Backup** ein vollständiges JSON-Backup speichern.
-2. Die Dateien aus dieser ZIP entpacken und **einzeln in das Hauptverzeichnis** des vorhandenen GitHub-Repositories hochladen.
-3. Die gleichnamigen Dateien ersetzen und den Commit bestätigen.
-4. Die Veröffentlichung in GitHub Pages abwarten und in der Web-App unter **Mehr → Auf Update prüfen** die Version **1.3.0** installieren.
-5. Die App nicht löschen und den lokalen Browser-Speicher nicht leeren.
+## Behebung
+- HTML lädt nun `styles.css?v=1.3.1` und `app.js?v=1.3.1`, um alte Cache-Einträge zu umgehen.
+- Der Service Worker lädt die App-Navigation ohne HTTP-Cache und hält versionsgebundene Dateien offline bereit.
+- Ein neuer Button **Aktualisierte App-Dateien neu laden** öffnet die App mit einer frischen Adresse. Es wird kein lokaler Speicher gelöscht.
+- Version 1.3.1 nutzt exakt dieselben lokalen Speicher-Schlüssel und die gleiche Datenstruktur. Alle Funktionen von 1.3.0 bleiben erhalten.
 
-## Technische Hinweise
-- Der lokale Speicher-Schlüssel bleibt gleich und vorhandene Daten werden weiterverwendet.
-- Die Datenstruktur bleibt kompatibel; neue Felder wie `absent` und `settings.champions` werden bei älteren Backups automatisch ergänzt.
-- Die Update-Datei enthält nur die geänderten Web-App-Dateien.
+## Installation auf GitHub
+1. In der alten App ein JSON-Backup erstellen.
+2. ZIP-Datei entpacken.
+3. Alle sechs Dateien in das **Hauptverzeichnis** von `Darts-Club-` hochladen und gleichnamige Dateien ersetzen.
+4. Auf GitHub committen und die GitHub-Pages-Veröffentlichung abwarten.
+5. Die Web-App **nicht löschen**. Zum ersten Test direkt in Safari öffnen: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=1.3.1`.
+6. Falls die installierte App weiter 1.2.1 anzeigt, wird das Update durch iOS noch nicht vollständig übernommen. Verwende zunächst das JSON-Backup und belasse die alte App unangetastet.
