@@ -1,1 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#0c1526"/><circle cx="256" cy="256" r="188" fill="#1c293b" stroke="#40e2bd" stroke-width="12"/><circle cx="256" cy="256" r="150" fill="#0c1526" stroke="#c9efff" stroke-width="22"/><circle cx="256" cy="256" r="116" fill="#17493f" stroke="#43dfb9" stroke-width="12"/><circle cx="256" cy="256" r="85" fill="#0c1526" stroke="#c9efff" stroke-width="7"/><circle cx="256" cy="256" r="47" fill="#3fdfb9"/><circle cx="256" cy="256" r="20" fill="#0c1526"/><path d="M255 257 375 130" stroke="#f9fbff" stroke-width="18" stroke-linecap="round"/><path d="m363 142 7-59 25 32 33 10-55 12" fill="#72e9c8" stroke="#f4ffff" stroke-width="7" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dartscheibe Jürgen">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#10253a"/>
+      <stop offset="1" stop-color="#09131f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <g transform="translate(256 288)">
+    <path d="M-180 70A180 180 0 0 1 180 70L150 70A150 150 0 0 0 -150 70Z" fill="#f4f1e6"/>
+    <path d="M-150 70A150 150 0 0 1 150 70L124 70A124 124 0 0 0 -124 70Z" fill="#1d1d1d"/>
+    <path d="M-124 70A124 124 0 0 1 124 70L106 70A106 106 0 0 0 -106 70Z" fill="#d4383c"/>
+    <path d="M-106 70A106 106 0 0 1 106 70L78 70A78 78 0 0 0 -78 70Z" fill="#2f9a63"/>
+    <circle cx="0" cy="70" r="18" fill="#d4383c"/>
+    <circle cx="0" cy="70" r="9" fill="#2f9a63"/>
+    <text x="-96" y="34" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#f9f5e6">1</text>
+    <text x="-18" y="18" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#f9f5e6">20</text>
+    <text x="78" y="34" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#f9f5e6">5</text>
+    <g transform="translate(-62,18) rotate(-18)">
+      <rect x="-3" y="-110" width="6" height="105" rx="3" fill="#d9ecf7"/>
+      <polygon points="0,-130 -8,-110 8,-110" fill="#8cd3f7"/>
+      <polygon points="0,-4 -12,18 12,18" fill="#4ad4a3"/>
+      <polygon points="0,-4 -18,10 18,10" fill="#4ad4a3" opacity=".65"/>
+    </g>
+    <g transform="translate(0,-4)">
+      <rect x="-3" y="-118" width="6" height="110" rx="3" fill="#d9ecf7"/>
+      <polygon points="0,-140 -8,-118 8,-118" fill="#8cd3f7"/>
+      <polygon points="0,-8 -12,14 12,14" fill="#4ad4a3"/>
+      <polygon points="0,-8 -18,7 18,7" fill="#4ad4a3" opacity=".65"/>
+    </g>
+    <g transform="translate(66,18) rotate(18)">
+      <rect x="-3" y="-110" width="6" height="105" rx="3" fill="#d9ecf7"/>
+      <polygon points="0,-130 -8,-110 8,-110" fill="#8cd3f7"/>
+      <polygon points="0,-4 -12,18 12,18" fill="#4ad4a3"/>
+      <polygon points="0,-4 -18,10 18,10" fill="#4ad4a3" opacity=".65"/>
+    </g>
+  </g>
+</svg>

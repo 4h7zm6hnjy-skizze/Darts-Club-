@@ -18,7 +18,7 @@
 <body>
   <div class="app-layout">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-mark" aria-hidden="true"><span>20</span></div><div><strong>JÜRGEN</strong><small>DARTKASSE</small></div></div>
+      <div class="brand"><div class="brand-mark symbol" aria-hidden="true"><span>20</span></div><div><strong>JÜRGEN</strong><small>DARTKASSE</small></div></div>
       <div class="nav-label">MENÜ</div>
       <nav class="side-nav" aria-label="Hauptnavigation">
         <button class="nav-btn active" data-view="play"><span class="nav-icon">◎</span> Treffer zählen</button>
@@ -30,55 +30,53 @@
     </aside>
     <div class="main-wrap">
       <header class="topbar">
-        <div class="mobile-brand"><div class="brand-mark" aria-hidden="true"><span>20</span></div><div><strong>JÜRGEN</strong><small>DARTKASSE</small></div></div>
+        <div class="mobile-brand"><div class="brand-mark symbol" aria-hidden="true"><span>20</span></div><div><strong>JÜRGEN</strong><small>DARTKASSE</small></div></div>
         <div class="topbar-note"><span class="pulse"></span><span id="storageStatus">Daten werden lokal gesichert</span></div>
         <div class="top-actions"><span class="version-pill">v<span class="version-value">1.0.0</span></span><button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button></div>
       </header>
       <main>
         <section class="view active" id="view-play" aria-label="Treffer zählen">
-          <div class="page-heading"><div><span class="eyebrow">DARTKASSE / SPIEL</span><h1>Treffer zählen<span class="accent-dot">.</span></h1><p>Jeder Tipp wird sofort gespeichert und abgerechnet.</p></div><button id="playNewSession" class="outline-btn small">+ Neuer Abend</button></div>
+          <div class="page-heading"><div><span class="eyebrow">DARTKASSE / SPIEL</span><h1>Treffer zählen<span class="accent-dot">.</span></h1><p>Jeder Jürgen wird sofort als Punkt gespeichert und mit dem festen Preis abgerechnet.</p></div><button id="playNewSession" class="outline-btn small">+ Neuer Abend</button></div>
           <div class="metric-grid">
             <div class="metric-card highlight"><span class="metric-label">Aktueller Kassenstand</span><strong id="playCash">0,00 €</strong><span class="metric-sub">Tatsächlich in der Kasse</span></div>
             <div class="metric-card"><span class="metric-label">Noch offen</span><strong id="playOpen">0,00 €</strong><span class="metric-sub">Noch nicht bezahlt</span></div>
-            <div class="metric-card"><span class="metric-label">Treffer heute / Abend</span><strong id="playHits">0</strong><span class="metric-sub" id="playSessionName">Aktueller Abend</span></div>
+            <div class="metric-card"><span class="metric-label">Punkte heute / Abend</span><strong id="playHits">0</strong><span class="metric-sub" id="playSessionName">Aktueller Abend</span></div>
           </div>
           <div class="two-col">
             <div class="panel count-panel">
-              <div class="panel-header"><div><span class="eyebrow">WERFEN</span><h2>Treffer erfassen</h2></div><div class="live-pill"><span></span> LIVE</div></div>
-              <div class="row-head"><span class="small-label">SPIELER AUSWÄHLEN</span><button id="quickAddPlayer" class="text-btn">+ Hinzufügen</button></div>
+              <div class="panel-header"><div><span class="eyebrow">WERFEN</span><h2>Jürgen erfassen</h2></div><div class="live-pill"><span></span> LIVE</div></div>
+              <div class="row-head"><span class="small-label">WER WIRFT?</span><button id="quickAddPlayer" class="text-btn">+ Hinzufügen</button></div>
               <div id="playerChips" class="player-chips"></div>
-              <div class="pad-title"><div><h3>Welches Feld wurde getroffen?</h3><p>Single / Double / Triple · 5 / 20 / 1</p></div><span class="pad-corner">3 × 3</span></div>
+              <div class="pad-title"><div><h3>Welcher Jürgen wurde geworfen?</h3><p>Single und Double = Jürgen · Triple = Perfekter Jürgen</p></div><span class="pad-corner">3 × 3</span></div>
               <div class="pad-columns"><span>ZIEL</span><span>SINGLE ×1</span><span>DOUBLE ×2</span><span>TRIPLE ×3</span></div>
               <div id="hitPad" class="hit-pad"></div>
               <div id="priceWarn" class="info-tip" hidden>Hinweis: Noch kein Preis festgelegt. Treffer werden mit 0,00 € erfasst.</div>
               <div class="pad-bottom"><span id="activePlayerCaption">Wähle einen Spieler aus.</span><button id="undoHit" class="outline-btn small" disabled>↶ Letzten Treffer zurücknehmen</button></div>
             </div>
             <div class="right-stack">
-              <div class="panel recent-panel"><div class="panel-header"><div><span class="eyebrow">LETZTE AKTIONEN</span><h2>Trefferverlauf</h2></div><span class="muted-mini">Aktueller Abend</span></div><div id="recentHits" class="event-list"></div></div>
+              <div class="panel recent-panel"><div class="panel-header"><div><span class="eyebrow">LETZTE AKTIONEN</span><h2>Jürgen-Verlauf</h2></div><span class="muted-mini">Aktueller Abend</span></div><div id="recentHits" class="event-list"></div></div>
               <div class="panel mini-panel"><div class="panel-header"><div><span class="eyebrow">SPIELABEND</span><h2>Auf einen Blick</h2></div></div><div id="sessionOverview" class="session-overview"></div></div>
             </div>
           </div>
         </section>
         <section class="view" id="view-players" aria-label="Spieler und Statistik">
-          <div class="page-heading"><div><span class="eyebrow">PERSONEN / AUSWERTUNG</span><h1>Spieler & Statistik<span class="accent-dot">.</span></h1><p>Treffer nach Ziel und Ring, Gebühren und offene Beträge.</p></div><button id="addPlayer" class="primary-btn">+ Spieler hinzufügen</button></div>
+          <div class="page-heading"><div><span class="eyebrow">PERSONEN / AUSWERTUNG</span><h1>Spieler & Statistik<span class="accent-dot">.</span></h1><p>Punkte, geworfene Jürgen, perfekte Jürgen, Gebühren und offene Beträge.</p></div><button id="addPlayer" class="primary-btn">+ Spieler hinzufügen</button></div>
           <div class="panel section-toolbar"><label class="filter-label" for="statsSession">Treffer anzeigen für</label><select id="statsSession"></select><span class="subdued">Die Finanzbeträge beziehen sich immer auf alle Spielabende.</span></div>
           <div id="playersList" class="players-list"></div>
         </section>
         <section class="view" id="view-cash" aria-label="Kassenbuch">
-          <div class="page-heading"><div><span class="eyebrow">GELD / BUCHUNGEN</span><h1>Kassenbuch<span class="accent-dot">.</span></h1><p>Treffergebühren sind Forderungen. Nur Einzahlungen erhöhen den Kassenstand.</p></div><button id="cashExport" class="outline-btn small">CSV exportieren</button></div>
-          <div class="metric-grid cash-metrics"><div class="metric-card highlight"><span class="metric-label">Kassenstand (Ist)</span><strong id="cashBalance">0,00 €</strong><span class="metric-sub">Einzahlungen + sonstige Einnahmen − Ausgaben</span></div><div class="metric-card"><span class="metric-label">Offene Beiträge</span><strong id="cashOwed">0,00 €</strong><span class="metric-sub">Treffergebühren minus Spielerzahlungen</span></div><div class="metric-card"><span class="metric-label">Erfasste Treffergebühren</span><strong id="cashBilled">0,00 €</strong><span class="metric-sub">Alle Spielabende</span></div></div>
+          <div class="page-heading"><div><span class="eyebrow">GELD / BUCHUNGEN</span><h1>Kassenbuch<span class="accent-dot">.</span></h1><p>Jürgen erzeugen Forderungen. Nur Einzahlungen erhöhen den Kassenstand.</p></div><button id="cashExport" class="outline-btn small">CSV exportieren</button></div>
+          <div class="metric-grid cash-metrics"><div class="metric-card highlight"><span class="metric-label">Kassenstand (Ist)</span><strong id="cashBalance">0,00 €</strong><span class="metric-sub">Einzahlungen + sonstige Einnahmen − Ausgaben</span></div><div class="metric-card"><span class="metric-label">Offene Beiträge</span><strong id="cashOwed">0,00 €</strong><span class="metric-sub">Treffergebühren minus Spielerzahlungen</span></div><div class="metric-card"><span class="metric-label">Erfasste Jürgen-Gebühren</span><strong id="cashBilled">0,00 €</strong><span class="metric-sub">Alle Spielabende</span></div></div>
           <div class="panel"><div class="panel-header"><div><span class="eyebrow">NEUE BUCHUNG</span><h2>Geld verwalten</h2></div></div><div class="action-grid"><button id="addPayment" class="action-tile"><span>↗</span><b>Spieler zahlt</b><small>Offene Beiträge begleichen</small></button><button id="addIncome" class="action-tile"><span>＋</span><b>Sonstige Einnahme</b><small>Geld zur Kasse hinzufügen</small></button><button id="addExpense" class="action-tile"><span>↙</span><b>Ausgabe</b><small>Geld aus der Kasse entnehmen</small></button><button id="cashCorrection" class="action-tile"><span>≋</span><b>Kassenkorrektur</b><small>Ist-Bestand abgleichen</small></button></div></div>
           <div class="panel"><div class="panel-header"><div><span class="eyebrow">KASSENJOURNAL</span><h2>Buchungsverlauf</h2></div><span class="muted-mini">Neueste zuerst</span></div><div id="cashJournal" class="event-list journal"></div></div>
         </section>
         <section class="view" id="view-settings" aria-label="Einstellungen und Datensicherung">
-          <div class="page-heading"><div><span class="eyebrow">APP / KONFIGURATION</span><h1>Einstellungen<span class="accent-dot">.</span></h1><p>Preise, Spielabende, Datensicherung und Updates.</p></div></div>
+          <div class="page-heading"><div><span class="eyebrow">APP / KONFIGURATION</span><h1>Einstellungen<span class="accent-dot">.</span></h1><p>Preis pro Punkt, Spielabende, Datensicherung und Updates.</p></div></div>
           <div class="settings-grid">
-            <div class="panel"><div class="panel-header"><div><span class="eyebrow">01 / PREISMODELL</span><h2>Was kostet ein Jürgen?</h2></div></div>
-              <p class="panel-intro">Du kannst einen Grundpreis mit Multiplikator oder neun einzelne Beträge festlegen. Preisänderungen gelten nur für neue Treffer.</p>
-              <div class="choice-group" role="radiogroup" aria-label="Preismodell"><label class="choice"><input type="radio" name="priceMode" value="factor"><span><b>Grundpreis × Multiplikator</b><small>Single ×1 · Double ×2 · Triple ×3</small></span></label><label class="choice"><input type="radio" name="priceMode" value="custom"><span><b>Individuelle Preise</b><small>Für jedes der 9 Trefferfelder separat</small></span></label></div>
-              <div id="factorPrices"><label class="field-label" for="basePrice">Preis für einen Single-Treffer (Euro)</label><div class="money-input"><input id="basePrice" type="text" inputmode="decimal" autocomplete="off" placeholder="0,50"><span>€</span></div><div class="calculation-preview"><div>Single <b id="previewSingle">0,00 €</b></div><div>Double <b id="previewDouble">0,00 €</b></div><div>Triple <b id="previewTriple">0,00 €</b></div></div></div>
-              <div id="customPrices" hidden><p class="small-label">PREIS JE TREFFER (IN EURO)</p><div id="customPriceGrid" class="custom-grid"></div></div>
-              <button id="savePrices" class="primary-btn full">Preise speichern</button>
+            <div class="panel"><div class="panel-header"><div><span class="eyebrow">01 / PREISMODELL</span><h2>Preis pro Jürgen-Punkt</h2></div></div>
+              <p class="panel-intro">Es gibt einen festen Preis pro Punkt. Ein normaler Jürgen gibt dem Werfer 1 Punkt. Ein perfekter Jürgen gibt jedem anderen aktiven Spieler 1 Punkt. Preisänderungen gelten nur für neue Einträge.</p>
+              <div id="factorPrices"><label class="field-label" for="basePrice">Preis pro Punkt / Jürgen (Euro)</label><div class="money-input"><input id="basePrice" type="text" inputmode="decimal" autocomplete="off" placeholder="0,50"><span>€</span></div><div class="calculation-preview"><div>Jürgen <b id="previewSingle">0,00 €</b></div><div>Double-Jürgen <b id="previewDouble">0,00 €</b></div><div>Perfekter Jürgen <b id="previewTriple">0,00 € pro Mitspieler</b></div></div></div>
+              <button id="savePrices" class="primary-btn full">Preis speichern</button>
             </div>
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELABENDE</span><h2>Neue Runde</h2></div></div><p class="panel-intro">Eine neue Runde setzt die aktuelle Trefferanzeige auf null. Frühere Treffer, Zahlungen und Kassenstände bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">+ Neuen Spielabend beginnen</button></div>

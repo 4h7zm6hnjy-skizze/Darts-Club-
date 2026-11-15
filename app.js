@@ -1,12 +1,11 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.0.0 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.1.0 */
 'use strict';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
 const HIT_TARGETS = [5,20,1];
 const MULT_NAMES = {1:'Single',2:'Double',3:'Triple'};
-const HIT_KEYS = HIT_TARGETS.flatMap(n=>[1,2,3].map(m=>`${n}-${m}`));
 const $ = id => document.getElementById(id);
 const moneyFmt = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 const intFmt = new Intl.NumberFormat('de-DE');
@@ -16,7 +15,20 @@ const euro = cents => moneyFmt.format((cents||0)/100);
 const when = iso => {const d=new Date(iso);return Number.isNaN(+d)?'–':d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};
 const today = iso => {const d=new Date(iso);return Number.isNaN(+d)?'–':d.toLocaleDateString('de-DE');};
 const now = () => new Date().toISOString();
-const makeInitial = () => {const s=uid();return {schema:'juergen-dartkasse',schemaVersion:1,revision:0,updatedAt:now(),players:[],sessions:[{id:s,name:'Spielabend 1',createdAt:now()}],activeSessionId:s,events:[],settings:{priceMode:'factor',baseCents:0,customPrices:Object.fromEntries(HIT_KEYS.map(k=>[k,0]))}};};
+const makeInitial = () => {
+  const s=uid();
+  return {
+    schema:'juergen-dartkasse',
+    schemaVersion:1,
+    revision:0,
+    updatedAt:now(),
+    players:[],
+    sessions:[{id:s,name:'Spielabend 1',createdAt:now()}],
+    activeSessionId:s,
+    events:[],
+    settings:{baseCents:0}
+  };
+};
 let state=makeInitial();
 let selectedPlayerId=null;
 let statsSession='active';
@@ -25,7 +37,6 @@ let cashMode='payment';
 let toastTimer;
 let idb=null;
 let registration=null;
-let updateReady=false;
 let reloadAfterUpdate=false;
 
 function parseMoney(raw){
@@ -35,7 +46,7 @@ function parseMoney(raw){
   const c=Number(a)*100+Number(b.padEnd(2,'0'));
   return Number.isSafeInteger(c)&&c>=0&&c<=1000000000?c:null;
 }
-function inputMoney(c){return (c/100).toFixed(2).replace('.',',');}
+function inputMoney(c){return ((c||0)/100).toFixed(2).replace('.',',');}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 function goView(view){
   if(!['play','players','cash','settings'].includes(view))return;
@@ -51,36 +62,64 @@ function eventValid(e){return !e.voided;}
 function activeEvents(type){return state.events.filter(e=>eventValid(e)&&(!type||e.type===type));}
 function getSession(){return state.sessions.find(s=>s.id===state.activeSessionId)||state.sessions[0];}
 function currentHits(){return activeEvents('hit').filter(e=>e.sessionId===state.activeSessionId);}
-function getRate(n,m){return state.settings.priceMode==='factor'?state.settings.baseCents*m:state.settings.customPrices[`${n}-${m}`]||0;}
+function pointPrice(){return state.settings.baseCents||0;}
 function calcTotals(){
-  let billed=0,paid=0,cash=0,hits=0;
+  let billed=0,paid=0,cash=0,points=0;
   for(const e of state.events){if(e.voided)continue;
-    if(e.type==='hit'){billed+=e.amount;hits++;}
+    if(e.type==='hit'){billed+=e.amount;points+=(e.points||1);}
     if(e.type==='payment'){paid+=e.amount;cash+=e.amount;}
     if(e.type==='income')cash+=e.amount;
     if(e.type==='expense')cash-=e.amount;
     if(e.type==='correction')cash+=e.amount;
   }
-  return {billed,paid,cash,hits,owed:billed-paid};
+  return {billed,paid,cash,points,owed:billed-paid};
 }
-function personStats(id,sessionId){
-  const counts=Object.fromEntries(HIT_KEYS.map(k=>[k,0]));
-  let billed=0,paid=0,hits=0;
-  for(const e of state.events){if(e.voided||e.playerId!==id)continue;
-    if(e.type==='payment')paid+=e.amount;
-    if(e.type==='hit'&&(!sessionId||e.sessionId===sessionId)){
-      counts[`${e.target}-${e.mult}`]++;
-      billed+=e.amount;hits++;
+function logicalThrows(sessionId=null){
+  const groups=new Map();
+  for(const e of activeEvents('hit')){
+    if(sessionId && e.sessionId!==sessionId)continue;
+    const key=e.groupId||e.id;
+    if(!groups.has(key))groups.set(key,{id:key,at:e.at,sessionId:e.sessionId,target:e.target,mult:e.mult,perfect:!!e.perfect,thrownBy:e.thrownBy||e.playerId,points:0,amount:0,recipients:[],eventIds:[]});
+    const g=groups.get(key);
+    g.points+=(e.points||1);
+    g.amount+=e.amount||0;
+    g.recipients.push(e.playerId);
+    g.eventIds.push(e.id);
+    if(String(e.at)>String(g.at))g.at=e.at;
+  }
+  return [...groups.values()].sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+}
+function uniqueCount(list){return new Set(list).size;}
+function personStats(id,sessionId=null){
+  const counts=Object.fromEntries(HIT_TARGETS.flatMap(n=>[1,2,3].map(m=>[`${n}-${m}`,0])));
+  let billed=0,paid=0,points=0;
+  const perfectThrown=new Set(), juergenThrown=new Set();
+  for(const e of state.events){
+    if(e.voided)continue;
+    if(e.type==='payment' && e.playerId===id)paid+=e.amount;
+    if(e.type==='hit'){
+      const key=e.groupId||e.id;
+      const thrownBy=e.thrownBy||e.playerId;
+      const inSession=!sessionId || e.sessionId===sessionId;
+      if(thrownBy===id && inSession){
+        if(e.perfect)perfectThrown.add(key); else juergenThrown.add(key);
+      }
+      if(e.playerId===id && inSession){
+        counts[`${e.target}-${e.mult}`]=(counts[`${e.target}-${e.mult}`]||0)+1;
+        billed+=e.amount;
+        points+=(e.points||1);
+      }
     }
   }
-  return {counts,billed,paid,owed:billed-paid,hits};
+  return {counts,billed,paid,owed:billed-paid,points,perfectThrown:perfectThrown.size,juergenThrown:juergenThrown.size};
 }
-function recordEvent(e){state.events.push({id:uid(),at:now(),voided:false,...e});persist();render();}
+function recordEvents(list){state.events.push(...list.map(e=>({id:uid(),at:now(),voided:false,...e})));persist();render();}
+function recordEvent(e){recordEvents([e]);}
 function validateImported(obj){
   if(!obj||obj.schema!=='juergen-dartkasse'||obj.schemaVersion!==1||!Array.isArray(obj.players)||!Array.isArray(obj.events)||!Array.isArray(obj.sessions))throw Error('Unbekanntes oder inkompatibles Backup-Format.');
   if(obj.players.length>300||obj.events.length>100000||obj.sessions.length>10000||obj.sessions.length===0)throw Error('Backup enthält zu viele Einträge.');
   const validText=(v,max)=>typeof v==='string'&&v.length<=max;
-  const isId=v=>validText(v,100)&&v.length>0;
+  const isId=v=>validText(v,120)&&v.length>0;
   const isAmount=v=>Number.isSafeInteger(v)&&Math.abs(v)<=1000000000;
   const ids=new Set(),pids=new Set(),sids=new Set();
   const players=obj.players.map(p=>{
@@ -94,15 +133,19 @@ function validateImported(obj){
   const events=obj.events.map(e=>{
     if(!e||!isId(e.id)||ids.has(e.id)||!['hit','payment','income','expense','correction'].includes(e.type)||!isAmount(e.amount)||!validText(e.at,50))throw Error('Ungültige Buchungsdaten.');
     ids.add(e.id);
-    if(e.type==='hit'&&(!pids.has(e.playerId)||!sids.has(e.sessionId)||!HIT_TARGETS.includes(e.target)||![1,2,3].includes(e.mult)||e.amount<0))throw Error('Ungültige Treffer im Backup.');
+    if(e.type==='hit'){
+      if(!pids.has(e.playerId)||!sids.has(e.sessionId)||!HIT_TARGETS.includes(e.target)||![1,2,3].includes(e.mult)||e.amount<0)throw Error('Ungültige Treffer im Backup.');
+      const thrownBy=pids.has(e.thrownBy)?e.thrownBy:e.playerId;
+      return {id:e.id,at:e.at,voided:!!e.voided,type:'hit',amount:e.amount,target:e.target,mult:e.mult,playerId:e.playerId,thrownBy,groupId:isId(e.groupId)?e.groupId:e.id,perfect:!!e.perfect,points:Number.isSafeInteger(e.points)&&e.points>0?e.points:1,sessionId:e.sessionId,note:validText(e.note,100)?e.note:''};
+    }
     if(e.type==='payment'&&(!pids.has(e.playerId)||e.amount<=0))throw Error('Ungültige Spielerzahlung.');
     if(['income','expense'].includes(e.type)&&e.amount<=0)throw Error('Ungültige Kassenbuchung.');
-    return {id:e.id,at:e.at,voided:!!e.voided,type:e.type,amount:e.amount,...(e.type==='hit'?{target:e.target,mult:e.mult,playerId:e.playerId,sessionId:e.sessionId}:{}),...(e.type==='payment'?{playerId:e.playerId}:{}),note:validText(e.note,100)?e.note:''};
+    return {id:e.id,at:e.at,voided:!!e.voided,type:e.type,amount:e.amount,...(e.type==='payment'?{playerId:e.playerId}:{}),note:validText(e.note,100)?e.note:''};
   });
   const cfg=obj.settings||{};
-  if(!['factor','custom'].includes(cfg.priceMode)||!isAmount(cfg.baseCents)||cfg.baseCents<0||!cfg.customPrices||typeof cfg.customPrices!=='object')throw Error('Ungültige Preise im Backup.');
-  const prices={};for(const k of HIT_KEYS){if(!isAmount(cfg.customPrices[k])||cfg.customPrices[k]<0)throw Error('Ungültiger Feldpreis.');prices[k]=cfg.customPrices[k];}
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,settings:{priceMode:cfg.priceMode,baseCents:cfg.baseCents,customPrices:prices}};
+  let baseCents = 0;
+  if(isAmount(cfg.baseCents) && cfg.baseCents>=0) baseCents = cfg.baseCents;
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,settings:{baseCents}};
 }
 function localGet(key){try{return localStorage.getItem(key);}catch{return null;}}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
@@ -132,31 +175,54 @@ async function loadData(){
   for(const raw of [fromLocal,fromDb]){try{if(raw)candidates.push(validateImported(typeof raw==='string'?JSON.parse(raw):raw));}catch{}}
   candidates.sort((a,b)=>b.revision-a.revision);
   if(candidates.length)state=candidates[0];
-  localSet(STORAGE_KEY,JSON.stringify(state));await idbPut(state);
-  if(!localGet(STORAGE_KEY)&&!idb)$('storageStatus').textContent='Speicherung blockiert! Backup verwenden';
+  localSet(STORAGE_KEY,JSON.stringify(state));
+  if(idb)await idbPut(state);
   selectedPlayerId=activePlayers()[0]?.id||null;
-  $('restorePrevious').hidden=!localGet(RESTORE_KEY);
 }
-function blobDownload(name,content,mime){
-  const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
-}
+function blobDownload(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
 function backup(){
-  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
-  blobDownload(`Juergen-Dartkasse-Backup-${stamp}.json`,JSON.stringify({backupType:'juergen-dartkasse',exportedAt:now(),appVersion:APP_VERSION,data:state},null,2),'application/json;charset=utf-8');
-  toast('Backup heruntergeladen. Datei sicher aufbewahren.');
+  const payload={backupType:'juergen-dartkasse',version:APP_VERSION,exportedAt:now(),data:state};
+  blobDownload(`Juergen-Dartkasse-Backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json');
+  toast('Backup gespeichert.');
 }
-function csvEscape(value){let v=String(value??'');if(/^[=+@\-\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
+function csvEscape(v){const s=String(v??'');return /[;"\n\r]/.test(s)?'"'+s.replaceAll('"','""')+'"':s;}
 function exportCSV(){
-  const rows=[['Datum','Art','Spieler','Feld','Multiplikator','Betrag EUR','Status','Notiz']];
-  for(const e of state.events){rows.push([when(e.at),e.type==='hit'?'Treffer':e.type==='payment'?'Spielerzahlung':e.type==='income'?'Einnahme':e.type==='expense'?'Ausgabe':'Kassenkorrektur',person(e.playerId)?.name||'',e.type==='hit'?e.target:'',e.type==='hit'?MULT_NAMES[e.mult]:'',(e.amount/100).toFixed(2).replace('.',','),e.voided?'Storniert':'Aktiv',e.note||'']);}
-  blobDownload(`Juergen-Dartkasse-Buchungen-${new Date().toISOString().slice(0,10)}.csv`,'\uFEFF'+rows.map(r=>r.map(csvEscape).join(';')).join('\r\n'),'text/csv;charset=utf-8');toast('CSV exportiert.');
+  const rows=[['Datum','Art','Werfer','Empfänger','Feld','Punkte','Betrag EUR','Status','Notiz']];
+  for(const e of state.events){
+    if(e.type==='hit'){
+      rows.push([
+        when(e.at),
+        e.perfect?'Perfekter Jürgen':'Jürgen',
+        person(e.thrownBy||e.playerId)?.name||'',
+        person(e.playerId)?.name||'',
+        `${MULT_NAMES[e.mult]} ${e.target}`,
+        e.points||1,
+        (e.amount/100).toFixed(2).replace('.',','),
+        e.voided?'Storniert':'Aktiv',
+        e.note||''
+      ]);
+    } else {
+      rows.push([
+        when(e.at),
+        e.type==='payment'?'Spielerzahlung':e.type==='income'?'Einnahme':e.type==='expense'?'Ausgabe':'Kassenkorrektur',
+        '',
+        person(e.playerId)?.name||'',
+        '',
+        '',
+        (e.amount/100).toFixed(2).replace('.',','),
+        e.voided?'Storniert':'Aktiv',
+        e.note||''
+      ]);
+    }
+  }
+  blobDownload(`Juergen-Dartkasse-Buchungen-${new Date().toISOString().slice(0,10)}.csv`,'\uFEFF'+rows.map(r=>r.map(csvEscape).join(';')).join('\r\n'),'text/csv;charset=utf-8');
+  toast('CSV exportiert.');
 }
 function savePrices(){
-  const mode=document.querySelector('input[name="priceMode"]:checked')?.value||'factor';
-  if(mode==='factor'){const val=parseMoney($('basePrice').value);if(val===null){toast('Bitte einen gültigen Euro-Betrag eingeben.');return;}state.settings.baseCents=val;}
-  else{const vals={};for(const key of HIT_KEYS){const inp=document.querySelector(`[data-price="${key}"]`);const val=parseMoney(inp?.value??'');if(val===null){toast(`Ungültiger Preis für ${key}.`);inp?.focus();return;}vals[key]=val;}state.settings.customPrices=vals;}
-  state.settings.priceMode=mode;persist();render();toast('Preise für zukünftige Treffer gespeichert.');
+  const val=parseMoney($('basePrice').value);
+  if(val===null){toast('Bitte einen gültigen Euro-Betrag eingeben.');return;}
+  state.settings.baseCents=val;
+  persist();render();toast('Preis für neue Jürgen gespeichert.');
 }
 function startNewSession(){
   const name=prompt('Name des neuen Spielabends:',`Spielabend ${state.sessions.length+1}`);
@@ -184,21 +250,40 @@ function toggleArchive(id){const p=person(id);if(!p)return;
   persist();render();toast(p.archived?'Spieler archiviert.':'Spieler reaktiviert.');
 }
 function deletePlayer(id){const p=person(id);if(!p)return;
-  if(state.events.some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.');return;}
+  if(state.events.some(e=>e.playerId===id||e.thrownBy===id)){toast('Spieler hat Einträge und kann nur archiviert werden.');return;}
   if(!confirm(`Spieler „${p.name}“ löschen?`))return;
   state.players=state.players.filter(p=>p.id!==id);if(selectedPlayerId===id)selectedPlayerId=activePlayers()[0]?.id||null;
   persist();render();toast('Spieler gelöscht.');
 }
 function hit(target,mult){
-  if(!person(selectedPlayerId)||person(selectedPlayerId).archived){toast('Bitte zuerst einen Spieler auswählen.');return;}
-  recordEvent({type:'hit',playerId:selectedPlayerId,sessionId:state.activeSessionId,target,mult,amount:getRate(target,mult)});
-  toast(`${MULT_NAMES[mult]} ${target} · ${euro(getRate(target,mult))} erfasst.`);
+  const thrower=person(selectedPlayerId);
+  if(!thrower||thrower.archived){toast('Bitte zuerst einen Spieler auswählen.');return;}
+  const price=pointPrice();
+  if(mult===3){
+    const recipients=activePlayers().filter(p=>p.id!==thrower.id);
+    if(!recipients.length){toast('Für einen perfekten Jürgen brauchst du mindestens 2 aktive Spieler.');return;}
+    const groupId=uid();
+    recordEvents(recipients.map(p=>({type:'hit',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target,mult,points:1,perfect:true,groupId,amount:price})));
+    toast(`Perfekter Jürgen T${target}: ${recipients.length} Punkt${recipients.length===1?'':'e'} verteilt.`);
+    return;
+  }
+  recordEvent({type:'hit',playerId:thrower.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target,mult,points:1,perfect:false,groupId:uid(),amount:price});
+  toast(`Jürgen ${mult===1?'Single':'Double'} ${target} · 1 Punkt · ${euro(price)} erfasst.`);
 }
-function voidEvent(id){const e=state.events.find(x=>x.id===id);if(!e||e.voided)return;
+function voidEvent(key){
+  const hitMatches=state.events.filter(e=>!e.voided&&e.type==='hit'&&((e.groupId||e.id)===key));
+  if(hitMatches.length){
+    if(hitMatches.length>1&&!confirm('Diesen perfekten Jürgen mit allen verteilten Punkten wirklich stornieren?'))return;
+    for(const e of hitMatches)e.voided=true;
+    persist();render();toast(hitMatches.length>1?'Perfekter Jürgen storniert.':'Jürgen storniert.');
+    return;
+  }
+  const e=state.events.find(x=>x.id===key);
+  if(!e||e.voided)return;
   if(e.type!=='hit'&&!confirm('Diese Kassenbuchung wirklich stornieren? Der Kassenstand wird neu berechnet.'))return;
-  e.voided=true;persist();render();toast('Eintrag storniert. Im Backup und CSV nachvollziehbar.');
+  e.voided=true;persist();render();toast('Eintrag storniert.');
 }
-function undoHit(){const last=state.events.findLast(e=>!e.voided&&e.type==='hit'&&e.sessionId===state.activeSessionId);if(last)voidEvent(last.id);}
+function undoHit(){const last=logicalThrows(state.activeSessionId).at(-1);if(last)voidEvent(last.id);}
 function openCashDialog(mode){
   cashMode=mode;
   const titles={payment:'Spielerzahlung buchen',income:'Sonstige Einnahme',expense:'Ausgabe buchen',correction:'Kassenbestand abgleichen'};
@@ -240,7 +325,7 @@ async function restoreBackup(file){
     const parsed=JSON.parse(await file.text());const raw=parsed?.backupType==='juergen-dartkasse'?parsed.data:parsed;
     const imported=validateImported(raw);
     const fee=imported.events.filter(e=>!e.voided&&e.type==='hit').reduce((a,e)=>a+e.amount,0);
-    if(!confirm(`Backup vom ${parsed.exportedAt?when(parsed.exportedAt):'unbekannten Datum'} wiederherstellen?\n\n${imported.players.length} Spieler, ${imported.events.length} Einträge, ${euro(fee)} erfasste Treffergebühren.\n\nACHTUNG: Die aktuellen Daten werden ersetzt. Bitte vorher ein Backup speichern.`))return;
+    if(!confirm(`Backup vom ${parsed.exportedAt?when(parsed.exportedAt):'unbekannten Datum'} wiederherstellen?\n\n${imported.players.length} Spieler, ${imported.events.length} Einträge, ${euro(fee)} erfasste Punktegebühren.\n\nACHTUNG: Die aktuellen Daten werden ersetzt. Bitte vorher ein Backup speichern.`))return;
     const saved=localSet(RESTORE_KEY,JSON.stringify(state));
     if(!saved&&!confirm('Der vorherige Datenstand konnte nicht lokal gesichert werden. Trotzdem fortfahren?'))return;
     imported.revision=Math.max(state.revision,imported.revision)+1;imported.updatedAt=now();state=imported;
@@ -252,25 +337,34 @@ function restorePrevious(){const raw=localGet(RESTORE_KEY);if(!raw)return;
   if(!confirm('Datenstand vor dem letzten Backup-Import wiederherstellen?'))return;
   try{const prev=validateImported(JSON.parse(raw));prev.revision=state.revision+1;state=prev;localSet(RESTORE_KEY,'');$('restorePrevious').hidden=true;selectedPlayerId=activePlayers()[0]?.id||null;persist();render();toast('Vorheriger Datenstand wiederhergestellt.');}catch{toast('Vorheriger Stand ist beschädigt.');}
 }
+function crowns(count){if(!count)return '';return count<=4?'👑'.repeat(count):`👑×${count}`;}
 function render(){
   document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);
   renderPlay();renderPlayers();renderCash();renderSettings();
 }
 function renderPlay(){
-  const t=calcTotals(),session=getSession(),hits=currentHits();
+  const t=calcTotals(),session=getSession(),hits=currentHits(),throws=logicalThrows(state.activeSessionId);
+  const sessionPoints=hits.reduce((sum,e)=>sum+(e.points||1),0);
   $('playCash').textContent=euro(t.cash);$('playOpen').textContent=euro(t.owed);
-  $('playHits').textContent=intFmt.format(hits.length);$('playSessionName').textContent=session?.name||'Aktueller Abend';
+  $('playHits').textContent=intFmt.format(sessionPoints);$('playSessionName').textContent=session?.name||'Aktueller Abend';
   const players=activePlayers();
   if(!players.some(p=>p.id===selectedPlayerId))selectedPlayerId=players[0]?.id||null;
   $('playerChips').innerHTML=players.length?players.map(p=>`<button class="player-chip ${selectedPlayerId===p.id?'active':''}" data-select-player="${esc(p.id)}" aria-pressed="${selectedPlayerId===p.id}"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><span class="chip-name">${esc(p.name)}</span></button>`).join(''):'<div class="empty-hint">Noch keine Spieler vorhanden. „Hinzufügen“ wählen.</div>';
-  $('hitPad').innerHTML=HIT_TARGETS.map(n=>`<div class="pad-row"><div class="target-number">${n}</div>${[1,2,3].map(m=>`<button class="hit-button" data-target="${n}" data-mult="${m}" ${selectedPlayerId?'':'disabled'} title="${MULT_NAMES[m]} ${n} verbuchen"><span class="code">${m===1?'S':m===2?'D':'T'}${n}</span><small>${euro(getRate(n,m))}</small></button>`).join('')}</div>`).join('');
-  $('priceWarn').hidden=HIT_KEYS.some(k=>{const [n,m]=k.split('-').map(Number);return getRate(n,m)>0;});
+  $('hitPad').innerHTML=HIT_TARGETS.map(n=>`<div class="pad-row"><div class="target-number">${n}</div>${[1,2,3].map(m=>`<button class="hit-button ${m===3?'perfect':''}" data-target="${n}" data-mult="${m}" ${selectedPlayerId?'':'disabled'} title="${m===3?'Perfekter Jürgen':'Jürgen'} ${MULT_NAMES[m]} ${n} verbuchen"><span class="tag">${m===3?'Perfekter Jürgen':'Jürgen'}</span><span class="code">${m===1?'S':m===2?'D':'T'}${n}</span><small class="sub">${m===3?'1 Punkt pro Mitspieler':'1 Punkt'} · ${euro(pointPrice())}</small></button>`).join('')}</div>`).join('');
+  $('priceWarn').hidden=pointPrice()>0;
   $('activePlayerCaption').textContent=selectedPlayerId?`Aktiv: ${person(selectedPlayerId)?.name||'–'}`:'Bitte Spieler hinzufügen';
-  $('undoHit').disabled=!hits.length;
-  const latest=hits.slice(-7).reverse();
-  $('recentHits').innerHTML=latest.length?latest.map(e=>`<div class="event-row"><div class="event-icon">${e.mult===1?'S':e.mult===2?'D':'T'}${e.target}</div><div class="event-meta"><b>${esc(person(e.playerId)?.name||'Unbekannt')} · ${MULT_NAMES[e.mult]} ${e.target}</b><small>${when(e.at)}</small></div><div class="event-sum">+ ${euro(e.amount)}</div><button class="mini-remove" title="Treffer stornieren" aria-label="Treffer stornieren" data-void="${esc(e.id)}">×</button></div>`).join(''):'<div class="empty-state">Hier erscheinen deine letzten Treffer.<br>Wähle einen Spieler und tippe auf ein Feld.</div>';
-  const per=players.map(p=>({p,num:hits.filter(e=>e.playerId===p.id).length})).filter(x=>x.num>0);
-  $('sessionOverview').innerHTML=per.length?per.map(({p,num})=>`<div class="session-person"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><b>${esc(p.name)}</b><span>${num} ${num===1?'Treffer':'Treffer'}</span></div>`).join(''):'<div class="empty-state">Noch keine Treffer in diesem Spielabend.</div>';
+  $('undoHit').disabled=!throws.length;
+  const latest=throws.slice(-7).reverse();
+  $('recentHits').innerHTML=latest.length?latest.map(g=>{
+    const thrower=person(g.thrownBy)?.name||'Unbekannt';
+    const recipients=g.recipients.map(id=>person(id)?.name||'Unbekannt');
+    const icon=g.perfect?'👑':(g.mult===1?'S':g.mult===2?'D':'T')+g.target;
+    const title=g.perfect?`${thrower} · Perfekter Jürgen T${g.target}`:`${thrower} · Jürgen ${g.mult===1?'S':'D'}${g.target}`;
+    const detail=g.perfect?`Punkte für: ${esc(recipients.join(', '))}`:`Punkt für: ${esc(recipients[0]||thrower)}`;
+    return `<div class="event-row"><div class="event-icon ${g.perfect?'perfect':''}">${icon}</div><div class="event-meta"><b>${title}</b><small>${when(g.at)} · ${detail}</small></div><div class="event-sum">${g.points} Punkt${g.points===1?'':'e'} · ${euro(g.amount)}</div><button class="mini-remove" title="Eintrag stornieren" aria-label="Eintrag stornieren" data-void="${esc(g.id)}">×</button></div>`;
+  }).join(''):'<div class="empty-state">Hier erscheinen deine letzten Jürgen.<br>Wähle einen Spieler und tippe auf einen Button.</div>';
+  const per=players.map(p=>({p,stats:personStats(p.id,state.activeSessionId)})).filter(x=>x.stats.points>0||x.stats.perfectThrown>0||x.stats.juergenThrown>0);
+  $('sessionOverview').innerHTML=per.length?per.map(({p,stats})=>`<div class="session-person"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><div class="meta"><b>${esc(p.name)}</b><small>${stats.points} Punkt${stats.points===1?'':'e'} erhalten · ${stats.juergenThrown} Jürgen geworfen</small></div><span class="crown-stack">${crowns(stats.perfectThrown)}</span></div>`).join(''):'<div class="empty-state">Noch keine Jürgen in diesem Spielabend.</div>';
 }
 function renderPlayers(){
   const options=`<option value="active">Aktueller Abend: ${esc(getSession()?.name||'')}</option><option value="all">Alle Spielabende</option>`+state.sessions.filter(s=>s.id!==state.activeSessionId).slice().reverse().map(s=>`<option value="${esc(s.id)}">${esc(s.name)} · ${today(s.createdAt)}</option>`).join('');
@@ -282,7 +376,7 @@ function renderPlayers(){
   $('playersList').innerHTML=players.map(p=>{
     const total=personStats(p.id),session=personStats(p.id,sessionId),count=session.counts;
     const grid=`<span></span><span class="stat-cell head">Single</span><span class="stat-cell head">Double</span><span class="stat-cell head">Triple</span>`+HIT_TARGETS.map(n=>`<span class="target-head">${n}</span>${[1,2,3].map(m=>`<span class="stat-cell">${intFmt.format(count[`${n}-${m}`])}</span>`).join('')}`).join('');
-    return `<div class="player-stat ${p.archived?'inactive':''}"><div class="stat-header"><div class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</div><div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':''}${session.hits} Treffer in der Auswahl</small></div><div class="inline-actions"><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button><button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${!state.events.some(e=>e.playerId===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''}</div></div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>Gebühren gesamt</small></div><div><b>${euro(total.paid)}</b><small>Bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':'Offen'}</small></div></div><div class="stat-grid">${grid}</div><div class="stat-foot">Gesamt: ${total.hits} Treffer · ${session.hits} in der Auswahl</div></div>`;
+    return `<div class="player-stat ${p.archived?'inactive':''}"><div class="stat-header"><div class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</div><div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':''}${session.points} Punkt${session.points===1?'':'e'} in der Auswahl</small></div><div class="inline-actions"><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button><button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${total.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte Jürgen: ${total.perfectThrown}</span></div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>Gebühren gesamt</small></div><div><b>${euro(total.paid)}</b><small>Bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':'Offen'}</small></div></div><div class="stat-grid">${grid}</div><div class="stat-foot">Erhaltene Punkte gesamt: ${total.points} · In Auswahl: ${session.points}</div></div>`;
   }).join('');
 }
 function renderCash(){
@@ -293,24 +387,25 @@ function renderCash(){
     const negative=e.type==='expense'||(e.type==='correction'&&e.amount<0);
     const who=e.type==='payment'?` · ${esc(person(e.playerId)?.name||'Unbekannt')}`:'';
     return `<div class="event-row"><div class="event-icon ${e.type==='expense'?'expense':e.type==='payment'?'payment':''}">${negative?'−':'+'}</div><div class="event-meta"><b>${descriptions[e.type]}${who}</b><small>${when(e.at)}${e.note?' · '+esc(e.note):''}</small></div><div class="event-sum ${negative?'negative':''}">${negative?'−':'+'} ${euro(Math.abs(e.amount))}</div><button class="mini-remove" data-void="${esc(e.id)}" title="Buchung stornieren" aria-label="Buchung stornieren">×</button></div>`;
-  }).join(''):'<div class="empty-state">Noch keine Kassenbuchungen vorhanden.<br>Treffer allein erhöhen den Kassenstand nicht.</div>';
+  }).join(''):'<div class="empty-state">Noch keine Kassenbuchungen vorhanden.<br>Jürgen erzeugen offene Beiträge, aber erst Zahlungen erhöhen den Kassenstand.</div>';
 }
 function renderSettings(){
   const cfg=state.settings;
-  document.querySelectorAll('input[name="priceMode"]').forEach(el=>el.checked=el.value===cfg.priceMode);
   $('basePrice').value=inputMoney(cfg.baseCents);
-  $('factorPrices').hidden=cfg.priceMode!=='factor';$('customPrices').hidden=cfg.priceMode!=='custom';
   renderPricePreview();
-  $('customPriceGrid').innerHTML=`<span></span><span class="custom-head">Single</span><span class="custom-head">Double</span><span class="custom-head">Triple</span>`+HIT_TARGETS.map(n=>`<span class="custom-target">${n}</span>`+[1,2,3].map(m=>`<input type="text" inputmode="decimal" autocomplete="off" data-price="${n}-${m}" aria-label="${MULT_NAMES[m]} ${n}" value="${inputMoney(cfg.customPrices[`${n}-${m}`]||0)}">`).join('')).join('');
   $('currentSessionInfo').textContent=`${getSession()?.name||'Spielabend'} · gestartet am ${when(getSession()?.createdAt)}`;
   $('restorePrevious').hidden=!localGet(RESTORE_KEY);
   $('networkStatus').textContent=navigator.onLine?'Online / offlinefähig':'Gerade offline';
 }
-function renderPricePreview(){let v=parseMoney($('basePrice').value);if(v===null)v=0;$('previewSingle').textContent=euro(v);$('previewDouble').textContent=euro(v*2);$('previewTriple').textContent=euro(v*3);}
-function activatePriceMode(mode){$('factorPrices').hidden=mode!=='factor';$('customPrices').hidden=mode!=='custom';}
+function renderPricePreview(){
+  let v=parseMoney($('basePrice').value);if(v===null)v=0;
+  if($('previewSingle'))$('previewSingle').textContent=euro(v);
+  if($('previewDouble'))$('previewDouble').textContent=euro(v);
+  if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} pro Mitspieler`;
+}
 function semverParts(v){return String(v).split('.').map(x=>Number(x)||0);}
 function newer(remote,local){const a=semverParts(remote),b=semverParts(local);for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true;if((a[i]||0)<(b[i]||0))return false;}return false;}
-function markUpdateAvailable(){updateReady=true;$('updateBanner').hidden=false;$('installUpdate').hidden=false;$('updateStatus').textContent='Eine neue Version wurde heruntergeladen und kann installiert werden. Deine lokalen Daten bleiben erhalten.';}
+function markUpdateAvailable(){$('updateBanner').hidden=false;$('installUpdate').hidden=false;$('updateStatus').textContent='Eine neue Version wurde heruntergeladen und kann installiert werden. Deine lokalen Daten bleiben erhalten.';}
 function installAvailableUpdate(){
   if(registration?.waiting){reloadAfterUpdate=true;registration.waiting.postMessage({type:'SKIP_WAITING'});return;}
   toast('Noch kein fertiges Update verfügbar. Bitte erneut prüfen.');
@@ -363,7 +458,6 @@ function setupEvents(){
   $('addExpense').addEventListener('click',()=>openCashDialog('expense'));$('cashCorrection').addEventListener('click',()=>openCashDialog('correction'));
   $('cashPlayer').addEventListener('change',prefillPayment);$('cashForm').addEventListener('submit',saveCash);
   $('cashExport').addEventListener('click',exportCSV);$('exportCsvSettings').addEventListener('click',exportCSV);
-  document.querySelectorAll('input[name="priceMode"]').forEach(el=>el.addEventListener('change',()=>activatePriceMode(el.value)));
   $('basePrice').addEventListener('input',renderPricePreview);$('savePrices').addEventListener('click',savePrices);
   $('importBackup').addEventListener('click',()=>$('backupFile').click());$('backupFile').addEventListener('change',e=>restoreBackup(e.target.files[0]));
   $('restorePrevious').addEventListener('click',restorePrevious);
