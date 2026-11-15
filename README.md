@@ -1,36 +1,27 @@
-# Darts-Club – Jürgen Dartkasse
+# Jürgen Dartkasse – Update 1.2.1
 
-**Version 1.2.0** – eigenständige, offlinefähige Web-App (PWA) für GitHub Pages.
+Update für das bestehende GitHub-Pages-Repository `4h7zm6hnjy-skizze/Darts-Club-`.
 
-## Neue Spielregeln
+## Änderungen
+- Die Schaltfläche **+ Neuer Abend** heißt jetzt **Datum: TT.MM.JJJJ**.
+- Beim Antippen öffnet sich eine Datumsauswahl (auf dem iPhone die native Datumseingabe).
+- Bereits gespeicherte Spieltage können erneut aufgerufen werden, ohne alte Punkte zu löschen.
+- Ein neues Datum legt automatisch einen neuen Spieltag an.
+- Die Punkteanzeige und der Jürgen-Verlauf beziehen sich auf das gewählte Datum.
+- Alle bisherigen Zahlungen, offenen Gebühren, Kronen und der Kassenstand bleiben erhalten.
+- Der einzige Preis pro Punkt und die Regeln für Jürgen/Perfekter Jürgen bleiben unverändert.
 
-- **Jürgen:** Ein Tipp gibt dem ausgewählten Werfer **1 Punkt**.
-- **Perfekter Jürgen:** Ein Tipp gibt **jedem anderen gespeicherten Spieler 1 Punkt**, aber **nie dem Werfer selbst**. Das gilt ausdrücklich auch für archivierte Spieler. Ein perfekter Jürgen ist nur möglich, wenn mindestens eine weitere Person gespeichert ist.
-- **Kronen:** Für jeden eigenen perfekten Jürgen bekommt der Werfer eine Krone in der Statistik.
-- **Preis:** Ein einziger, frei änderbarer Preis **pro Punkt**, gleich bei beiden Buttons. Ein perfekter Jürgen berechnet den Preis für jeden anderen Spieler einzeln. Preisänderungen wirken sich nur auf neue Buchungen aus.
-- **Rückgängig:** Ein perfekter Jürgen wird als gemeinsames Ereignis mit allen zugehörigen Punkten und Kosten zurückgenommen.
+## Sichere Aktualisierung
+1. In der bisher installierten App unter Mehr → Backup ein vollständiges JSON-Backup speichern.
+2. Die Dateien aus dieser ZIP entpacken und **einzeln in das Hauptverzeichnis** des vorhandenen GitHub-Repositories hochladen (nicht nur ZIP-Datei hochladen).
+3. Die gleichnamigen Dateien ersetzen und den Commit bestätigen.
+4. Die Veröffentlichung in GitHub Pages abwarten und in der Web-App unter Mehr → Auf Update prüfen die Version 1.2.1 installieren, falls verfügbar.
+5. Alte Spieler- und Kassenstände kontrollieren. Die App nicht löschen und den lokalen Browser-Speicher nicht leeren.
 
-Die neun Single-/Double-/Triple-Buttons wurden durch **zwei große Schaltflächen** ersetzt. Die Eingabe des genauen getroffenene Feldes entfällt.
+## Technische Kompatibilität
+Die vorhandenen lokalen Speicher-Schlüssel `juergen-dartkasse-state-v1`, `juergen-dartkasse-before-import-v1` sowie die IndexedDB `juergen-dartkasse` bleiben bestehen. Die Datenstruktur bleibt `schemaVersion:1`; das optionale Feld `date` ergänzt lediglich neue Spieltage. Vorhandene Spielabende ohne Datumsfeld werden anhand ihres ursprünglichen Erstellungsdatums angezeigt. Die Dateiauswahl verändert frühere Buchungen nicht.
 
-## Kassenlogik
-
-Die Punkte erzeugen zunächst offene Beiträge pro Spieler. Nur **tatsächliche Zahlungen** und sonstige Einnahmen erhöhen den Kassenstand. Ausgaben mindern ihn. Im Kassenbuch können Zahlungen verbucht, Ausgaben und Einnahmen gespeichert und Korrekturen vorgenommen werden.
-
-## Bestehende Daten
-
-Die App benutzt unverändert den lokalen Speicher-Namen `juergen-dartkasse-state-v1` sowie die IndexedDB `juergen-dartkasse`. Dadurch können vorhandene Spieler und Kassenbuchungen aus v1.0.x/v1.1.0 erhalten bleiben. Alte Einträge werden nicht automatisch neu abgerechnet. Die älteren JSON-Backups lassen sich weiterhin importieren.
-
-**Wichtig:** Vor jedem Update aus der bisherigen App ein JSON-Backup erstellen. Die App bei einem Update nicht deinstallieren und die Safari-Website-Daten nicht löschen.
-
-## GitHub Pages – Update aufspielen
-
-1. Diese ZIP-Datei **entpacken**.
-2. `https://github.com/4h7zm6hnjy-skizze/Darts-Club-/upload/main` öffnen.
-3. Die **entpackten Dateien** im Stammverzeichnis von `main` hochladen bzw. bestehende Dateien gleichen Namens ersetzen. Mindestens `index.html`, `app.js`, `styles.css`, `sw.js`, `version.json`, `icon.svg`, `icon-192.png`, `icon-512.png` und `apple-touch-icon.png` müssen aktualisiert werden. Die ZIP-Datei selbst ist nicht die Website.
-4. Commit ausführen. GitHub Pages ist für **Deploy from a branch → main → /(root)** vorgesehen.
-5. Website: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/`.
-6. Nach der Veröffentlichung in der App **Mehr → Auf Update prüfen** auswählen. Der Browser kann das Update erst installieren, sobald der neue Service Worker zur Verfügung steht.
-
-## Datenschutz
-
-Spieler, Treffer, Gebühren und Zahlungen bleiben im lokalen Gerätespeicher. GitHub enthält nur den App-Code. Die Datensicherung ist ein lokaler JSON-Dateiexport; CSV-Export ist ebenfalls möglich.
+## Getestet
+- Syntaxprüfung von `app.js`.
+- Datumsauswahl, Wechsel zwischen vorhandenen/neuen Tagen, Erhalt von Punkten und Kassenständen, Krone bei perfektem Jürgen, Backup-Kompatibilität mit alten Sitzungen.
+- Geräte-/Safari-Test nach der GitHub-Pages-Veröffentlichung steht noch aus.

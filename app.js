@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.2.0 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.2.1 */
 'use strict';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -15,6 +15,17 @@ const euro = cents => moneyFmt.format((cents||0)/100);
 const when = iso => {const d=new Date(iso);return Number.isNaN(+d)?'–':d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};
 const today = iso => {const d=new Date(iso);return Number.isNaN(+d)?'–':d.toLocaleDateString('de-DE');};
 const now = () => new Date().toISOString();
+const dateKey = date => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+const dateFromTimestamp = iso => {const d=new Date(iso);return Number.isNaN(+d)?dateKey(new Date()):dateKey(d);};
+const validDateKey = key => {
+  if(typeof key!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(key))return false;
+  const [y,m,d]=key.split('-').map(Number);
+  const parsed=new Date(y,m-1,d,12);
+  return parsed.getFullYear()===y&&parsed.getMonth()===m-1&&parsed.getDate()===d&&y>=2000&&y<=2100;
+};
+const prettyDate = key => validDateKey(key)?key.split('-').reverse().join('.'):'–';
+const sessionDate = session => validDateKey(session?.date)?session.date:dateFromTimestamp(session?.createdAt);
+
 const makeInitial = () => {
   const s=uid();
   return {
@@ -23,7 +34,7 @@ const makeInitial = () => {
     revision:0,
     updatedAt:now(),
     players:[],
-    sessions:[{id:s,name:'Spielabend 1',createdAt:now()}],
+    sessions:[{id:s,name:`Spieltag ${prettyDate(dateKey(new Date()))}`,date:dateKey(new Date()),createdAt:now()}],
     activeSessionId:s,
     events:[],
     settings:{baseCents:0}
@@ -126,7 +137,7 @@ function validateImported(obj){
   });
   const sessions=obj.sessions.map(s=>{
     if(!s||!isId(s.id)||!validText(s.name,70)||sids.has(s.id))throw Error('Ungültige Spielabende.');
-    sids.add(s.id);return {id:s.id,name:s.name,createdAt:validText(s.createdAt,50)?s.createdAt:now()};
+    sids.add(s.id);return {id:s.id,name:s.name,createdAt:validText(s.createdAt,50)?s.createdAt:now(),...(validDateKey(s.date)?{date:s.date}:{})};
   });
   const events=obj.events.map(e=>{
     if(!e||!isId(e.id)||ids.has(e.id)||!['hit','payment','income','expense','correction'].includes(e.type)||!isAmount(e.amount)||!validText(e.at,50))throw Error('Ungültige Buchungsdaten.');
@@ -225,11 +236,33 @@ function savePrices(){
   state.settings.baseCents=val;
   persist();render();toast('Preis für neue Jürgen gespeichert.');
 }
-function startNewSession(){
-  const name=prompt('Name des neuen Spielabends:',`Spielabend ${state.sessions.length+1}`);
-  if(name===null)return;const label=name.trim().slice(0,70);
-  if(!label){toast('Bitte einen Namen eingeben.');return;}
-  const s={id:uid(),name:label,createdAt:now()};state.sessions.push(s);state.activeSessionId=s.id;statsSession='active';persist();render();goView('play');toast('Neuer Spielabend begonnen. Die Kasse bleibt unverändert.');
+function openDateDialog(){
+  const chosen=sessionDate(getSession());
+  $('sessionDateInput').value=chosen;
+  $('dateDialog').showModal();
+}
+function applySelectedDate(e){
+  e.preventDefault();
+  const chosen=$('sessionDateInput').value;
+  if(!validDateKey(chosen)){toast('Bitte ein gültiges Datum auswählen.');return;}
+  const previousSessionId=state.activeSessionId;
+  // Vorhandene Spieltage werden geöffnet statt ihre Punkte zu überschreiben.
+  let existing=state.sessions.find(s=>s.id===previousSessionId&&sessionDate(s)===chosen);
+  if(!existing)existing=state.sessions.findLast(s=>sessionDate(s)===chosen);
+  if(existing){
+    state.activeSessionId=existing.id;
+    statsSession='active';
+    if(previousSessionId!==existing.id)persist();
+    $('dateDialog').close();goView('play');
+    toast(`Spieltag ${prettyDate(chosen)} geöffnet.`);
+    return;
+  }
+  const session={id:uid(),name:`Spieltag ${prettyDate(chosen)}`,date:chosen,createdAt:now()};
+  state.sessions.push(session);
+  state.activeSessionId=session.id;
+  statsSession='active';
+  persist();$('dateDialog').close();goView('play');
+  toast(`Spieltag ${prettyDate(chosen)} angelegt. Bisherige Punkte und Kassenbuchungen bleiben erhalten.`);
 }
 function openPlayerDialog(id=null){
   const p=id?person(id):null;
@@ -349,7 +382,8 @@ function renderPlay(){
   const t=calcTotals(),session=getSession(),hits=currentHits(),throws=logicalThrows(state.activeSessionId);
   const sessionPoints=hits.reduce((sum,e)=>sum+(e.points||1),0);
   $('playCash').textContent=euro(t.cash);$('playOpen').textContent=euro(t.owed);
-  $('playHits').textContent=intFmt.format(sessionPoints);$('playSessionName').textContent=session?.name||'Aktueller Abend';
+  $('playHits').textContent=intFmt.format(sessionPoints);$('playSessionName').textContent=prettyDate(sessionDate(session));
+  $('currentDateLabel').textContent=prettyDate(sessionDate(session));
   const players=activePlayers();
   if(!players.some(p=>p.id===selectedPlayerId))selectedPlayerId=players[0]?.id||null;
   $('playerChips').innerHTML=players.length?players.map(p=>`<button class="player-chip ${selectedPlayerId===p.id?'active':''}" data-select-player="${esc(p.id)}" aria-pressed="${selectedPlayerId===p.id}"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><span class="chip-name">${esc(p.name)}</span></button>`).join(''):'<div class="empty-hint">Noch keine Spieler vorhanden. „Hinzufügen“ wählen.</div>';
@@ -382,7 +416,7 @@ function renderPlay(){
   $('sessionOverview').innerHTML=per.length?per.map(({p,stats})=>`<div class="session-person"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><div class="meta"><b>${esc(p.name)}</b><small>${stats.points} Punkt${stats.points===1?'':'e'} erhalten · ${stats.juergenThrown} Jürgen geworfen</small></div><span class="crown-stack">${crowns(stats.perfectThrown)}</span></div>`).join(''):'<div class="empty-state">Noch keine Jürgen in diesem Spielabend.</div>';
 }
 function renderPlayers(){
-  const options=`<option value="active">Aktueller Abend: ${esc(getSession()?.name||'')}</option><option value="all">Alle Spielabende</option>`+state.sessions.filter(s=>s.id!==state.activeSessionId).slice().reverse().map(s=>`<option value="${esc(s.id)}">${esc(s.name)} · ${today(s.createdAt)}</option>`).join('');
+  const options=`<option value="active">Aktueller Spieltag: ${prettyDate(sessionDate(getSession()))}</option><option value="all">Alle Spieltage</option>`+state.sessions.filter(s=>s.id!==state.activeSessionId).slice().reverse().map(s=>`<option value="${esc(s.id)}">${esc(s.name)} · ${prettyDate(sessionDate(s))}</option>`).join('');
   $('statsSession').innerHTML=options;
   const valid=['active','all',...state.sessions.map(s=>s.id)].includes(statsSession);if(!valid)statsSession='active';$('statsSession').value=statsSession;
   const sessionId=statsSession==='all'?null:statsSession==='active'?state.activeSessionId:statsSession;
@@ -411,7 +445,7 @@ function renderSettings(){
   const cfg=state.settings;
   $('basePrice').value=inputMoney(cfg.baseCents);
   renderPricePreview();
-  $('currentSessionInfo').textContent=`${getSession()?.name||'Spielabend'} · gestartet am ${when(getSession()?.createdAt)}`;
+  $('currentSessionInfo').textContent=`Aktives Datum: ${prettyDate(sessionDate(getSession()))} · ${getSession()?.name||'Spieltag'}`;
   $('restorePrevious').hidden=!localGet(RESTORE_KEY);
   $('networkStatus').textContent=navigator.onLine?'Online / offlinefähig':'Gerade offline';
 }
@@ -460,7 +494,8 @@ function setupEvents(){
   $('headerBackup').addEventListener('click',backup);$('exportBackup').addEventListener('click',backup);
   $('quickAddPlayer').addEventListener('click',()=>openPlayerDialog());$('addPlayer').addEventListener('click',()=>openPlayerDialog());
   $('playerForm').addEventListener('submit',savePlayer);
-  $('playNewSession').addEventListener('click',startNewSession);$('newSession').addEventListener('click',startNewSession);
+  $('playNewSession').addEventListener('click',openDateDialog);$('newSession').addEventListener('click',openDateDialog);
+  $('dateForm').addEventListener('submit',applySelectedDate);
   $('undoHit').addEventListener('click',undoHit);
   $('playerChips').addEventListener('click',e=>{const b=e.target.closest('[data-select-player]');if(!b)return;selectedPlayerId=b.dataset.selectPlayer;renderPlay();});
   $('hitPad').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b&&!b.disabled)addJuergen(b.dataset.kind==='perfect');});
