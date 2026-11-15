@@ -99,3 +99,9 @@ body{
 .action-tile:hover,.primary-btn:hover,.outline-btn:hover,.nav-btn:hover,.icon-button:hover,.square-button:hover,.text-btn:hover,.juergen-action:hover,.tiny-btn:hover{transform:translateY(-1px)}
 @media (max-width:900px){.champions-board{grid-template-columns:1fr}.stats-toolbar{grid-template-columns:1fr 1fr}.hit-pad{grid-template-columns:1fr}}
 @media (max-width:640px){.stats-toolbar{grid-template-columns:1fr}.champion-body{align-items:flex-start}.champion-photo{width:82px;height:82px}.period-grid{grid-template-columns:1fr}}
+
+/* 1.3.2: ruhige, feste iPhone-PWA-Ansicht ohne unbeabsichtigten Zoom */
+html,body { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; overscroll-behavior-x: none; }
+button,a { touch-action: manipulation; }
+input,select,textarea { font-size: 16px; }
+.juergen-action .cost-caption { font-size: 11px; font-weight: 700; color: #eec778; text-align: center; }

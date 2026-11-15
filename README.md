@@ -1,20 +1,22 @@
-# Jürgen Dartkasse – Update 1.3.1 / Safari-Reparatur
+# Jürgen Dartkasse – Update 1.3.2
 
-Dieses Paket ersetzt nur die sechs Programmdateien `index.html`, `app.js`, `styles.css`, `sw.js`, `version.json` und `README.md` im bestehenden Repository `4h7zm6hnjy-skizze/Darts-Club-`.
+Update für das bestehende GitHub-Pages-Repository `4h7zm6hnjy-skizze/Darts-Club-`.
 
-## Problem
-Die iPhone-Web-App kann nach Veröffentlichung einer neuen Version in Safari / als Home-Bildschirm-App noch alte JavaScript- oder CSS-Dateien aus dem lokalen Service-Worker-Cache verwenden. Dann zeigt sie weiterhin v1.2.1, obwohl GitHub die neue Version meldet.
+## Änderungen
+- **Jürgen:** 1 Punkt für den Werfer und einmal der eingestellte Preis.
+- **Perfekter Jürgen:** Jeder andere gespeicherte Spieler erhält 1 Punkt, auch abwesende und archivierte Spieler. Der Werfer bekommt nur eine Krone, keinen Punkt.
+- **Nur ein Gesamtpreis pro perfektem Jürgen:** Der einstellbare Preis wird genau einmal verbucht, egal wie viele Mitspieler einen Punkt erhalten. Die Centbeträge werden gleichmäßig auf deren Spielerforderungen verteilt; unteilbare Rest-Cent werden in der Spieler-Reihenfolge verteilt (Beispiel: 0,30 € bei zwei Mitspielern = 0,15 € pro Spieler).
+- **Anzeige:** Statt „2 × 0,30 €“ steht nur noch der Gesamtpreis „0,30 €“ am perfekten Jürgen.
+- **Zoom:** Die PWA versucht das versehentliche Pinch- und Doppel-Tipp-Zoom auf dem iPhone zu unterbinden, auch bei Eingabefeldern. iOS-Bedienungshilfen sowie Browser-Verhalten können nicht vollständig blockiert werden.
+- **Version 1.3.2:** Versionskennung, Service-Worker-Cache sowie JS/CSS-Versionen angepasst.
 
-## Behebung
-- HTML lädt nun `styles.css?v=1.3.1` und `app.js?v=1.3.1`, um alte Cache-Einträge zu umgehen.
-- Der Service Worker lädt die App-Navigation ohne HTTP-Cache und hält versionsgebundene Dateien offline bereit.
-- Ein neuer Button **Aktualisierte App-Dateien neu laden** öffnet die App mit einer frischen Adresse. Es wird kein lokaler Speicher gelöscht.
-- Version 1.3.1 nutzt exakt dieselben lokalen Speicher-Schlüssel und die gleiche Datenstruktur. Alle Funktionen von 1.3.0 bleiben erhalten.
+## Daten und Sicherheit
+- Alte Spieler, Champions, Zahlungen und Kassendaten bleiben unter denselben Speicher-Schlüsseln gespeichert.
+- Bereits erfasste perfekte Jürgen **werden nicht rückwirkend umgebucht**. Bestehende Buchungen behalten ihre ursprünglichen Werte. Möchtest du einen alten Eintrag ändern, kannst du ihn stornieren und mit neuer Regel erneut erfassen. Beachte dabei ggf. schon geleistete Zahlungen.
+- Vor dem Update unter **Mehr → Vollständiges JSON-Backup** sichern. App nicht löschen und keine Website-Daten löschen.
 
-## Installation auf GitHub
-1. In der alten App ein JSON-Backup erstellen.
-2. ZIP-Datei entpacken.
-3. Alle sechs Dateien in das **Hauptverzeichnis** von `Darts-Club-` hochladen und gleichnamige Dateien ersetzen.
-4. Auf GitHub committen und die GitHub-Pages-Veröffentlichung abwarten.
-5. Die Web-App **nicht löschen**. Zum ersten Test direkt in Safari öffnen: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=1.3.1`.
-6. Falls die installierte App weiter 1.2.1 anzeigt, wird das Update durch iOS noch nicht vollständig übernommen. Verwende zunächst das JSON-Backup und belasse die alte App unangetastet.
+## Update einspielen
+1. ZIP entpacken und alle **sechs Dateien** ins Hauptverzeichnis von `Darts-Club-` hochladen, vorhandene gleichnamige Dateien ersetzen. Nicht die ZIP-Datei hochladen.
+2. GitHub Pages veröffentlichen lassen.
+3. App mit Internetverbindung öffnen und unter **Mehr → Auf Update prüfen** aktualisieren. Bei festhängender installierter App ggf. die vorhandene Schaltfläche **Aktualisierte App-Dateien neu laden** nutzen.
+4. Prüfen, ob Version **1.3.2** und der neue Gesamtpreis auf dem perfekten Jürgen angezeigt werden.

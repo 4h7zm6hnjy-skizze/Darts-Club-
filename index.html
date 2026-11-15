@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0c1526">
   <meta name="description" content="Jürgen Dartkasse: 5, 20, 1 zählen, abrechnen und offline verwalten.">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,9 +11,9 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=1.3.1">
+  <link rel="stylesheet" href="./styles.css?v=1.3.2">
   <title>Jürgen – Dartkasse</title>
-  <script src="./app.js?v=1.3.1" defer></script>
+  <script src="./app.js?v=1.3.2" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -26,13 +26,13 @@
         <button class="nav-btn" data-view="cash"><span class="nav-icon">€</span> Kassenbuch</button>
         <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span> Einstellungen</button>
       </nav>
-      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">1.3.1</span></small></div>
+      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">1.3.2</span></small></div>
     </aside>
     <div class="main-wrap">
       <header class="topbar">
         <div class="mobile-brand"><div class="brand-mark symbol" aria-hidden="true"><span>20</span></div><div><strong>JÜRGEN</strong><small>DARTKASSE</small></div></div>
         <div class="topbar-note"><span class="pulse"></span><span id="storageStatus">Daten werden lokal gesichert</span></div>
-        <div class="top-actions"><span class="version-pill">v<span class="version-value">1.3.1</span></span><button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button></div>
+        <div class="top-actions"><span class="version-pill">v<span class="version-value">1.3.2</span></span><button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button></div>
       </header>
       <main>
         <section class="view active" id="view-play" aria-label="Treffer zählen">
@@ -74,14 +74,14 @@
           <div class="page-heading"><div><span class="eyebrow">APP / KONFIGURATION</span><h1>Einstellungen<span class="accent-dot">.</span></h1><p>Preis pro Punkt, Spieltage, Datensicherung und Updates.</p></div></div>
           <div class="settings-grid">
             <div class="panel"><div class="panel-header"><div><span class="eyebrow">01 / PREISMODELL</span><h2>Preis pro Jürgen-Punkt</h2></div></div>
-              <p class="panel-intro">Es gibt einen festen Preis pro Punkt. Ein normaler Jürgen gibt dem Werfer 1 Punkt. Ein perfekter Jürgen gibt jedem anderen gespeicherten Spieler 1 Punkt, auch archivierten. Der Werfer bekommt keinen Punkt. Preisänderungen gelten nur für neue Einträge.</p>
-              <div id="factorPrices"><label class="field-label" for="basePrice">Preis pro Punkt / Jürgen (Euro)</label><div class="money-input"><input id="basePrice" type="text" inputmode="decimal" autocomplete="off" placeholder="0,50"><span>€</span></div><div class="calculation-preview"><div>Jürgen <b id="previewSingle">0,00 €</b></div><div>Perfekter Jürgen <b id="previewTriple">0,00 € pro anderem Spieler</b></div></div></div>
+              <p class="panel-intro">Es gilt ein einziger Preis pro Jürgen. Ein normaler Jürgen gibt dem Werfer 1 Punkt. Ein perfekter Jürgen gibt jedem anderen gespeicherten Spieler 1 Punkt, auch abwesenden und archivierten. Der Werfer bekommt keinen Punkt. Der perfekte Jürgen kostet insgesamt nur einmal den eingestellten Preis, unabhängig von der Anzahl der anderen Spieler; die Gebühr wird auf diese Spieler verteilt. Preisänderungen gelten nur für neue Einträge.</p>
+              <div id="factorPrices"><label class="field-label" for="basePrice">Preis pro Jürgen – auch perfekt (Euro)</label><div class="money-input"><input id="basePrice" type="text" inputmode="decimal" autocomplete="off" placeholder="0,50"><span>€</span></div><div class="calculation-preview"><div>Jürgen <b id="previewSingle">0,00 €</b></div><div>Perfekter Jürgen <b id="previewTriple">0,00 € insgesamt</b></div></div></div>
               <button id="savePrices" class="primary-btn full">Preis speichern</button>
             </div>
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELTAGE</span><h2>Spieltag wählen</h2></div></div><p class="panel-intro">Wähle ein Datum. Für bereits erfasste Spieltage werden die vorhandenen Punkte angezeigt. Neue Daten erhalten einen eigenen Spieltag; Zahlungen und der Kassenstand bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">Datum auswählen</button></div>
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">03 / SICHERUNG</span><h2>Backup & Export</h2></div></div><p class="panel-intro">Alle Daten bleiben auf diesem Gerät. Sichere sie regelmäßig als Datei, insbesondere vor Updates oder einem Gerätewechsel.</p><div class="button-stack"><button id="exportBackup" class="primary-btn full">↓ Vollständiges JSON-Backup</button><button id="importBackup" class="outline-btn full">↑ Backup wiederherstellen</button><button id="restorePrevious" class="outline-btn full" hidden>↶ Stand vor letztem Import zurückholen</button><button id="exportCsvSettings" class="outline-btn full">↓ Buchungen als CSV</button></div><input type="file" id="backupFile" accept="application/json,.json" hidden></div>
-              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">1.3.1</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
+              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">1.3.2</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
             </div>
           </div>
           <div class="footer-warning">Hinweis: Offline-Speicher auf Mobilgeräten kann vom Betriebssystem gelöscht werden. Das JSON-Backup ist deine zusätzliche Sicherung.</div>

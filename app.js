@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.3.1 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.3.2 */
 'use strict';
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.3.2';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -251,8 +251,12 @@ function addJuergen(perfect){
   const recipients = perfect ? state.players.filter(p=>p.id!==thrower.id) : [thrower];
   if(!recipients.length){toast('Für einen perfekten Jürgen muss mindestens ein weiterer Spieler gespeichert sein.'); return;}
   const price=pointPrice(); const groupId=uid();
-  recordEvents(recipients.map(p=>({type:'hit',kind:perfect?'perfect':'juergen',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target:null,mult:null,points:1,perfect,groupId,amount:price})));
-  toast(perfect?`Perfekter Jürgen! ${recipients.length} andere Spieler bekommen je 1 Punkt.`:`Jürgen! 1 Punkt für ${thrower.name}.`);
+  // Ein perfekter Jürgen kostet insgesamt genau einen festgelegten Preis.
+  // Die Centbeträge werden auf die Empfänger verteilt; Punkte bleiben je 1.
+  const pricePerRecipient=perfect?Math.floor(price/recipients.length):price;
+  const remainingCents=perfect?price%recipients.length:0;
+  recordEvents(recipients.map((p,i)=>({type:'hit',kind:perfect?'perfect':'juergen',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target:null,mult:null,points:1,perfect,groupId,amount:pricePerRecipient+(i<remainingCents?1:0)})));
+  toast(perfect?`Perfekter Jürgen! ${recipients.length} andere Spieler bekommen je 1 Punkt. Gesamtpreis: ${euro(price)}.`:`Jürgen! 1 Punkt für ${thrower.name} · ${euro(price)}.`);
 }
 function voidEvent(key){
   const hitMatches=state.events.filter(e=>!e.voided&&e.type==='hit'&&((e.groupId||e.id)===key));
@@ -314,7 +318,7 @@ function renderPlay(){
   if(!visible.length) $('playerChips').innerHTML='<div class="empty-hint">Noch keine Spieler vorhanden. „Hinzufügen“ wählen.</div>';
   else $('playerChips').innerHTML=visible.map(p=>`<button class="player-chip ${selectedPlayerId===p.id?'active':''} ${p.absent?'absent':''}" data-select-player="${esc(p.id)}" ${p.absent?'disabled':''} aria-pressed="${selectedPlayerId===p.id}"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><span class="chip-name">${esc(p.name)}</span><small>${p.absent?'abwesend':'anwesend'}</small></button>`).join('');
   const otherCount=selectedPlayerId?state.players.filter(p=>p.id!==selectedPlayerId).length:0;
-  $('hitPad').innerHTML=`<button class="juergen-action action-normal" data-kind="juergen" ${selectedPlayerId?'':'disabled'}><span class="action-icon">◎</span><b>Jürgen</b><small>+1 Punkt für den Werfer</small><strong>${euro(pointPrice())}</strong></button><button class="juergen-action action-perfect" data-kind="perfect" ${selectedPlayerId?'':'disabled'}><span class="action-icon crown">👑</span><b>Perfekter Jürgen</b><small>+1 Punkt für jeden anderen gespeicherten Spieler</small><strong>${otherCount} × ${euro(pointPrice())}</strong></button>`;
+  $('hitPad').innerHTML=`<button class="juergen-action action-normal" data-kind="juergen" ${selectedPlayerId?'':'disabled'}><span class="action-icon">◎</span><b>Jürgen</b><small>+1 Punkt für den Werfer</small><strong>${euro(pointPrice())}</strong></button><button class="juergen-action action-perfect" data-kind="perfect" ${selectedPlayerId?'':'disabled'}><span class="action-icon crown">👑</span><b>Perfekter Jürgen</b><small>+1 Punkt für jeden anderen gespeicherten Spieler</small><strong>${euro(pointPrice())}</strong><span class="cost-caption">Gesamtpreis für alle</span></button>`;
   $('priceWarn').hidden=pointPrice()>0;
   $('undoHit').disabled=!throws.length;
   if(!visible.length) $('activePlayerCaption').textContent='Bitte Spieler hinzufügen';
@@ -338,7 +342,7 @@ function renderPlayers(){
 }
 function renderCash(){ const t=calcTotals(); $('cashBalance').textContent=euro(t.cash); $('cashOwed').textContent=euro(t.owed); $('cashBilled').textContent=euro(t.billed); const log=state.events.filter(e=>!e.voided&&e.type!=='hit').slice(-100).reverse(); const descriptions={payment:'Spielerzahlung',income:'Sonstige Einnahme',expense:'Ausgabe',correction:'Kassenkorrektur'}; $('cashJournal').innerHTML=log.length?log.map(e=>{const negative=e.type==='expense'||(e.type==='correction'&&e.amount<0); const who=e.type==='payment'?` · ${esc(person(e.playerId)?.name||'Unbekannt')}`:''; return `<div class="event-row"><div class="event-icon ${e.type==='expense'?'expense':e.type==='payment'?'payment':''}">${negative?'−':'+'}</div><div class="event-meta"><b>${descriptions[e.type]}${who}</b><small>${when(e.at)}${e.note?' · '+esc(e.note):''}</small></div><div class="event-sum ${negative?'negative':''}">${negative?'−':'+'} ${euro(Math.abs(e.amount))}</div><button class="mini-remove" data-void="${esc(e.id)}" title="Buchung stornieren" aria-label="Buchung stornieren">×</button></div>`; }).join(''):'<div class="empty-state">Noch keine Kassenbuchungen vorhanden.</div>'; }
 function renderSettings(){ $('basePrice').value=inputMoney(state.settings.baseCents); renderPricePreview(); $('currentSessionInfo').textContent=`Aktives Datum: ${prettyDate(sessionDate(getSession()))} · ${getSession()?.name||'Spieltag'}`; $('restorePrevious').hidden=!localGet(RESTORE_KEY); $('networkStatus').textContent=navigator.onLine?'Online / offlinefähig':'Gerade offline'; }
-function renderPricePreview(){ let v=parseMoney($('basePrice').value); if(v===null)v=0; if($('previewSingle'))$('previewSingle').textContent=euro(v); if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} pro anderem Spieler`; }
+function renderPricePreview(){ let v=parseMoney($('basePrice').value); if(v===null)v=0; if($('previewSingle'))$('previewSingle').textContent=euro(v); if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} insgesamt`; }
 function semverParts(v){return String(v).split('.').map(x=>Number(x)||0);} function newer(remote,local){const a=semverParts(remote),b=semverParts(local); for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true; if((a[i]||0)<(b[i]||0))return false;} return false;}
 function markUpdateAvailable(){$('updateBanner').hidden=false; $('installUpdate').hidden=false; $('updateStatus').textContent='Eine neue Version wurde heruntergeladen und kann installiert werden. Deine lokalen Daten bleiben erhalten.';}
 function installAvailableUpdate(){
@@ -359,6 +363,11 @@ async function forceUpdateNow(){
 async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
+  // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
+  // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
+  const preventGestureZoom=e=>{if(e.cancelable)e.preventDefault();};
+  document.addEventListener('gesturestart',preventGestureZoom,{passive:false});
+  document.addEventListener('gesturechange',preventGestureZoom,{passive:false});
   document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>goView(el.dataset.view)));
   document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>$(el.dataset.close).close()));
   document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();}));
