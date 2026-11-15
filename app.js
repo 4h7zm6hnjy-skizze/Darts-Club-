@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — standalone offline-first app, v1.1.0 */
+/* JÜRGEN DARTKASSE — standalone offline-first app, v1.2.0 */
 'use strict';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -91,27 +91,25 @@ function logicalThrows(sessionId=null){
 }
 function uniqueCount(list){return new Set(list).size;}
 function personStats(id,sessionId=null){
-  const counts=Object.fromEntries(HIT_TARGETS.flatMap(n=>[1,2,3].map(m=>[`${n}-${m}`,0])));
   let billed=0,paid=0,points=0;
-  const perfectThrown=new Set(), juergenThrown=new Set();
+  const perfectThrown=new Set(),juergenThrown=new Set();
   for(const e of state.events){
     if(e.voided)continue;
     if(e.type==='payment' && e.playerId===id)paid+=e.amount;
     if(e.type==='hit'){
-      const key=e.groupId||e.id;
+      const group=e.groupId||e.id;
       const thrownBy=e.thrownBy||e.playerId;
       const inSession=!sessionId || e.sessionId===sessionId;
       if(thrownBy===id && inSession){
-        if(e.perfect)perfectThrown.add(key); else juergenThrown.add(key);
+        if(e.perfect)perfectThrown.add(group); else juergenThrown.add(group);
       }
       if(e.playerId===id && inSession){
-        counts[`${e.target}-${e.mult}`]=(counts[`${e.target}-${e.mult}`]||0)+1;
         billed+=e.amount;
         points+=(e.points||1);
       }
     }
   }
-  return {counts,billed,paid,owed:billed-paid,points,perfectThrown:perfectThrown.size,juergenThrown:juergenThrown.size};
+  return {billed,paid,owed:billed-paid,points,perfectThrown:perfectThrown.size,juergenThrown:juergenThrown.size};
 }
 function recordEvents(list){state.events.push(...list.map(e=>({id:uid(),at:now(),voided:false,...e})));persist();render();}
 function recordEvent(e){recordEvents([e]);}
@@ -134,9 +132,12 @@ function validateImported(obj){
     if(!e||!isId(e.id)||ids.has(e.id)||!['hit','payment','income','expense','correction'].includes(e.type)||!isAmount(e.amount)||!validText(e.at,50))throw Error('Ungültige Buchungsdaten.');
     ids.add(e.id);
     if(e.type==='hit'){
-      if(!pids.has(e.playerId)||!sids.has(e.sessionId)||!HIT_TARGETS.includes(e.target)||![1,2,3].includes(e.mult)||e.amount<0)throw Error('Ungültige Treffer im Backup.');
+      const legacyRing=HIT_TARGETS.includes(e.target)&&[1,2,3].includes(e.mult);
+      const flatButton=e.target===null&&e.mult===null&&['juergen','perfect'].includes(e.kind);
+      if(!pids.has(e.playerId)||!sids.has(e.sessionId)||(!legacyRing&&!flatButton)||e.amount<0)throw Error('Ungültige Jürgen-Buchung im Backup.');
+      if(flatButton&&Boolean(e.perfect)!==(e.kind==='perfect'))throw Error('Ungültiger Jürgen-Typ im Backup.');
       const thrownBy=pids.has(e.thrownBy)?e.thrownBy:e.playerId;
-      return {id:e.id,at:e.at,voided:!!e.voided,type:'hit',amount:e.amount,target:e.target,mult:e.mult,playerId:e.playerId,thrownBy,groupId:isId(e.groupId)?e.groupId:e.id,perfect:!!e.perfect,points:Number.isSafeInteger(e.points)&&e.points>0?e.points:1,sessionId:e.sessionId,note:validText(e.note,100)?e.note:''};
+      return {id:e.id,at:e.at,voided:!!e.voided,type:'hit',amount:e.amount,target:e.target,mult:e.mult,kind:['juergen','perfect'].includes(e.kind)?e.kind:null,playerId:e.playerId,thrownBy,groupId:isId(e.groupId)?e.groupId:e.id,perfect:!!e.perfect,points:Number.isSafeInteger(e.points)&&e.points>0?e.points:1,sessionId:e.sessionId,note:validText(e.note,100)?e.note:''};
     }
     if(e.type==='payment'&&(!pids.has(e.playerId)||e.amount<=0))throw Error('Ungültige Spielerzahlung.');
     if(['income','expense'].includes(e.type)&&e.amount<=0)throw Error('Ungültige Kassenbuchung.');
@@ -195,7 +196,7 @@ function exportCSV(){
         e.perfect?'Perfekter Jürgen':'Jürgen',
         person(e.thrownBy||e.playerId)?.name||'',
         person(e.playerId)?.name||'',
-        `${MULT_NAMES[e.mult]} ${e.target}`,
+        e.target==null?'–':`${MULT_NAMES[e.mult]} ${e.target}`,
         e.points||1,
         (e.amount/100).toFixed(2).replace('.',','),
         e.voided?'Storniert':'Aktiv',
@@ -255,20 +256,22 @@ function deletePlayer(id){const p=person(id);if(!p)return;
   state.players=state.players.filter(p=>p.id!==id);if(selectedPlayerId===id)selectedPlayerId=activePlayers()[0]?.id||null;
   persist();render();toast('Spieler gelöscht.');
 }
-function hit(target,mult){
+function addJuergen(perfect){
   const thrower=person(selectedPlayerId);
-  if(!thrower||thrower.archived){toast('Bitte zuerst einen Spieler auswählen.');return;}
+  if(!thrower || thrower.archived){toast('Bitte zuerst einen Spieler auswählen.');return;}
+  // Alle gespeicherten Spieler zählen mit – auch archivierte. Nur der Werfer wird ausgeschlossen.
+  const recipients=perfect ? state.players.filter(p=>p.id!==thrower.id) : [thrower];
+  if(!recipients.length){toast('Für einen perfekten Jürgen muss mindestens ein weiterer Spieler gespeichert sein.');return;}
   const price=pointPrice();
-  if(mult===3){
-    const recipients=activePlayers().filter(p=>p.id!==thrower.id);
-    if(!recipients.length){toast('Für einen perfekten Jürgen brauchst du mindestens 2 aktive Spieler.');return;}
-    const groupId=uid();
-    recordEvents(recipients.map(p=>({type:'hit',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target,mult,points:1,perfect:true,groupId,amount:price})));
-    toast(`Perfekter Jürgen T${target}: ${recipients.length} Punkt${recipients.length===1?'':'e'} verteilt.`);
-    return;
-  }
-  recordEvent({type:'hit',playerId:thrower.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target,mult,points:1,perfect:false,groupId:uid(),amount:price});
-  toast(`Jürgen ${mult===1?'Single':'Double'} ${target} · 1 Punkt · ${euro(price)} erfasst.`);
+  const groupId=uid();
+  recordEvents(recipients.map(p=>({
+    type:'hit', kind:perfect?'perfect':'juergen', playerId:p.id,
+    thrownBy:thrower.id, sessionId:state.activeSessionId,
+    target:null, mult:null, points:1, perfect, groupId, amount:price
+  })));
+  toast(perfect
+    ? `Perfekter Jürgen! ${recipients.length} andere Spieler bekommen je 1 Punkt.`
+    : `Jürgen! 1 Punkt für ${thrower.name} · ${euro(price)}.`);
 }
 function voidEvent(key){
   const hitMatches=state.events.filter(e=>!e.voided&&e.type==='hit'&&((e.groupId||e.id)===key));
@@ -350,7 +353,19 @@ function renderPlay(){
   const players=activePlayers();
   if(!players.some(p=>p.id===selectedPlayerId))selectedPlayerId=players[0]?.id||null;
   $('playerChips').innerHTML=players.length?players.map(p=>`<button class="player-chip ${selectedPlayerId===p.id?'active':''}" data-select-player="${esc(p.id)}" aria-pressed="${selectedPlayerId===p.id}"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><span class="chip-name">${esc(p.name)}</span></button>`).join(''):'<div class="empty-hint">Noch keine Spieler vorhanden. „Hinzufügen“ wählen.</div>';
-  $('hitPad').innerHTML=HIT_TARGETS.map(n=>`<div class="pad-row"><div class="target-number">${n}</div>${[1,2,3].map(m=>`<button class="hit-button ${m===3?'perfect':''}" data-target="${n}" data-mult="${m}" ${selectedPlayerId?'':'disabled'} title="${m===3?'Perfekter Jürgen':'Jürgen'} ${MULT_NAMES[m]} ${n} verbuchen"><span class="tag">${m===3?'Perfekter Jürgen':'Jürgen'}</span><span class="code">${m===1?'S':m===2?'D':'T'}${n}</span><small class="sub">${m===3?'1 Punkt pro Mitspieler':'1 Punkt'} · ${euro(pointPrice())}</small></button>`).join('')}</div>`).join('');
+  $('hitPad').innerHTML=`
+    <button class="juergen-action normal" data-kind="juergen" ${selectedPlayerId?'':'disabled'}>
+      <span class="juergen-action-symbol" aria-hidden="true">◎</span>
+      <span class="juergen-action-name">Jürgen</span>
+      <span class="juergen-action-details">+1 Punkt für den Werfer</span>
+      <span class="juergen-action-price">${euro(pointPrice())}</span>
+    </button>
+    <button class="juergen-action perfect" data-kind="perfect" ${(selectedPlayerId&&state.players.some(p=>p.id!==selectedPlayerId))?'':'disabled'}>
+      <span class="juergen-action-symbol" aria-hidden="true">👑</span>
+      <span class="juergen-action-name">Perfekter Jürgen</span>
+      <span class="juergen-action-details">+1 Punkt für jeden anderen gespeicherten Spieler</span>
+      <span class="juergen-action-price">${state.players.filter(p=>p.id!==selectedPlayerId).length} × ${euro(pointPrice())}</span>
+    </button>`;
   $('priceWarn').hidden=pointPrice()>0;
   $('activePlayerCaption').textContent=selectedPlayerId?`Aktiv: ${person(selectedPlayerId)?.name||'–'}`:'Bitte Spieler hinzufügen';
   $('undoHit').disabled=!throws.length;
@@ -358,12 +373,12 @@ function renderPlay(){
   $('recentHits').innerHTML=latest.length?latest.map(g=>{
     const thrower=person(g.thrownBy)?.name||'Unbekannt';
     const recipients=g.recipients.map(id=>person(id)?.name||'Unbekannt');
-    const icon=g.perfect?'👑':(g.mult===1?'S':g.mult===2?'D':'T')+g.target;
-    const title=g.perfect?`${thrower} · Perfekter Jürgen T${g.target}`:`${thrower} · Jürgen ${g.mult===1?'S':'D'}${g.target}`;
+    const icon=g.perfect?'👑':g.target==null?'J':(g.mult===1?'S':g.mult===2?'D':'T')+g.target;
+    const title=g.perfect?`${thrower} · Perfekter Jürgen${g.target!=null?` T${g.target}`:''}`:`${thrower} · Jürgen${g.target!=null?` ${g.mult===1?'S':'D'}${g.target}`:''}`;
     const detail=g.perfect?`Punkte für: ${esc(recipients.join(', '))}`:`Punkt für: ${esc(recipients[0]||thrower)}`;
     return `<div class="event-row"><div class="event-icon ${g.perfect?'perfect':''}">${icon}</div><div class="event-meta"><b>${title}</b><small>${when(g.at)} · ${detail}</small></div><div class="event-sum">${g.points} Punkt${g.points===1?'':'e'} · ${euro(g.amount)}</div><button class="mini-remove" title="Eintrag stornieren" aria-label="Eintrag stornieren" data-void="${esc(g.id)}">×</button></div>`;
   }).join(''):'<div class="empty-state">Hier erscheinen deine letzten Jürgen.<br>Wähle einen Spieler und tippe auf einen Button.</div>';
-  const per=players.map(p=>({p,stats:personStats(p.id,state.activeSessionId)})).filter(x=>x.stats.points>0||x.stats.perfectThrown>0||x.stats.juergenThrown>0);
+  const per=state.players.map(p=>({p,stats:personStats(p.id,state.activeSessionId)})).filter(x=>x.stats.points>0||x.stats.perfectThrown>0||x.stats.juergenThrown>0);
   $('sessionOverview').innerHTML=per.length?per.map(({p,stats})=>`<div class="session-person"><span class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</span><div class="meta"><b>${esc(p.name)}</b><small>${stats.points} Punkt${stats.points===1?'':'e'} erhalten · ${stats.juergenThrown} Jürgen geworfen</small></div><span class="crown-stack">${crowns(stats.perfectThrown)}</span></div>`).join(''):'<div class="empty-state">Noch keine Jürgen in diesem Spielabend.</div>';
 }
 function renderPlayers(){
@@ -374,9 +389,12 @@ function renderPlayers(){
   const players=state.players;
   if(!players.length){$('playersList').innerHTML='<div class="panel empty-state">Noch keine Spieler angelegt. Tippe auf „Spieler hinzufügen“.</div>';return;}
   $('playersList').innerHTML=players.map(p=>{
-    const total=personStats(p.id),session=personStats(p.id,sessionId),count=session.counts;
-    const grid=`<span></span><span class="stat-cell head">Single</span><span class="stat-cell head">Double</span><span class="stat-cell head">Triple</span>`+HIT_TARGETS.map(n=>`<span class="target-head">${n}</span>${[1,2,3].map(m=>`<span class="stat-cell">${intFmt.format(count[`${n}-${m}`])}</span>`).join('')}`).join('');
-    return `<div class="player-stat ${p.archived?'inactive':''}"><div class="stat-header"><div class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</div><div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':''}${session.points} Punkt${session.points===1?'':'e'} in der Auswahl</small></div><div class="inline-actions"><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button><button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${total.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte Jürgen: ${total.perfectThrown}</span></div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>Gebühren gesamt</small></div><div><b>${euro(total.paid)}</b><small>Bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':'Offen'}</small></div></div><div class="stat-grid">${grid}</div><div class="stat-foot">Erhaltene Punkte gesamt: ${total.points} · In Auswahl: ${session.points}</div></div>`;
+    const total=personStats(p.id),session=personStats(p.id,sessionId);
+    return `<div class="player-stat ${p.archived?'inactive':''}"><div class="stat-header"><div class="avatar">${esc(p.name.slice(0,1).toUpperCase())}</div><div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':''}${session.points} Punkte in der Auswahl</small></div><div class="inline-actions"><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button><button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''}</div></div>
+      <div class="flag-row"><span class="flag-pill">Jürgen geworfen: ${session.juergenThrown}</span><span class="flag-pill crown">${crowns(session.perfectThrown)||'👑'} Perfekte Jürgen: ${session.perfectThrown}</span></div>
+      <div class="stat-money"><div><b>${euro(total.billed)}</b><small>Gebühren gesamt</small></div><div><b>${euro(total.paid)}</b><small>Bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':'Offen'}</small></div></div>
+      <div class="player-point-summary"><div><b>${session.points}</b><small>Punkte in der Auswahl</small></div><div><b>${total.points}</b><small>Punkte gesamt</small></div></div>
+    </div>`;
   }).join('');
 }
 function renderCash(){
@@ -400,8 +418,7 @@ function renderSettings(){
 function renderPricePreview(){
   let v=parseMoney($('basePrice').value);if(v===null)v=0;
   if($('previewSingle'))$('previewSingle').textContent=euro(v);
-  if($('previewDouble'))$('previewDouble').textContent=euro(v);
-  if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} pro Mitspieler`;
+  if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} pro anderem Spieler`;
 }
 function semverParts(v){return String(v).split('.').map(x=>Number(x)||0);}
 function newer(remote,local){const a=semverParts(remote),b=semverParts(local);for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true;if((a[i]||0)<(b[i]||0))return false;}return false;}
@@ -446,7 +463,7 @@ function setupEvents(){
   $('playNewSession').addEventListener('click',startNewSession);$('newSession').addEventListener('click',startNewSession);
   $('undoHit').addEventListener('click',undoHit);
   $('playerChips').addEventListener('click',e=>{const b=e.target.closest('[data-select-player]');if(!b)return;selectedPlayerId=b.dataset.selectPlayer;renderPlay();});
-  $('hitPad').addEventListener('click',e=>{const b=e.target.closest('[data-target]');if(b)hit(Number(b.dataset.target),Number(b.dataset.mult));});
+  $('hitPad').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b&&!b.disabled)addJuergen(b.dataset.kind==='perfect');});
   for(const el of [$('recentHits'),$('cashJournal')])el.addEventListener('click',e=>{const b=e.target.closest('[data-void]');if(b)voidEvent(b.dataset.void);});
   $('playersList').addEventListener('click',e=>{const b=e.target.closest('[data-edit-player],[data-archive-player],[data-delete-player]');if(!b)return;
     if(b.dataset.editPlayer)openPlayerDialog(b.dataset.editPlayer);

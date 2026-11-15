@@ -1,5 +1,5 @@
 /* Offline service worker. Bump CACHE_NAME in each release. */
-const CACHE_NAME = 'juergen-dartkasse-static-1.1.0';
+const CACHE_NAME = 'juergen-dartkasse-static-1.2.0';
 const CORE = ['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./version.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE))));
 self.addEventListener('activate',event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('juergen-dartkasse-static-')&&k!==CACHE_NAME).map(k=>caches.delete(k)))),self.clients.claim()])));

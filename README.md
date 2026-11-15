@@ -1,46 +1,36 @@
-# Jürgen – Dartkasse 5 · 20 · 1
+# Darts-Club – Jürgen Dartkasse
 
-**Offlinefähige Web-App (PWA)** für GitHub Pages, Version **1.0.0**.
+**Version 1.2.0** – eigenständige, offlinefähige Web-App (PWA) für GitHub Pages.
 
-## Funktionen
+## Neue Spielregeln
 
-- 5, 20 und 1 jeweils Single, Double, Triple zählen
-- Spieler anlegen, umbenennen und archivieren
-- Grundpreis × Multiplikator oder neun individuelle Preise
-- Treffergebühren, offene Beträge und tatsächlich eingezahltes Geld unterscheiden
-- Spielerzahlungen, sonstige Einnahmen, Ausgaben und Kassenkorrekturen buchen
-- Neue Spielabende, Statistik, Storno, CSV-Export
-- Lokale Speicherung, JSON-Backup und Wiederherstellung
-- Service Worker für Offlinebetrieb, Versionsanzeige und Update-Knopf
+- **Jürgen:** Ein Tipp gibt dem ausgewählten Werfer **1 Punkt**.
+- **Perfekter Jürgen:** Ein Tipp gibt **jedem anderen gespeicherten Spieler 1 Punkt**, aber **nie dem Werfer selbst**. Das gilt ausdrücklich auch für archivierte Spieler. Ein perfekter Jürgen ist nur möglich, wenn mindestens eine weitere Person gespeichert ist.
+- **Kronen:** Für jeden eigenen perfekten Jürgen bekommt der Werfer eine Krone in der Statistik.
+- **Preis:** Ein einziger, frei änderbarer Preis **pro Punkt**, gleich bei beiden Buttons. Ein perfekter Jürgen berechnet den Preis für jeden anderen Spieler einzeln. Preisänderungen wirken sich nur auf neue Buchungen aus.
+- **Rückgängig:** Ein perfekter Jürgen wird als gemeinsames Ereignis mit allen zugehörigen Punkten und Kosten zurückgenommen.
 
-## In GitHub Pages veröffentlichen
+Die neun Single-/Double-/Triple-Buttons wurden durch **zwei große Schaltflächen** ersetzt. Die Eingabe des genauen getroffenene Feldes entfällt.
 
-1. Unter **https://github.com/new** ein **neues, separates Repository** erstellen, z. B. `Juergen-Dartkasse`. Bei GitHub Free muss es für GitHub Pages **Public** sein. Wähle `main` und erstelle am besten eine anfängliche README-Datei.
-2. Lade die **entpackten Dateien aus diesem Projekt** in das Repository. Die `index.html` muss im Repo-Hauptverzeichnis liegen. **Nicht nur die ZIP-Datei hochladen.** Die `.github/workflows/deploy-pages.yml` ist die automatische Veröffentlichungs-Konfiguration.
-3. Öffne **Settings → Pages → Build and deployment → Source → GitHub Actions**. GitHub sollte den Workflow nach dem nächsten Commit oder einem manuellen Start unter **Actions** ausführen.
-4. Die veröffentlichte Adresse lautet normalerweise `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/`. Prüfe die tatsächlich von GitHub angezeigte URL unter **Settings → Pages**.
-5. Öffne die Seite einmal online. Am iPhone in Safari: **Teilen → Zum Home-Bildschirm**. Offlinebetrieb erst nach erfolgreicher erster Online-Installation testen.
+## Kassenlogik
 
-### Updates
+Die Punkte erzeugen zunächst offene Beiträge pro Spieler. Nur **tatsächliche Zahlungen** und sonstige Einnahmen erhöhen den Kassenstand. Ausgaben mindern ihn. Im Kassenbuch können Zahlungen verbucht, Ausgaben und Einnahmen gespeichert und Korrekturen vorgenommen werden.
 
-Bei jeder Änderung am Branch `main` wird die Website durch GitHub Actions neu veröffentlicht.
+## Bestehende Daten
 
-Bei einem **App-Update** die Versionsnummer *einheitlich* in `app.js` (`APP_VERSION`), `version.json`, `sw.js` (`CACHE_NAME`) sowie der Versionsanzeige in `index.html` ändern. Die App prüft die bereitgestellte `version.json` und bietet bei heruntergeladenem neuem Service Worker **Update installieren** an. Keine automatische Garantie für die Update-Anzeige auf jeder iOS-Version; falls nötig Seite online neu öffnen.
+Die App benutzt unverändert den lokalen Speicher-Namen `juergen-dartkasse-state-v1` sowie die IndexedDB `juergen-dartkasse`. Dadurch können vorhandene Spieler und Kassenbuchungen aus v1.0.x/v1.1.0 erhalten bleiben. Alte Einträge werden nicht automatisch neu abgerechnet. Die älteren JSON-Backups lassen sich weiterhin importieren.
 
-### Datenschutz und Datensicherung
+**Wichtig:** Vor jedem Update aus der bisherigen App ein JSON-Backup erstellen. Die App bei einem Update nicht deinstallieren und die Safari-Website-Daten nicht löschen.
 
-**GitHub enthält nur die App-Dateien.** Spieler und Buchungen verbleiben im lokalen Browser-/App-Speicher (localStorage und IndexedDB), nicht im GitHub-Repository. Ein öffentliches GitHub Pages Repository macht dennoch *den Quellcode und darin abgelegte Dateien öffentlich* – keine persönlichen Daten oder Backups hineinladen.
+## GitHub Pages – Update aufspielen
 
-**Backups:** in der App regelmäßig **JSON-Backup** herunterladen und privat aufbewahren. Browserdaten-Löschung, anderer Browser, anderer Origin oder neues Gerät übertragen gespeicherte Daten nicht automatisch. Bei einem Wechsel von Netlify oder einer lokal gespeicherten Datei zu GitHub Pages müssen die Daten mit JSON-Backup exportiert und auf der GitHub-Pages-App importiert werden.
+1. Diese ZIP-Datei **entpacken**.
+2. `https://github.com/4h7zm6hnjy-skizze/Darts-Club-/upload/main` öffnen.
+3. Die **entpackten Dateien** im Stammverzeichnis von `main` hochladen bzw. bestehende Dateien gleichen Namens ersetzen. Mindestens `index.html`, `app.js`, `styles.css`, `sw.js`, `version.json`, `icon.svg`, `icon-192.png`, `icon-512.png` und `apple-touch-icon.png` müssen aktualisiert werden. Die ZIP-Datei selbst ist nicht die Website.
+4. Commit ausführen. GitHub Pages ist für **Deploy from a branch → main → /(root)** vorgesehen.
+5. Website: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/`.
+6. Nach der Veröffentlichung in der App **Mehr → Auf Update prüfen** auswählen. Der Browser kann das Update erst installieren, sobald der neue Service Worker zur Verfügung steht.
 
-**Kassenlogik:** Treffer erhöhen die Forderung, nicht das Bargeld. Nur eine Zahlung oder sonstige Einnahme erhöht den Kassenstand. Ausgaben und Korrekturen verändern den Kassenstand; Preisänderungen wirken erst für neue Treffer.
+## Datenschutz
 
-**Spielregeln:** Die App nutzt 5 / 20 / 1 und Single / Double / Triple als frei konfigurierbare Gebührenfelder. Weitere ortsübliche Regeln für „Jürgen“ sind nicht fest einprogrammiert.
-
-### Technisches
-
-Keine externen Bibliotheken, kein Backend, kein Login, keine Werbe-/Tracking-Skripte, keine kostenpflichtige API. Alle Asset-Pfade sind relativ, damit die App sowohl unter `/` als auch unter GitHub Pages Projekt-Pfaden (`/Juergen-Dartkasse/`) funktioniert. Der Webserver muss HTTPS verwenden, damit Installation und Service Worker aktiv werden.
-
-## GitHub-Verbindung für dieses Repository
-
-Falls GitHub beim automatischen Hochladen `403 Resource not accessible by integration` meldet, unter <https://github.com/settings/installations/178891315> die Installation konfigurieren: `Repository access` > `Only select repositories` > `Darts-Club-` hinzufügen > Speichern. Das ist eine Berechtigung für den Code-Zugriff, keine Veröffentlichung persönlicher Kassen- oder Spielerdaten.
+Spieler, Treffer, Gebühren und Zahlungen bleiben im lokalen Gerätespeicher. GitHub enthält nur den App-Code. Die Datensicherung ist ein lokaler JSON-Dateiexport; CSV-Export ist ebenfalls möglich.
