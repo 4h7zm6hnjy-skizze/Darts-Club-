@@ -1,1 +1,1 @@
-{"version": "1.6.0", "released": "2026-11-16", "notes": "Freundlicheres Dart-Design, obere Kopfzeile entfernt, Version und Backup-Pfeil in das neue Logo-Kästchen verschoben, Spieler-Icon als Dartpfeil und technische Prüfung der Kernfunktionen."}
+{"version": "1.7.0", "released": "2026-11-16", "notes": "Neuer eigener Spielmodus mit X01, Cricket-Varianten, Trainings-/Partyspielen, Dart-für-Dart-Eingabe, rückgängig machen, lokalem Spielverlauf und Dart-Statistik."}

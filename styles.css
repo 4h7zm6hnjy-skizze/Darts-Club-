@@ -597,3 +597,104 @@ main{padding-top:28px}
   .dart-brand-showcase .icon-button{height:42px;width:42px;font-size:24px}
 }
 .brand-status{color:#93b7be!important;font-size:11px!important;letter-spacing:.02em!important}
+
+/* 1.7.0 · independently designed Dart-Spielcenter */
+.game-hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px;margin:4px 0 22px;border:1px solid rgba(244,199,102,.36);border-radius:23px;background:linear-gradient(115deg,rgba(25,94,102,.94),rgba(16,50,72,.97) 63%,rgba(25,44,60,.99));box-shadow:0 18px 34px rgba(0,0,0,.18)}
+.game-overline{font-size:11px;font-weight:900;letter-spacing:.23em;color:#f7d88a}
+.game-hero h2{font-size:clamp(22px,3vw,31px);margin:8px 0;color:#fff1cf}
+.game-hero p{font-size:13px;line-height:1.7;max-width:550px;margin:0;color:#c4e5e7}
+.game-hero-target{width:126px;height:126px;border-radius:50%;background:repeating-conic-gradient(from -9deg,#cde8df 0deg 18deg,#1b333a 18deg 36deg);border:10px solid #071b26;box-shadow:0 0 0 3px #dfb95a,0 8px 25px #0006;position:relative;display:grid;place-items:center;flex:none;opacity:.88}
+.game-hero-target:after{content:"";width:56px;height:56px;border-radius:50%;border:9px solid #26845b;background:radial-gradient(circle,#a62e38 0 20%,#419e69 21% 39%,#f0d9c3 40% 60%,#111f2a 61%)}
+.game-hero-target span{position:absolute;top:5px;font-size:11px;font-weight:900;color:#fff;z-index:1}
+.game-workspace{display:grid;grid-template-columns:minmax(285px,.88fr) minmax(0,1.3fr);gap:18px;align-items:start}
+.game-panel{border:1px solid rgba(101,181,191,.31);border-radius:20px;padding:22px;background:linear-gradient(180deg,rgba(17,42,64,.96),rgba(11,29,49,.97));box-shadow:0 16px 34px rgba(0,0,0,.17);min-width:0}
+.game-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:17px}
+.game-section-head h2{font-size:21px;margin:6px 0 0;color:#fff4d0}
+.game-muted{color:#a9c6d4;font-size:12px;line-height:1.6;margin:7px 0}
+.game-no-match{padding:40px 16px;text-align:center;color:#a9c6d4;border:1px dashed #46687a;border-radius:14px}
+.game-mode-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:13px 0}
+.mode-card{text-align:left;border:1px solid #33556b;border-radius:13px;padding:13px;background:#102a41;display:flex;flex-direction:column;align-items:flex-start;gap:5px;color:#f1f6fa;min-height:95px;transition:.15s}
+.mode-card.selected{background:linear-gradient(145deg,#185c60,#16415a);border-color:#66dec9;box-shadow:inset 0 0 0 1px #66dec929}
+.mode-card .mode-type{color:#f0ca78;letter-spacing:.08em;text-transform:uppercase;font-weight:850;font-size:9px}
+.mode-card strong{font-size:13px}
+.mode-card small{font-size:10px;color:#b0c8d3;line-height:1.4}
+.mode-card:active,.dart-target:active{transform:scale(.97)}
+.game-config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.game-config-grid label,.game-filters label{font-weight:700;font-size:12px;color:#a8c9d3;display:flex;flex-direction:column;gap:6px}
+.game-checkbox{display:flex!important;flex-direction:row!important;align-items:center;gap:11px;padding:10px 0;color:#e4f4f4!important}
+.game-checkbox input{width:20px;height:20px;min-height:20px;accent-color:#63edd5}
+.game-subheading{font-size:15px;color:#fff0c9;margin:20px 0 12px}
+.game-player-list{display:flex;flex-wrap:wrap;gap:8px}
+.game-player-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid #3c6173;background:#102b40;color:#d9e9ef;border-radius:14px;padding:8px 11px;min-height:46px;font-weight:700}
+.game-player-toggle.selected{border-color:#5bdfc7;background:#1d5e63;color:white}
+.game-mini-avatar{width:27px;height:27px;border-radius:50%;background:linear-gradient(145deg,#42e5c8,#1a8d8e);display:grid;place-items:center;color:#0c2531;font-weight:900;overflow:hidden;flex:none}
+.game-mini-avatar img{width:100%;height:100%;object-fit:cover}
+.game-check{font-weight:900;color:#ffe09b}
+.game-start-button{margin-top:18px}
+.game-current{scroll-margin-top:14px}
+.game-status-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.game-status{padding:6px 9px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;border-radius:90px;background:#174f4f;color:#b2fbe6}
+.game-scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.game-score-card{position:relative;padding:15px;border-radius:16px;border:1px solid #34586b;background:linear-gradient(145deg,#0d273d,#142f45);min-width:0}
+.game-score-card.active{border-color:#60ebd1;background:linear-gradient(145deg,#154b54,#15374a);box-shadow:0 0 0 1px #5bdbcd33}
+.game-score-card.winner{border-color:#e5c273;background:linear-gradient(145deg,#58441e,#292b2b)}
+.game-score-name{display:flex;align-items:center;gap:7px;font-size:13px;min-width:0}
+.game-score-name strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.game-turn-indicator,.game-trophy{margin-left:auto;padding:4px 6px;border-radius:8px;background:#1f7568;color:#d3fff3;font-size:9px;font-weight:900;white-space:nowrap}
+.game-trophy{background:#725b22;color:#ffeab3}
+.game-score-number{font-size:clamp(30px,4vw,46px);font-weight:950;letter-spacing:-.04em;color:#fcf6da;margin:9px 0 5px}
+.game-score-caption{font-size:10px;color:#aac4d4}
+.game-live{margin-top:20px;border-top:1px solid #33566a;padding-top:18px}
+.game-live>h3{font-size:19px;color:#e9fff5;margin:0 0 6px}
+.dart-input-title{font-size:11px;color:#a1bccf;text-transform:uppercase;letter-spacing:.1em;font-weight:850;margin:18px 0 9px}
+.game-ring-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.game-ring-buttons button{min-height:47px;border:1px solid #466b7c;color:#d9edf2;background:#17354a;border-radius:12px;font-size:14px;font-weight:900}
+.game-ring-buttons button.active{background:#2c7c72;color:#f8ffef;border-color:#8cf2db}
+.game-ring-buttons button[data-ring="3"].active{background:#806027;border-color:#edd084}
+.game-target-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.dart-target{border:1px solid #3c6176;min-height:53px;border-radius:12px;background:linear-gradient(165deg,#173c54,#102b42);font-weight:900;font-size:18px;color:#eaf7f6}
+.dart-target:nth-child(odd){background:linear-gradient(165deg,#25545b,#173947)}
+.dart-target.bull{background:#1b6b59;color:#e5ffef;border-color:#51bd9c}
+.dart-target.miss{background:#553337;color:#ffd8cd;border-color:#ab6561}
+.game-draft{margin-top:16px;padding:14px;background:rgba(7,20,37,.65);border-radius:14px;border:1px solid #315468;display:flex;flex-direction:column;gap:12px}
+.game-draft-darts{display:flex;gap:7px;flex-wrap:wrap;min-height:28px;align-items:center}
+.staged-dart{padding:6px 10px;border:1px solid #488b83;background:#175b5a;color:#dcfff0;font-weight:900;font-size:12px;border-radius:9px}
+.game-draft strong{color:#ffe09c}
+.game-draft-actions{display:flex;gap:8px;flex-wrap:wrap}
+.game-draft-actions button{flex:1}
+.game-toolbar-bottom{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}
+.game-danger{color:#ffc4c4;border-color:#9e575d}
+.game-subsection{margin-top:22px}
+.game-subsection h3{font-size:16px;color:#fff1ce}
+.game-cricket-table{overflow-x:auto;border:1px solid #385e72;border-radius:13px;margin:12px 0}
+.game-cricket-table table{width:100%;border-collapse:collapse;min-width:270px}
+.game-cricket-table th,.game-cricket-table td{text-align:center;border-bottom:1px solid #26485c;padding:11px 6px;font-size:12px}
+.game-cricket-table th{color:#e7d18b}
+.game-cricket-table td.closed{background:rgba(37,150,114,.26);color:#d6ffef;font-weight:900}
+.match-stats{display:grid;gap:10px}
+.match-stat-player{background:#0c273c;border:1px solid #345b6f;border-radius:13px;padding:13px}
+.match-stat-player h4{margin:0 0 11px;color:#f8f0d4}
+.match-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.match-stat-grid>div{display:flex;flex-direction:column;gap:5px}
+.match-stat-grid small{font-size:10px;color:#9fb8c9}
+.match-stat-grid strong{font-size:16px;color:#76f1d7}
+.game-history-list{display:grid;gap:3px}
+.game-history-row{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid rgba(117,167,187,.16);font-size:12px}
+.game-history-row span{color:#b3c9d2}
+.game-history-row b{text-align:right;color:#e7d18b}
+.game-winner{text-align:center;padding:23px;border-radius:16px;border:1px solid #bfa15f;background:linear-gradient(145deg,#5a4723,#1c3341)}
+.game-win-icon{font-size:34px}.game-winner h3{font-size:23px;margin:8px}.game-winner p{color:#e6d9b7}
+.game-records{margin-top:20px}
+.game-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.game-global-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.game-total-stat{border:1px solid #355d6e;background:#0c293f;border-radius:12px;padding:14px}
+.game-total-stat h4{margin:0 0 10px;font-size:15px;color:#ffe5a5}
+.game-stat-chips{display:flex;flex-wrap:wrap;gap:6px}
+.game-stat-chips span{font-size:10px;border:1px solid #46697a;background:#153b4f;padding:5px 7px;border-radius:8px}
+.game-match-list{display:grid;gap:7px}
+.game-history-match{border:1px solid #34586d;background:#0d293f;color:#e7f4f4;padding:12px 13px;border-radius:12px;text-align:left;display:flex;justify-content:space-between;gap:14px;align-items:center}
+.game-history-match.selected{border-color:#64e1cd}
+.game-history-match span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.game-history-match small{color:#9bb6c5;line-height:1.4}
+@media(max-width:1150px){.game-workspace{grid-template-columns:1fr}.game-scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.game-panel{padding:15px}.game-hero{padding:18px}.game-hero-target{width:74px;height:74px;border-width:6px}.game-hero-target:after{width:34px;height:34px;border-width:5px}.game-mode-cards{grid-template-columns:1fr 1fr}.mode-card{padding:10px;min-height:105px}.game-section-head{flex-wrap:wrap}.game-score-name{font-size:11px}.game-score-name .game-mini-avatar{width:23px;height:23px}.game-score-card{padding:11px}.game-score-number{font-size:32px}.game-score-caption{font-size:9px}.game-status-tools{width:100%;justify-content:space-between}.game-target-buttons{gap:6px}.dart-target{min-height:51px;font-size:18px}.game-draft-actions button{font-size:11px}.game-global-stats{grid-template-columns:1fr}.match-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.match-stat-grid strong{font-size:14px}.game-history-row{grid-template-columns:75px 1fr auto;font-size:11px}.game-filters{grid-template-columns:1fr}.game-checkbox{grid-column:span 2}.mobile-nav-btn{min-width:0!important;flex:1;flex-basis:0;padding:4px 1px!important;font-size:10px}.mobile-nav-btn span{font-size:21px}.bottom-nav{gap:0}.dart-brand-showcase{scroll-margin-top:10px}}

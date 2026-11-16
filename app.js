@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v1.6.0: historische Spieler-Abrechnung */
+/* JÜRGEN DARTKASSE — offline-first app, v1.7.0: historische Spieler-Abrechnung */
 'use strict';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -59,6 +59,8 @@ function makeInitial(){
     activeSessionId:s,
     events:[],
     paperEntries:[],
+    dartMatches:[],
+    activeDartMatchId:null,
     settings:{baseCents:0,champions:championDefaults()}
   };
 }
@@ -87,7 +89,7 @@ function toast(msg){const el=$('toast'); if(!el) return; el.textContent=msg; el.
 function localGet(key){try{return localStorage.getItem(key);}catch{return null;}}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
 function goView(view){
-  if(!['play','players','cash','settings'].includes(view))return;
+  if(!['play','games','players','cash','settings'].includes(view))return;
   currentView=view;
   document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===`view-${view}`));
   document.querySelectorAll('[data-view]').forEach(el=>{const active=el.dataset.view===view;el.classList.toggle('active',active);active?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current');});
@@ -255,13 +257,25 @@ function validateImported(obj){
     paperKeys.add(key);
     paperEntries.push({date:e.date,playerId:e.playerId,points:e.points,attendance:e.attendance,sourceId:e.sourceId});
   }
+  let dartMatches=[];
+  if(obj.dartMatches!==undefined){
+    if(!Array.isArray(obj.dartMatches)||obj.dartMatches.length>2000)throw Error('Ungültige Dart-Partien im Backup.');
+    if(!window.DartsGameEngine)throw Error('Spiel-Engine nicht geladen.');
+    const gameIds=new Set();
+    dartMatches=obj.dartMatches.map(game=>{
+      const item=window.DartsGameEngine.sanitizeMatch(game,pids);
+      if(gameIds.has(item.id))throw Error('Doppelte Dart-Partie im Backup.');
+      gameIds.add(item.id);return item;
+    });
+  }
+  const activeDartMatchId=dartMatches.some(m=>m.id===obj.activeDartMatchId)?obj.activeDartMatchId:(dartMatches.at(-1)?.id||null);
   const cfg=obj.settings||{};
   const championsDefault=championDefaults();
   const champions={
     undisputed:{name:validText(cfg?.champions?.undisputed?.name,60)?cfg.champions.undisputed.name:championsDefault.undisputed.name,image:validText(cfg?.champions?.undisputed?.image,2000000)?cfg.champions.undisputed.image:''},
     summerslam:{name:validText(cfg?.champions?.summerslam?.name,60)?cfg.champions.summerslam.name:championsDefault.summerslam.name,image:validText(cfg?.champions?.summerslam?.image,2000000)?cfg.champions.summerslam.image:''}
   };
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
 }
 
 function openIDB(){return new Promise(resolve=>{
@@ -286,6 +300,8 @@ async function loadData(){
   if(candidates.length)state=candidates[0];
   if(!state.settings.champions) state.settings.champions = championDefaults();
   if(!Array.isArray(state.paperEntries))state.paperEntries=[];
+  if(!Array.isArray(state.dartMatches))state.dartMatches=[];
+  if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
   selectedPlayerId = throwerPlayers()[0]?.id || null;
   localSet(STORAGE_KEY,JSON.stringify(state)); if(idb) await idbPut(state);
 }
@@ -375,7 +391,7 @@ function savePlayer(e){
 }
 function toggleArchive(id){ const p=person(id); if(!p) return; const action=p.archived?'reaktivieren':'archivieren'; if(!confirm(`${p.name} ${action}? Bisherige Treffer und Buchungen bleiben erhalten.`))return; p.archived=!p.archived; if(p.archived) p.absent=false; if(selectedPlayerId===id && (p.archived||p.absent)) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.archived?'Spieler archiviert.':'Spieler reaktiviert.'); }
 function toggleAbsent(id){ const p=person(id); if(!p||p.archived) return; p.absent=!p.absent; if(selectedPlayerId===id && p.absent) selectedPlayerId=throwerPlayers()[0]?.id||null; if(!selectedPlayerId) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.absent?`${p.name} als abwesend markiert.`:`${p.name} ist wieder anwesend.`); }
-function deletePlayer(id){ const p=person(id); if(!p) return; if(state.events.some(e=>e.playerId===id||e.thrownBy===id)|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
+function deletePlayer(id){ const p=person(id); if(!p) return; if((state.events.some(e=>e.playerId===id||e.thrownBy===id)||(state.paperEntries||[]).some(e=>e.playerId===id)||(state.dartMatches||[]).some(g=>g.playerIds.includes(id)))|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
 function addJuergen(perfect){
   const thrower=person(selectedPlayerId);
   if(!thrower || thrower.archived || isAbsentForSelectedDate(thrower)){toast('Bitte zuerst einen anwesenden Spieler auswählen.'); return;}
@@ -440,7 +456,7 @@ function openChampionUpload(slot){ const input=$(slot==='undisputed'?'championUn
 function uploadChampionFile(slot,file){ if(!file) return; if(!file.type.startsWith('image/')){toast('Bitte ein Bild auswählen.'); return;} if(file.size>3*1024*1024){toast('Bild ist zu groß (max. 3 MB).'); return;} const reader=new FileReader(); reader.onload=()=>{ state.settings.champions[slot].image=String(reader.result||''); persist(); render(); toast('Champion-Bild gespeichert.'); }; reader.onerror=()=>toast('Bild konnte nicht geladen werden.'); reader.readAsDataURL(file); }
 function removeChampionImage(slot){ state.settings.champions[slot].image=''; persist(); render(); toast('Champion-Bild entfernt.'); }
 
-function render(){ document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION); renderPlay(); renderPlayers(); renderCash(); renderSettings(); renderPaperTable(); }
+function render(){ document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION); renderPlay(); renderPlayers(); renderCash(); renderSettings(); renderPaperTable(); window.DartsGameUI?.render(); }
 function renderPlay(){
   ensureChampionState(); renderChampions();
   const totals=calcTotals(), session=getSession(), throws=logicalThrows(state.activeSessionId), present=throwerPlayers(), visible=visiblePlayers(), historical=paperDaySummary(sessionDate(session));
@@ -572,6 +588,7 @@ async function forceUpdateNow(){
 async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
+  window.DartsGameUI?.init({getState:()=>state,persist,toast});
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
   const preventGestureZoom=e=>{if(e.cancelable)e.preventDefault();};
