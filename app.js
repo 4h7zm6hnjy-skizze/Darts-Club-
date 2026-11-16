@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v1.9.0: Profi-Spielmodus mit Checkout-Hinweisen */
+/* JÜRGEN DARTKASSE — offline-first app, v1.9.1: Profi-Spielmodus mit Checkout-Hinweisen */
 'use strict';
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -278,13 +278,23 @@ function validateImported(obj){
   return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
 }
 
+let idbUnavailable=false;
 function openIDB(){return new Promise(resolve=>{
-  if(!('indexedDB' in window)){resolve(null);return;}
-  let req; try{req=indexedDB.open(DB_NAME,1);}catch{resolve(null);return;}
+  if(!('indexedDB' in window)){idbUnavailable=true;resolve(null);return;}
+  let done=false;
+  const finish=db=>{if(done){if(db)try{db.close();}catch{}return;}done=true;clearTimeout(timer);if(!db)idbUnavailable=true;resolve(db);};
+  const timer=setTimeout(()=>finish(null),3500);
+  let req; try{req=indexedDB.open(DB_NAME,1);}catch{finish(null);return;}
   req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('data'))req.result.createObjectStore('data');};
-  req.onsuccess=()=>resolve(req.result); req.onerror=()=>resolve(null); req.onblocked=()=>resolve(null);
+  req.onsuccess=()=>finish(req.result); req.onerror=()=>finish(null); req.onblocked=()=>finish(null);
 });}
-function idbGet(){return new Promise(resolve=>{if(!idb){resolve(null);return;} try{const r=idb.transaction('data','readonly').objectStore('data').get('state'); r.onsuccess=()=>resolve(r.result||null); r.onerror=()=>resolve(null);}catch{resolve(null);}});}
+function idbGet(){return new Promise(resolve=>{
+ if(!idb){resolve(null);return;}
+ let done=false;const finish=v=>{if(done)return;done=true;clearTimeout(timer);resolve(v);};
+ const timer=setTimeout(()=>{idbUnavailable=true;finish(null);},3500);
+ try{const r=idb.transaction('data','readonly').objectStore('data').get('state');r.onsuccess=()=>finish(r.result||null);r.onerror=()=>{idbUnavailable=true;finish(null)};}
+ catch{idbUnavailable=true;finish(null);}
+});}
 function idbPut(value){return new Promise(resolve=>{if(!idb){resolve(false);return;} try{const t=idb.transaction('data','readwrite'); t.objectStore('data').put(value,'state'); t.oncomplete=()=>resolve(true); t.onerror=()=>resolve(false); t.onabort=()=>resolve(false);}catch{resolve(false);}});}
 function persist(){
   state.revision++; state.updatedAt=now();
@@ -293,17 +303,25 @@ function persist(){
   if(!saved&&!idb)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';
 }
 async function loadData(){
+  // Do not write anything while reading the stores. Old data may still be recoverable.
   idb=await openIDB();
-  const fromLocal=localGet(STORAGE_KEY); const fromDb=await idbGet(); let candidates=[];
-  for(const raw of [fromLocal,fromDb]){ try{ if(raw) candidates.push(validateImported(typeof raw==='string'?JSON.parse(raw):raw)); }catch{} }
+  const fromLocal=localGet(STORAGE_KEY),fromDb=await idbGet();
+  const candidates=[];
+  for(const raw of [fromLocal,fromDb]){
+    if(!raw)continue;
+    try{candidates.push(validateImported(typeof raw==='string'?JSON.parse(raw):raw));}
+    catch(err){console.warn('Gespeicherte App-Daten konnten nicht validiert werden. Original bleibt unangetastet.',err);}
+  }
+  if(!candidates.length&&(fromLocal||fromDb||idbUnavailable))
+    throw Error('Vorhandene Daten sind momentan nicht zuverlässig lesbar. Es wurde nichts überschrieben. Bitte die App nicht löschen.');
   candidates.sort((a,b)=>b.revision-a.revision);
   if(candidates.length)state=candidates[0];
-  if(!state.settings.champions) state.settings.champions = championDefaults();
+  if(!state.settings.champions)state.settings.champions=championDefaults();
   if(!Array.isArray(state.paperEntries))state.paperEntries=[];
   if(!Array.isArray(state.dartMatches))state.dartMatches=[];
   if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
-  selectedPlayerId = throwerPlayers()[0]?.id || null;
-  localSet(STORAGE_KEY,JSON.stringify(state)); if(idb) await idbPut(state);
+  selectedPlayerId=throwerPlayers()[0]?.id||null;
+  // Save only after an explicit user action. This prevents a blank state replacing stored data.
 }
 
 function blobDownload(name,text,type){const blob=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);}
@@ -490,7 +508,11 @@ function openChampionUpload(slot){ const input=$(slot==='undisputed'?'championUn
 function uploadChampionFile(slot,file){ if(!file) return; if(!file.type.startsWith('image/')){toast('Bitte ein Bild auswählen.'); return;} if(file.size>3*1024*1024){toast('Bild ist zu groß (max. 3 MB).'); return;} const reader=new FileReader(); reader.onload=()=>{ state.settings.champions[slot].image=String(reader.result||''); persist(); render(); toast('Champion-Bild gespeichert.'); }; reader.onerror=()=>toast('Bild konnte nicht geladen werden.'); reader.readAsDataURL(file); }
 function removeChampionImage(slot){ state.settings.champions[slot].image=''; persist(); render(); toast('Champion-Bild entfernt.'); }
 
-function render(){ document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION); renderPlay(); renderPlayers(); renderCash(); renderSettings(); renderPaperTable(); window.DartsGameUI?.render(); }
+function render(){
+ document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);
+ renderPlay();renderPlayers();renderCash();renderSettings();renderPaperTable();
+ try{window.DartsGameUI?.render();}catch(err){console.error('Dart-Spielmodus konnte nicht angezeigt werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Der Spielmodus hat einen Ladefehler. Die Jürgen-Kasse bleibt weiterhin bedienbar. Bitte JSON-Backup sichern.';}}
+}
 function renderPlay(){
   ensureChampionState(); renderChampions();
   const totals=calcTotals(), session=getSession(), throws=logicalThrows(state.activeSessionId), present=throwerPlayers(), visible=visiblePlayers(), historical=paperDaySummary(sessionDate(session));
@@ -622,7 +644,8 @@ async function forceUpdateNow(){
 async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
-  window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});
+  try{window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});}
+  catch(err){console.error('Dart-Spielmodus konnte nicht gestartet werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Fehler im Spielmodus. Die Jürgen-Kasse wurde getrennt gestartet. Bitte zuerst ein JSON-Backup erstellen.';}}
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
   const preventGestureZoom=e=>{if(e.cancelable)e.preventDefault();};
@@ -656,4 +679,7 @@ function setupEvents(){
   window.addEventListener('online',()=>{$('networkStatus').textContent='Online / offlinefähig';}); window.addEventListener('offline',()=>{$('networkStatus').textContent='Gerade offline';});
 }
 
-(async()=>{ await loadData(); setupEvents(); render(); initServiceWorker(); })();
+(async()=>{
+ try{await loadData();setupEvents();render();const b=$('startupFailure');if(b)b.hidden=true;initServiceWorker();}
+ catch(err){console.error('App-Start angehalten, um vorhandene Daten zu schützen:',err);const b=$('startupFailure');if(b){b.hidden=false;b.textContent='Daten konnten nicht sicher geladen werden. Es wurde nichts überschrieben. Bitte die App nicht löschen und keine leeren Backups importieren. Öffne die Website in Safari und prüfe das Update.';}document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);}
+})();

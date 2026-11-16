@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v1.9.0 */
+/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v1.9.1 */
 (function(root,factory){
   const value=factory();
   if(typeof module==='object'&&module.exports)module.exports=value;

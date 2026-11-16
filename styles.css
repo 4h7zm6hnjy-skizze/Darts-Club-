@@ -743,3 +743,6 @@ main{padding-top:28px}
 .game-comparison{display:block;font-size:11px;margin-top:8px;font-weight:800}.game-comparison.positive{color:#8cf4c9}.game-comparison.negative{color:#ffb2b8}
 .game-stat-footnote{font-size:10px;margin-top:12px}
 @media(max-width:600px){.game-window-filter{gap:5px}.game-window-filter button{font-size:10px;padding:9px 2px}.game-live-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.live-meta-card{padding:10px}.live-meta-card strong{font-size:14px}.game-trend-svg{height:115px}}
+
+/* v1.9.1 safe-start diagnostics; data never auto-replaced on load */
+.app-safe-warning{margin:0 0 18px;padding:14px 16px;border:1px solid #f1c369;border-radius:14px;background:#443016;color:#fff0c2;font-weight:700;line-height:1.5;}

@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v1.9.0 */
+/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v1.9.1 */
 (function(){
 'use strict';
 const E=window.DartsGameEngine;
@@ -24,6 +24,22 @@ const playerRef=id=>getState().players.find(p=>p.id===id)||null;
 const validGamePlayers=()=>getState().players.filter(p=>!p.archived);
 const modeName=mode=>E.GAME_MODES.find(m=>m.id===mode)?.name||mode;
 const gameDate=m=>new Date(m.createdAt).toLocaleDateString('de-DE');
+function ensureChosen(){
+ const ids=new Set(validGamePlayers().map(p=>p.id));
+ selectedPlayers=selectedPlayers.filter(id=>ids.has(id));
+ if(!selectedPlayers.length)selectedPlayers=validGamePlayers().slice(0,2).map(p=>p.id);
+}
+function avatar(player){
+ if(!player)return '<span class="game-mini-avatar">?</span>';
+ return `<span class="game-mini-avatar">${player.photo?`<img src="${esc(player.photo)}" alt="">`:esc(player.name.charAt(0).toUpperCase())}</span>`;
+}
+function liveAverage(report,playerState){return playerState.darts?report.average3:0;}
+function projectedAverage(playerState,extraPoints,extraDarts){
+ const darts=playerState.darts+extraDarts;
+ return darts?Number((((playerState.pointsThrown||0)+extraPoints)/darts*3).toFixed(2)):0;
+}
+function refresh(){render();}
+function toast(t){api.toast(t);}
 // The game engine supplies verified double-out checkout routes for 1-3 darts.
 function checkoutText(remaining,dartsLeft,doubleOut){
  if(!Number.isInteger(remaining))return '–';

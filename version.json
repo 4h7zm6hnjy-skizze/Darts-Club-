@@ -1,1 +1,5 @@
-{"version": "1.9.0", "released": "2026-11-16", "notes": "X01 Best-of-Sets, sichere Jürgen-Mitbuchung mit Rücknahme, genaue Checkout-Wege, Live-Average, verbesserte Spielerstatistiken und optionaler Caller."}
+{
+  "version": "1.9.1",
+  "released": "2026-11-16",
+  "notes": "Reparatur: fehlende ensureChosen-Funktion, Jürgen-Kasse bleibt bei Spielmodulfehlern erreichbar, sichere Start- und Datenspeicherprüfung ohne leeres Überschreiben."
+}

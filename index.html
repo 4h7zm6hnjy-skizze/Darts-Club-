@@ -11,11 +11,11 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=1.9.0">
+  <link rel="stylesheet" href="./styles.css?v=1.9.1">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=1.9.0" defer></script>
-  <script src="./games-ui.js?v=1.9.0" defer></script>
-  <script src="./app.js?v=1.9.0" defer></script>
+  <script src="./games-engine.js?v=1.9.1" defer></script>
+  <script src="./games-ui.js?v=1.9.1" defer></script>
+  <script src="./app.js?v=1.9.1" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -34,6 +34,8 @@
     <div class="main-wrap">
       <header class="topbar" hidden></header>
       <main>
+        <div id="startupFailure" class="app-safe-warning" role="alert" hidden></div>
+        <div id="gameModuleWarning" class="app-safe-warning" role="status" hidden></div>
         <div class="dart-brand-showcase" aria-label="Jürgen Dartkasse – App-Logo">
           <img src="./icon-192.png" alt="Dart-Logo mit drei Pfeilen und Champion-Krone" width="92" height="92">
           <div class="dart-brand-showcase-copy">
