@@ -1,1 +1,1 @@
-{"version":"1.5.3","released":"2026-11-16","notes":"iPhone-Kopfzeile: Statusleisten-Überlagerung umgangen, dauerhaft sichtbares großes Dart-Logo im Inhaltsbereich und Copyright Marcel Hentschel 2026."}
+{"version": "1.6.0", "released": "2026-11-16", "notes": "Freundlicheres Dart-Design, obere Kopfzeile entfernt, Version und Backup-Pfeil in das neue Logo-Kästchen verschoben, Spieler-Icon als Dartpfeil und technische Prüfung der Kernfunktionen."}
