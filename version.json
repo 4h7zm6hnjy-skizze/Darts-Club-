@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
-  "released": "2026-11-16",
-  "notes": "Profi-Spiel-Layout mit Turnieranzeige, großen Spielerfeldern und neuer Dart-Eingabe."
+  "version": "2.1.0",
+  "released": "2026-11-17",
+  "notes": "Dartabend LIVE Beta: plattformübergreifender Offline-LAN-Modus mit direkter WebRTC-Verbindung zwischen iPhone und Android. QR-/Kopiercode-Kopplung, Spielleiterfreigabe, zentralen Spielständen und Dart-Eingabe."
 }

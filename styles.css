@@ -821,3 +821,24 @@ main{padding-top:28px}
  .dart-target{min-height:72px;font-size:26px}
  .game-special-booking,.game-action-row,.game-toolbar-bottom{grid-template-columns:1fr}
 }
+
+/* v2.1.0 LAN Dartabend, intentionally isolated from Jürgen bookkeeping UI */
+.live-alert,.live-panel,.live-status{border:1px solid rgba(111,191,190,.3);border-radius:15px;padding:14px;background:#143148;color:#e8f3ee;line-height:1.55}
+.live-alert{background:#3b311f;border-color:#a78a45;margin-bottom:15px}
+.live-role-switch,.live-row,.live-rings{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
+.live-role-switch button,.live-rings button{flex:1;min-height:48px;min-width:100px;border-radius:12px;background:#183448;border:1px solid #3e6973;color:#d8e7ed;font-weight:800}
+.live-role-switch button.active,.live-rings button.active{background:#246e65;color:#fff;border-color:#77dfca}
+.live-panel{margin-bottom:15px;background:linear-gradient(150deg,#112d43,#0b2134);padding:19px}
+.live-panel h2,.live-panel h3{margin:5px 0 10px;color:#ffebbd}
+.live-panel textarea{width:100%;max-width:100%;min-height:90px;resize:vertical;background:#071b2c;border:1px solid #486c77;color:#e2efef;border-radius:11px;padding:12px;font-size:12px;margin:10px 0}
+.live-qr{width:min(360px,100%);background:white;padding:10px;margin:12px auto;border-radius:10px;line-height:0}
+.live-qr svg{max-width:100%;height:auto}
+.live-code-box,.live-input-box{border:1px solid #3b6573;background:#0c2638;border-radius:16px;padding:13px;margin:14px 0}
+.live-status{margin:10px 0;background:#142e40;font-size:13px}
+.live-peers{display:grid;gap:10px;margin:12px 0}.live-peer{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #3e6673;background:#0b2537;border-radius:10px;padding:12px;font-size:13px;flex-wrap:wrap}
+.live-scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:12px 0}
+.live-score-person{padding:12px;background:#243847;border-radius:13px;border:1px solid #446576}.live-score-person.active{background:#7e3431;border-color:#e7b87e}.live-score-person b,.live-score-person strong,.live-score-person small{display:block}.live-score-person strong{font-size:40px;margin:6px 0}.live-score-person small{color:#bfd6df}
+.live-dart-list{padding:12px;background:#142e40;border-radius:12px;margin:10px 0}
+.live-juergen-label{display:flex;align-items:center;gap:8px;line-height:1.4;font-size:13px;color:#e9d2a5;margin:14px 0}.live-juergen-label input{width:20px;height:20px;min-height:auto}
+#liveGuestPad .dart-target{min-height:60px;font-size:22px}
+@media(max-width:600px){.live-panel{padding:14px}.live-scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.live-role-switch button{font-size:12px}}

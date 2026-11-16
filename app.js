@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v2.0.0: Profi-Spiel-Layout mit Turnieransicht */
+/* JÜRGEN DARTKASSE — offline-first app, v2.1.0: lokaler Dartabend mit Turnieransicht */
 'use strict';
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -89,7 +89,7 @@ function toast(msg){const el=$('toast'); if(!el) return; el.textContent=msg; el.
 function localGet(key){try{return localStorage.getItem(key);}catch{return null;}}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
 function goView(view){
-  if(!['play','games','players','cash','settings'].includes(view))return;
+  if(!['play','games','live','players','cash','settings'].includes(view))return;
   currentView=view;
   document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===`view-${view}`));
   document.querySelectorAll('[data-view]').forEach(el=>{const active=el.dataset.view===view;el.classList.toggle('active',active);active?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current');});
@@ -301,6 +301,7 @@ function persist(){
   const saved=localSet(STORAGE_KEY,JSON.stringify(state));
   idbPut(state).then(ok=>{if(!ok&&!saved)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';});
   if(!saved&&!idb)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';
+  try{window.DartLocalLive?.broadcast();}catch(err){console.warn('LAN-Synchronisierung:',err);}
 }
 async function loadData(){
   // Do not write anything while reading the stores. Old data may still be recoverable.
@@ -646,6 +647,7 @@ function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','ht
 function setupEvents(){
   try{window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});}
   catch(err){console.error('Dart-Spielmodus konnte nicht gestartet werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Fehler im Spielmodus. Die Jürgen-Kasse wurde getrennt gestartet. Bitte zuerst ein JSON-Backup erstellen.';}}
+  try{window.DartLocalLive?.init({getState:()=>state,persist,render,toast,addJuergenForThrower,canBookDartJuergen});}catch(err){console.warn('Live-Modul konnte nicht starten:',err);}
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
   const preventGestureZoom=e=>{if(e.cancelable)e.preventDefault();};
