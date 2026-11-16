@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v1.7.0: historische Spieler-Abrechnung */
+/* JÜRGEN DARTKASSE — offline-first app, v1.9.0: Profi-Spielmodus mit Checkout-Hinweisen */
 'use strict';
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.9.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -394,9 +394,9 @@ function toggleAbsent(id){ const p=person(id); if(!p||p.archived) return; p.abse
 function deletePlayer(id){ const p=person(id); if(!p) return; if((state.events.some(e=>e.playerId===id||e.thrownBy===id)||(state.paperEntries||[]).some(e=>e.playerId===id)||(state.dartMatches||[]).some(g=>g.playerIds.includes(id)))|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
 function addJuergen(perfect){
   const thrower=person(selectedPlayerId);
-  if(!thrower || thrower.archived || isAbsentForSelectedDate(thrower)){toast('Bitte zuerst einen anwesenden Spieler auswählen.'); return;}
+  if(!thrower || thrower.archived || isAbsentForSelectedDate(thrower)){toast('Bitte zuerst einen anwesenden Spieler auswählen.'); return null;}
   const recipients = perfect ? state.players.filter(p=>p.id!==thrower.id) : [thrower];
-  if(!recipients.length){toast('Für einen perfekten Jürgen muss mindestens ein weiterer Spieler gespeichert sein.'); return;}
+  if(!recipients.length){toast('Für einen perfekten Jürgen muss mindestens ein weiterer Spieler gespeichert sein.'); return null;}
   const price=pointPrice(); const groupId=uid();
   // Ein perfekter Jürgen kostet insgesamt genau einen festgelegten Preis.
   // Die Centbeträge werden auf die Empfänger verteilt; Punkte bleiben je 1.
@@ -404,6 +404,40 @@ function addJuergen(perfect){
   const remainingCents=perfect?price%recipients.length:0;
   recordEvents(recipients.map((p,i)=>({type:'hit',kind:perfect?'perfect':'juergen',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target:null,mult:null,points:1,perfect,groupId,amount:pricePerRecipient+(i<remainingCents?1:0)})));
   toast(perfect?`Perfekter Jürgen! ${recipients.length} andere Spieler bekommen je 1 Punkt. Gesamtpreis: ${euro(price)}.`:`Jürgen! 1 Punkt für ${thrower.name} · ${euro(price)}.`);
+  return groupId;
+}
+// Übernimmt für Spielmodus-Buchungen das lokale Datum des Dart-Matches,
+// ohne die zuvor gewählte Jürgen-Ansicht dauerhaft umzuschalten.
+function isAbsentOnDate(p,date){
+  const historical=paperEntry(date,p.id);
+  if(historical?.attendance==='absent')return true;
+  if(historical?.attendance==='present')return false;
+  return !!p.absent;
+}
+function canBookDartJuergen(throwerId,perfect,matchCreatedAt){
+  const p=person(throwerId);
+  const date=dateFromTimestamp(matchCreatedAt);
+  if(!p||p.archived||isAbsentOnDate(p,date))return false;
+  return !perfect||state.players.some(other=>other.id!==throwerId);
+}
+function addJuergenForThrower(throwerId,perfect,matchCreatedAt){
+  if(!canBookDartJuergen(throwerId,perfect,matchCreatedAt))return null;
+  const previousPlayer=selectedPlayerId, previousSession=state.activeSessionId;
+  const date=dateFromTimestamp(matchCreatedAt);
+  let session=state.sessions.find(item=>sessionDate(item)===date);
+  if(!session){session={id:uid(),name:`Spieltag ${prettyDate(date)}`,date,createdAt:now()};state.sessions.push(session);}
+  selectedPlayerId=throwerId;state.activeSessionId=session.id;
+  try{return addJuergen(perfect);}finally{selectedPlayerId=previousPlayer;state.activeSessionId=previousSession;}
+}
+// Spielmodus: gebuchte Jürgen sind über ihre Gruppen-ID mit einer Dart-Aufnahme verknüpft.
+// Bei einer Rücknahme wird nur die zugehörige Buchung storniert.
+function voidDartJuergenGroup(groupId){
+  if(typeof groupId!=='string'||!groupId)return false;
+  const hits=state.events.filter(e=>e.type==='hit'&&!e.voided&&e.groupId===groupId);
+  if(!hits.length)return false;
+  hits.forEach(e=>{e.voided=true;});
+  persist(); render();
+  return true;
 }
 function voidEvent(key){
   const hitMatches=state.events.filter(e=>!e.voided&&e.type==='hit'&&((e.groupId||e.id)===key));
@@ -588,7 +622,7 @@ async function forceUpdateNow(){
 async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
-  window.DartsGameUI?.init({getState:()=>state,persist,toast});
+  window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
   const preventGestureZoom=e=>{if(e.cancelable)e.preventDefault();};

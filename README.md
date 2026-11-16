@@ -1,43 +1,32 @@
-# Jürgen Dartkasse – Update 1.7.0: eigener Dart-Spielmodus
+# JÜRGEN DARTKASSE – Update 1.9.0
 
-## Installation
+Dieses Update enthält **alle Funktionen aus 1.8.0** und die Erweiterungen von 1.9.0. Version 1.8.0 muss vorher nicht separat installiert werden.
 
-1. Zuerst in der bestehenden Dart-App **Mehr → Vollständiges JSON-Backup** ausführen und die Datei sicher speichern.
-2. Die **acht Update-Dateien** aus der ZIP-Datei entpacken.
-3. Alle acht Dateien einzeln in das Hauptverzeichnis des bestehenden Repositories `4h7zm6hnjy-skizze/Darts-Club-` hochladen; die vorhandenen gleichnamigen Dateien ersetzen.
-4. Auf **Commit changes** tippen und anschließend GitHub Pages neu laden.
-5. Unter **Mehr → Version & Update** prüfen, ob `1.7.0` angezeigt wird. **Nicht die bestehende Home-Bildschirm-App löschen oder den Browser-Speicher leeren.**
+## Neu im Spielmodus
 
-## Neu: Spielen
+- **X01 Best-of-Sets:** Wahl zwischen 1, 3 und 5 Sets; ein Set besteht aus der gewählten Anzahl von Legs (Best of 1/3/5/7/9). Aktuelle Sets und Legs werden angezeigt.
+- **Checkout-Anzeige:** mathematisch gültige Finish-Wege für bis zu drei verbleibende Darts, einschließlich Bullseye als Doppel-25. Für ausgewählte Werte sind häufig verwendete Wege hinterlegt. Die Anzeige gibt mögliche Wege, keinen garantierten Treffer an.
+- **Live-Werte:** 3-Dart-Average des Werfers, mögliche Entwicklung mit den gerade erfassten Darts, Restpunkte und BUST-Hinweis.
+- **Caller:** optional einschaltbare Sprachausgabe nach der Aufnahme; Verfügbarkeit und verwendete Stimme hängen von Safari/iOS bzw. dem Browser ab.
+- **Spielerstatistik:** echte PPR-Verlaufsgrafik abgeschlossener X01-Legs, PPR, First-9, Checkout-%, höchste Finishes, Win-%, 60+/100+/140+/180 und Cricket MPR. Filter Letzte 10 / 100 / 1000 / Alle Spiele und Datum/Modus.
+- **Jürgen im Spiel:** Nur passende drei Treffer werden mitgebucht: Zahlen 1, 5, 20 je Single/Double = Jürgen; T1/T5/T20 = Perfekter Jürgen. Die Buchung wird auf dem lokalen Datum der Partie erfasst. Beim Rückgängigmachen einer Aufnahme wird ihre verknüpfte Jürgen-Gebühr mit storniert; beim Löschen einer Partie wird dies ausdrücklich bestätigt.
 
-Der untere Navigationsbereich hat fünf Punkte: **Zählen · Spielen · Spieler · Kasse · Mehr**.
+## Unverändert
 
-Unter **Spielen** gibt es elf regelbasierte Varianten mit manueller Dart-für-Dart-Erfassung:
+- Bisherige Spieler, Profilfotos, Papierliste, Champions, Spielstände und Kassenbuchungen bleiben gespeichert.
+- Perfekter Jürgen: ein einmaliger Gesamtpreis, 1 Punkt für **alle anderen** gespeicherten Spieler, keiner für den Werfer.
+- Kein Konto und keine externen Datenübertragungen. Die App speichert weiterhin im bisherigen lokalen Browser-Speicher.
 
-- X01 (170/210–1501, Double-Out optional, Best of 1/3/5/7/9 Legs)
-- Cricket
-- No-Score Cricket
-- Cut-Throat Cricket
-- Tactics Cricket
-- Count-Up
-- Around the Clock
-- Shanghai
-- Half-It
-- Bob’s 27
-- 170 Checkout (Einzeltraining mit maximal neun Darts)
+## Installation auf GitHub
 
-Bis zu sechs vorhandene Spieler können pro Partie gewählt werden (170 Checkout: ein Spieler). Es gibt Single/Double/Triple, Bull und Miss, eine Rücknahme der letzten Aufnahme, getrennte Spielverläufe und Statistiken.
+1. In der alten App unter **Mehr → Vollständiges JSON-Backup** zuerst eine Sicherung speichern.
+2. ZIP entpacken.
+3. Die **8 Dateien direkt im Hauptverzeichnis** von `Darts-Club-` hochladen und vorhandene Dateien ersetzen.
+4. Änderungen committen und nach Veröffentlichung auf Version **1.9.0** prüfen.
 
-### Statistiken
-- X01: 3-Dart-Average, First-9, 100+/140+/180, Busts, Checkout und Highest Finish.
-- Cricket: Marks, MPR und Punkte.
-- Training: Runden, Darts, Punktzahl.
-- Modusübergreifend: Spiele, Siege und verfügbare Vergleichswerte; Monats- und Jahresfilter aus vorhandenen Partien.
+## Teststand
 
-## Datensicherheit
-
-Der Spielmodus nutzt die **vorhandenen Spielerprofile**. Spiele werden im bestehenden lokalen Zustand unter `dartMatches` gespeichert und im vollständigen JSON-Backup mitgesichert. Die bisherige Speicherung für Jürgen-Punkte, Papierlisten-Daten, Champions, Fotos und Kassenbuchungen bleibt unangetastet. **Dart-Partien erzeugen keine Jürgen-Gebühren.**
-
-## Nicht enthalten
-
-Diese Version ist **keine Kopie von Dartsmind** und enthält **kein Kamera-Autoscoring, keine Online-Lobby und keinen DartBot**. Weitere spezielle Spiele oder Sets können in weiteren Updates ergänzt werden. Die Regeln und die Offline-Spielmaske wurden automatisiert getestet, die iPhone-PWA muss nach dem Upload noch auf dem Gerät geprüft werden.
+- Tests mit Node.js für alle Checkout-Werte 1–170, 1–3 Darts, Double-Out, Best-of-3-Sets, Backup-Kompatibilität und Rücknahme: bestanden.
+- JavaScript-Syntax und DOM-ID-Verknüpfungen: geprüft.
+- Mobiler Browser-Funktionstest: **nicht abgeschlossen**; der lokale Webseitenaufruf wurde durch die Testumgebung blockiert. Bitte auf dem iPhone nach dem Upload prüfen.
+- Die Sprachausgabe erfordert eine vom Gerät bereitgestellte Sprache; Offline-Unterstützung wird nicht garantiert.

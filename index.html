@@ -11,11 +11,11 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=1.7.0">
+  <link rel="stylesheet" href="./styles.css?v=1.9.0">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=1.7.0" defer></script>
-  <script src="./games-ui.js?v=1.7.0" defer></script>
-  <script src="./app.js?v=1.7.0" defer></script>
+  <script src="./games-engine.js?v=1.9.0" defer></script>
+  <script src="./games-ui.js?v=1.9.0" defer></script>
+  <script src="./app.js?v=1.9.0" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -84,7 +84,8 @@
               <div id="dartsX01Options" class="game-config-grid">
                 <label>Startpunkte<select id="dartsStart"><option value="170">170</option><option value="210">210</option><option value="301">301</option><option value="401">401</option><option value="501" selected>501</option><option value="601">601</option><option value="701">701</option><option value="801">801</option><option value="901">901</option><option value="1001">1001</option><option value="1501">1501</option></select></label>
                 <label>Match-Länge<select id="dartsBestOf"><option value="1">1 Leg</option><option value="3">Best of 3 Legs</option><option value="5">Best of 5 Legs</option><option value="7">Best of 7 Legs</option><option value="9">Best of 9 Legs</option></select></label>
-                <label class="game-checkbox"><input type="checkbox" id="dartsDoubleOut" checked>Double-Out</label>
+                <label>Match-Sets<select id="dartsBestOfSets"><option value="1" selected>1 Set</option><option value="3">Best of 3 Sets</option><option value="5">Best of 5 Sets</option></select></label>
+                <label class="game-checkbox"><input type="checkbox" id="dartsDoubleOut" checked>Double-Out (Bull = Double 25)</label>
               </div>
               <div id="dartsRoundsOption" hidden><label class="field-label" for="dartsRoundLimit">Runden</label><select id="dartsRoundLimit"><option value="7">7</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
               <label id="dartsAroundOption" class="game-checkbox" hidden><input type="checkbox" id="dartsAroundBull" checked>Zum Schluss Bull treffen</label>
@@ -95,12 +96,13 @@
               <div class="game-section-head"><div><span class="eyebrow">SPIEL / LIVE</span><h2 id="dartsCurrentTitle">Partie</h2><p id="dartsCurrentMeta" class="game-muted"></p></div><div class="game-status-tools"><span id="dartsMatchStatus" class="game-status">Laufend</span><button id="dartsNewGame" class="outline-btn small">+ Neues Spiel</button></div></div>
               <div id="dartsNoGame" class="game-no-match">Noch keine Dart-Partie gestartet. Wähle oben einen Spielmodus.</div>
               <div id="dartsCurrent" hidden>
-                <div id="dartsScoreboard" class="game-scoreboard"></div>
+                <div id="dartsLegSetBoard" class="game-leg-set-board" hidden></div><div id="dartsScoreboard" class="game-scoreboard"></div>
                 <div id="dartsCricketTable" class="game-cricket-table" hidden></div>
                 <div id="dartsLive" class="game-live">
-                  <h3 id="dartsTurnTitle">Wer ist am Zug?</h3><p id="dartsTurnInfo" class="game-muted"></p>
+                  <div class="game-live-heading"><h3 id="dartsTurnTitle">Wer ist am Zug?</h3><button id="dartsCallerToggle" type="button" class="outline-btn small" aria-pressed="false">🔈 Caller aus</button></div><p id="dartsTurnInfo" class="game-muted"></p><div id="dartsLiveMeta" class="game-live-meta"></div>
                   <div class="dart-input-title">Trefferart wählen</div>
                   <div id="dartsRingButtons" class="game-ring-buttons"><button data-ring="1" class="active">Single</button><button data-ring="2">Double</button><button data-ring="3">Triple</button></div>
+                  <div class="dart-input-title">Spezialwurf mitbuchen</div><div id="dartsSpecialBooking" class="game-special-booking"></div><p class="game-muted game-special-hint">Nur bei drei getroffenen Feldern 1, 5 und 20: Single/Double = Jürgen, alle Triple = perfekter Jürgen. Bei Rücknahme wird die zugehörige Buchung ebenfalls storniert.</p>
                   <div class="dart-input-title">Feld treffen</div><div id="dartsTargetButtons" class="game-target-buttons"></div>
                   <div class="game-draft"><div><div id="dartsTurnPreview" class="game-draft-darts"></div><strong id="dartsDraftScore">0 Punkte</strong></div><div class="game-draft-actions"><button id="dartsRemoveStaged" class="outline-btn small">↶ Dart entfernen</button><button id="dartsConfirmTurn" class="primary-btn">Aufnahme buchen</button></div></div>
                 </div>
@@ -111,7 +113,7 @@
               </div>
             </section>
           </div>
-          <section class="game-panel game-records"><div class="game-section-head"><div><span class="eyebrow">STATISTIK / VERLAUF</span><h2>Meine Dart-Statistik</h2></div></div><p class="game-muted">Diese Auswertung enthält nur Dart-Spiele, keine Jürgen-Punkte oder Papierlisteneinträge.</p><div class="game-filters"><label>Spielmodus<select id="dartsStatsMode"><option value="all">Alle Spielmodi</option><option value="x01">X01</option><option value="cricket">Cricket</option><option value="cricket-no">No-Score Cricket</option><option value="cricket-cut">Cut-Throat</option><option value="cricket-tactics">Tactics Cricket</option><option value="countup">Count-Up</option><option value="around">Around the Clock</option><option value="shanghai">Shanghai</option><option value="halfit">Half-It</option><option value="bobs27">Bob's 27</option><option value="finish170">170 Checkout</option></select></label><label>Zeitraum<select id="dartsStatsPeriod"><option value="all">Gesamter Zeitraum</option><option value="2026-11">November 2026</option><option value="2026-10">Oktober 2026</option><option value="2026-09">September 2026</option></select></label></div><div id="dartsAllStats" class="game-global-stats"></div><h3 class="game-subheading">Gespeicherte Partien</h3><div id="dartsMatchList" class="game-match-list"></div></section>
+          <section class="game-panel game-records"><div class="game-section-head"><div><span class="eyebrow">STATISTIK / VERLAUF</span><h2>Meine Dart-Statistik</h2></div></div><p class="game-muted">Diese Auswertung enthält nur Dart-Spiele, keine Jürgen-Punkte oder Papierlisteneinträge.</p><div class="game-filters"><label>Spielmodus<select id="dartsStatsMode"><option value="all">Alle Spielmodi</option><option value="x01">X01</option><option value="cricket">Cricket</option><option value="cricket-no">No-Score Cricket</option><option value="cricket-cut">Cut-Throat</option><option value="cricket-tactics">Tactics Cricket</option><option value="countup">Count-Up</option><option value="around">Around the Clock</option><option value="shanghai">Shanghai</option><option value="halfit">Half-It</option><option value="bobs27">Bob's 27</option><option value="finish170">170 Checkout</option></select></label><label>Zeitraum<select id="dartsStatsPeriod"><option value="all">Gesamter Zeitraum</option><option value="2026-11">November 2026</option><option value="2026-10">Oktober 2026</option><option value="2026-09">September 2026</option></select></label></div><div class="game-window-filter" aria-label="Statistikumfang"><button class="active" type="button" data-stats-window="10">Letzte 10</button><button type="button" data-stats-window="100">Letzte 100</button><button type="button" data-stats-window="1000">Letzte 1000</button><button type="button" data-stats-window="all">Alle</button></div><p id="dartsStatsWindowLabel" class="game-muted game-window-label">Letzte 10 Spiele je Spieler</p><div id="dartsAllStats" class="game-global-stats"></div><p class="game-muted">Der Checkout-Prozentsatz berücksichtigt nur erfasste Doppelversuche. Fehlwürfe ohne markiertes Doppelziel können nicht automatisch als Checkout-Versuch erkannt werden.</p><div id="dartsPlayerStats" class="game-player-pro-stats"></div><h3 class="game-subheading">Gespeicherte Partien</h3><div id="dartsMatchList" class="game-match-list"></div></section>
         </section>
         <section class="view" id="view-players" aria-label="Spieler und Statistik">
           <div class="page-heading"><div><span class="eyebrow">PERSONEN / AUSWERTUNG</span><h1>Spieler & Statistik<span class="accent-dot">.</span></h1><p>Punkte aus Würfen und Papierliste, Kronen, Gebühren und offene Beträge.</p></div><button id="addPlayer" class="primary-btn">+ Spieler hinzufügen</button></div>

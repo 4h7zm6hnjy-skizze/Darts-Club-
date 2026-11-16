@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v1.7.0 */
+/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v1.9.0 */
 (function(root,factory){
   const value=factory();
   if(typeof module==='object'&&module.exports)module.exports=value;
@@ -40,6 +40,7 @@ function matchOptions(mode,raw={}){
  const options={start:mode==='finish170'?170:inRange(r.start,210,1501)?r.start:501,
   doubleOut:mode==='finish170'?true:r.doubleOut!==false,
   bestOfLegs:mode==='x01'&&[1,3,5,7,9].includes(r.bestOfLegs)?r.bestOfLegs:1,
+  bestOfSets:mode==='x01'&&[1,3,5].includes(r.bestOfSets)?r.bestOfSets:1,
   rounds:inRange(r.rounds,1,100)?r.rounds:mode==='shanghai'?7:mode==='countup'?10:20,
   aroundBull:r.aroundBull===true};
  if(mode==='x01' && [170,210,301,401,501,601,701,801,901,1001,1501].includes(r.start))options.start=r.start;
@@ -58,7 +59,7 @@ function sanitizeMatch(raw,existingPlayerIds){
  if(!Array.isArray(raw.turns)||raw.turns.length>MAX_MATCH_TURNS)throw Error('Zu viele Dart-Würfe.');
  const turns=raw.turns.map(t=>{
   if(!t||!validId(t.playerId)||!raw.playerIds.includes(t.playerId)||!Array.isArray(t.darts)||t.darts.length<1||t.darts.length>3||!t.darts.every(normalDart))throw Error('Ungültiger Dart-Eintrag.');
-  return {playerId:t.playerId,darts:t.darts.map(d=>({n:d.n,m:d.m})),at:typeof t.at==='string'&&t.at.length<=50?t.at:''};
+  return {playerId:t.playerId,darts:t.darts.map(d=>({n:d.n,m:d.m})),at:typeof t.at==='string'&&t.at.length<=50?t.at:'',...(validId(t.juergenGroupId)?{juergenGroupId:t.juergenGroupId}:{})};
  });
  const m=createMatch({id:raw.id,mode:raw.mode,playerIds:raw.playerIds,options:raw.options,createdAt:raw.createdAt});m.turns=turns;m.finishedAt=typeof raw.finishedAt==='string'&&raw.finishedAt.length<=50?raw.finishedAt:null;
  // Reject impossible turn ownership or turns after completion.
@@ -67,13 +68,13 @@ function sanitizeMatch(raw,existingPlayerIds){
 }
 function makePlayer(id,m){return {id,remaining:isX01(m.mode)?m.options.start:0,score:m.mode==='halfit'?40:m.mode==='bobs27'?27:0,
  marks:Object.fromEntries(targetList(m.mode).map(t=>[t,0])),progress:1,visits:0,
- darts:0,pointsThrown:0,first9Score:0,first9Darts:0,
- highFinish:0,doublesAttempted:0,doublesHit:0,legs:0,rounds:0,
+ darts:0,pointsThrown:0,first9Score:0,first9Darts:0,first9LegDarts:0,
+ highFinish:0,doublesAttempted:0,doublesHit:0,legs:0,sets:0,totalLegs:0,rounds:0,
  scores100:0,scores140:0,scores180:0,busts:0,eliminated:false,finished:false,
  cricketMarks:0,checkoutAttempts:0,checkoutHits:0,positiveVisits:0};}
 function replay(match,{strict=false}={}){
  const p=Object.fromEntries(match.playerIds.map(id=>[id,makePlayer(id,match)]));
- const history=[],legHistory=[]; let idx=0,winnerId=null,leg=1,finished=false,invalid=false;
+ const history=[],legHistory=[],setHistory=[]; let idx=0,winnerId=null,leg=1,set=1,finished=false,invalid=false;
  const mode=match.mode,opt=match.options;
  const targetNums=targetList(mode);
  let current=match.playerIds[0];
@@ -89,7 +90,7 @@ function replay(match,{strict=false}={}){
   current=match.playerIds[idx];
  }
  function startNextLeg(){
-  for(const id of match.playerIds){p[id].remaining=opt.start;}
+  for(const id of match.playerIds){p[id].remaining=opt.start;p[id].first9LegDarts=0;}
   idx=(match.playerIds.indexOf(current)+1)%match.playerIds.length;
   current=match.playerIds[idx]; leg++;
  }
@@ -101,7 +102,7 @@ function replay(match,{strict=false}={}){
  for(let ti=0;ti<match.turns.length;ti++){
   const t=match.turns[ti];
   if(finished||t.playerId!==current){invalid=true;if(strict)break; else continue;}
-  const throwerId=current;const s=p[current];let sum=0,bust=false,checkout=false,win=false;
+  const throwerId=current;const turnLeg=leg,turnSet=set;const s=p[current];let sum=0,bust=false,checkout=false,win=false;
   const before={remaining:s.remaining,score:s.score,marks:{...s.marks},progress:s.progress};
   const target=mode==='shanghai'?Math.min(s.visits+1,opt.rounds):mode==='halfit'?HALFIT[Math.min(s.visits,6)]:mode==='bobs27'?Math.min(s.visits+1,21):s.progress;
   const playedDarts=[];
@@ -145,7 +146,7 @@ function replay(match,{strict=false}={}){
    }else if(mode==='bobs27'){
     if(d.n===target && d.m===2)hitTarget++;
    }
-   s.darts++; if(s.first9Darts<9 && isX01(mode)){s.first9Darts++;first9VisitScore+=val;}
+   s.darts++; if(s.first9LegDarts<9 && isX01(mode)){s.first9LegDarts++;s.first9Darts++;first9VisitScore+=val;}
    if(bust||win)break;
   }
   if(isX01(mode)){
@@ -153,9 +154,19 @@ function replay(match,{strict=false}={}){
    if(!bust){s.pointsThrown+=sum;}
    // The first-nine average uses scored points, so a bust scores zero for its visit.
    if(!bust)s.first9Score+=first9VisitScore;
-   if(win){s.legs++;legHistory.push({winnerId:current,leg,at:t.at,finish:before.remaining});
-    if(mode==='finish170'||s.legs>=Math.ceil(opt.bestOfLegs/2)){winnerId=current;finished=true;}
-    else {startNextLeg();}
+   if(win){
+    s.legs++; s.totalLegs++;
+    legHistory.push({winnerId:current,leg,set,at:t.at,finish:before.remaining});
+    if(mode==='finish170'){winnerId=current;finished=true;}
+    else if(s.legs>=Math.ceil(opt.bestOfLegs/2)){
+     s.sets++;setHistory.push({winnerId:current,set,at:t.at});
+     if(s.sets>=Math.ceil(opt.bestOfSets/2)){winnerId=current;finished=true;}
+     else {
+      for(const id of match.playerIds)p[id].legs=0;
+      set++;
+      startNextLeg();
+     }
+    } else startNextLeg();
    }
   }else if(isCricket(mode)){
    s.cricketMarks+=marksInVisit;
@@ -177,7 +188,7 @@ function replay(match,{strict=false}={}){
   }
   s.visits++;s.rounds++;if(sum>0)s.positiveVisits++;
   if(sum===180)s.scores180++; if(sum>=140)s.scores140++;if(sum>=100)s.scores100++;
-  history.push({id:ti+1,playerId:throwerId,at:t.at,round:leg,score:sum,target,darts:playedDarts,bust,win,remaining:win?0:s.remaining,points:s.score});
+  history.push({id:ti+1,playerId:throwerId,at:t.at,round:turnLeg,set:turnSet,score:sum,target,darts:playedDarts,bust,win,remaining:win?0:s.remaining,points:s.score});
   if(finished)break;
   if(mode==='countup'||mode==='shanghai') concludeTimedMode();
   if(mode==='halfit'&&match.playerIds.every(id=>p[id].visits>=HALFIT.length)){
@@ -195,7 +206,7 @@ function replay(match,{strict=false}={}){
   if(!finished && !(isX01(mode)&&win))nextPlayer();
  }
  const currentPlayerId=finished?null:current;
- return {players:p,currentPlayerId,winnerId,finished,history,legHistory,leg,invalid,turnCount:match.turns.length,mode};
+ return {players:p,currentPlayerId,winnerId,finished,history,legHistory,setHistory,leg,set,invalid,turnCount:match.turns.length,mode};
 }
 function nextTurn(match,darts){
  if(!Array.isArray(darts)||darts.length<1||darts.length>3||!darts.every(normalDart))throw Error('Bitte 1 bis 3 gültige Darts erfassen.');
@@ -215,7 +226,62 @@ function playerReport(match,id){
  return {id,mode:match.mode,visits:s.visits,darts:s.darts,totalPoints:s.pointsThrown,average3:Number(avg.toFixed(2)),first9:Number(first9.toFixed(2)),mpr:Number(mpr.toFixed(2)),
   checkoutRate:s.checkoutAttempts?Number((s.checkoutHits/s.checkoutAttempts*100).toFixed(1)):0,checkoutAttempts:s.checkoutAttempts,checkoutHits:s.checkoutHits,
   scores100:s.scores100,scores140:s.scores140,scores180:s.scores180,busts:s.busts,legs:s.legs,score:s.score,
-  highFinish:s.highFinish,winner:r.winnerId===id,finished:r.finished};
+  highFinish:s.highFinish,sets:s.sets,totalLegs:s.totalLegs,winner:r.winnerId===id,finished:r.finished};
 }
-return {GAME_MODES,TARGETS_CRICKET,TARGETS_TACTICS,HALFIT,createMatch,sanitizeMatch,replay,nextTurn,undoTurn,playerReport,matchOptions,isX01,isCricket,isPractice,dartValue,dartLabel,normalDart,targetList};
+function juergenType(darts){
+ if(!Array.isArray(darts)||darts.length!==3||!darts.every(normalDart))return null;
+ const targets=darts.map(d=>d.n).sort((a,b)=>a-b);
+ if(targets.join(',')!=='1,5,20')return null;
+ if(darts.every(d=>d.m===3))return 'perfect';
+ if(darts.every(d=>d.m===1||d.m===2))return 'juergen';
+ return null;
+}
+// Deterministic double-out checkout recommendation. Search for 1-3 legal darts.
+// Prioritize common tops/16/12/8 doubles and T20/T19 scoring; no speculative routes.
+const CHECKOUT_DOUBLES=[20,16,12,8,18,10,4,14,6,2,1,5,7,9,11,13,15,17,19,3,25].map(n=>({n,m:2}));
+const CHECKOUT_SETUP=[20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1].map(n=>({n,m:3}))
+ .concat([{n:25,m:2}],CHECKOUT_DOUBLES,[{n:25,m:1}],Array.from({length:20},(_,i)=>({n:20-i,m:1})));
+// Familiar optional routes are used only when the complete route fits in the available darts.
+// They are suggestions, not claims that a checkout is guaranteed.
+const PREFERRED_DOUBLE_CHECKOUTS={
+  25:[{n:9,m:1},{n:8,m:2}],
+  41:[{n:1,m:1},{n:20,m:2}],
+  61:[{n:15,m:3},{n:8,m:2}],
+  81:[{n:19,m:3},{n:12,m:2}],
+  91:[{n:17,m:3},{n:20,m:2}],
+  99:[{n:19,m:3},{n:10,m:1},{n:16,m:2}],
+  100:[{n:20,m:3},{n:20,m:2}],
+  121:[{n:20,m:3},{n:11,m:3},{n:14,m:2}],
+  132:[{n:20,m:3},{n:16,m:3},{n:12,m:2}],
+  161:[{n:20,m:3},{n:17,m:3},{n:25,m:2}],
+  164:[{n:20,m:3},{n:18,m:3},{n:25,m:2}],
+  167:[{n:20,m:3},{n:19,m:3},{n:25,m:2}],
+  170:[{n:20,m:3},{n:20,m:3},{n:25,m:2}]
+};
+function checkoutRoute(remaining,available=3,doubleOut=true){
+ if(!Number.isInteger(remaining)||remaining<1||available<1)return null;
+ const maxDarts=Math.min(3,available);
+ if(remaining>(doubleOut?170:180))return null;
+ if(doubleOut){const preferred=PREFERRED_DOUBLE_CHECKOUTS[remaining];
+  if(preferred && preferred.length<=maxDarts && preferred.reduce((a,d)=>a+dartValue(d),0)===remaining)return preferred.map(d=>({...d}));
+ }
+ const finish=doubleOut?CHECKOUT_DOUBLES:CHECKOUT_SETUP;
+ const routeSearch=(target,count)=>{
+  if(count===1){const last=finish.find(d=>dartValue(d)===target);return last?[last]:null;}
+  for(const d of CHECKOUT_SETUP){
+   const val=dartValue(d);
+   if(val>=target)continue;
+   const tail=routeSearch(target-val,count-1);
+   if(tail)return [d,...tail];
+  }
+  return null;
+ };
+ for(let count=1;count<=maxDarts;count++){
+  const route=routeSearch(remaining,count);
+  if(route&&(!doubleOut||route.at(-1).m===2))return route;
+ }
+ return null;
+}
+
+return {checkoutRoute,juergenType,GAME_MODES,TARGETS_CRICKET,TARGETS_TACTICS,HALFIT,createMatch,sanitizeMatch,replay,nextTurn,undoTurn,playerReport,matchOptions,isX01,isCricket,isPractice,dartValue,dartLabel,normalDart,targetList};
 });
