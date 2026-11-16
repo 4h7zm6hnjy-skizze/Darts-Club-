@@ -1,15 +1,17 @@
-# Jürgen Dartkasse 2.1.0 – Dartabend LIVE (LAN-Beta)
+# Jürgen Dartkasse 2.2.0 – Vollbild-Spielmodus
 
-**iPhone + Android ohne Internetdienst:** WebRTC DataChannel über ein gemeinsames WLAN. Ein lokaler Router ohne Internet ist möglich, sofern die Geräte miteinander kommunizieren dürfen. Auf jedem Handy die Web-App vorab einmal online in Safari/Chrome öffnen, damit sie offline gespeichert wird.
+**Änderung gegenüber v2.1.0:** Während eines Dartspiels öffnet sich automatisch eine feste Vollbild-Spielansicht. Keine Navigation und kein Scrollen durch die übrige App beim Werfen. Schließen bringt dich zur normalen App zurück. Der bestehende Spielmodus, LIVE-LAN und die Datenstruktur bleiben unverändert.
 
-1. Bestehendes JSON-Backup auf dem Haupthandy erstellen.
-2. Unter **Spielen** eine Partie starten; unter **Live** auf dem Haupthandy eine Sitzung starten.
-3. **Weiteres Handy verbinden** erzeugt einen QR-Code. Der Mitspieler scannt ihn mit der normalen Handykamera und öffnet den Link (bzw. fügt den Code unter Live ein).
-4. Auf dem Mitspielerhandy **Verbindung vorbereiten** und dessen Antwort-QR öffnen.
-5. Der Spielleiter scannt den Antwortcode mit der normalen Handykamera, kopiert ihn und fügt ihn in der ursprünglichen App unter **Antwort übernehmen** ein.
-6. Der Mitspieler fragt sein Profil an. Der Spielleiter bestätigt es. Danach erscheinen Punkte und aktive Partie live.
-7. Jeder Spieler kann seinen Wurf erfassen. **Nur das Haupthandy speichert Partien, Jürgen-Punkte und Geldforderungen**. Keine Übertragung des Kassenbuchs an Teilnehmer.
+- Neue Spiele öffnen automatisch die Vollbildansicht.
+- Gespeicherte Partien öffnen beim Antippen ebenfalls die Vollbildansicht.
+- Die Schaltfläche „⛶ Vollbild spielen“ öffnet sie erneut.
+- „✕ Schließen“ führt zurück zur App, ohne die Partie zu beenden.
+- „↶ Rückgängig“ nimmt die letzte abgeschlossene Aufnahme nach Bestätigung zurück.
+- Spielstände, Leg/Set, 3 Dart-Slots, Checkout, Trefferwahl und Jürgen-Schalter bleiben sichtbar.
+- Das Spielbrett ist für Hoch- und Querformat als feste Ansicht angeordnet; keine Hintergrund-Scrollfunktion.
+- Statistiken, Spielverlauf und Cricket-Detailtabelle sind während der Vollbildansicht ausgeblendet, bleiben nach dem Schließen erreichbar.
+- Keine Änderung der lokalen Speicherstruktur, der gespeicherten Spieler-/Kassendaten oder des LIVE-Verbindungsprotokolls.
 
-**Wichtig:** Keine Garantie für jedes WLAN. Einige Hotspots/Router blockieren direkte Verbindungen (AP-Isolation, mDNS). Reine QR-Kopplung kann auf iOS den Wechsel zwischen Kamera/Safari und der PWA erfordern. Scannen der QR-Codes über die normale Kamera statt der nicht allgemein verfügbaren Safari-BarcodeDetector-API.
+**Installation:** Auf dem Haupthandy zuerst JSON-Backup erstellen. ZIP entpacken; die 7 Dateien im Repository-Root auf GitHub hochladen. Keine anderen Dateien oder Verzeichnisse löschen. Danach App-Version 2.2.0 prüfen. Vor dem echten Dartabend auf iPhone und Android testen.
 
-Das Paket enthält ausschließlich die geänderten Programmdateien, keine persönlichen Daten. Die App-Logos aus v2.0.0 bleiben vorhanden. Offline-WebRTC zwischen verschiedenen tatsächlichen iPhones und Android-Geräten ist **nicht** durch die automatisierten Tests abgedeckt; dies ist ein zu testender Beta-Modus.
+**Grenze:** Der Browser selbst (Safari/Chrome) kann seine Systemleisten einblenden. Die App kann das Betriebssystem nicht in einen nativen Kioskmodus versetzen. Der Vollbildmodus unterbindet das Scrollen innerhalb der App, aber keine Systemgesten.

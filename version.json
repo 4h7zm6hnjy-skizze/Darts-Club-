@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "released": "2026-11-17",
-  "notes": "Dartabend LIVE Beta: plattformübergreifender Offline-LAN-Modus mit direkter WebRTC-Verbindung zwischen iPhone und Android. QR-/Kopiercode-Kopplung, Spielleiterfreigabe, zentralen Spielständen und Dart-Eingabe."
+  "notes": "Vollbild-Spielmodus: Aktuelle Dart-Partie in einem festen, scrollfreien Spielfenster; große Scores, kompaktes Eingabefeld und Schließen/Zurücknehmen. Neue Partien starten im Vollbild."
 }

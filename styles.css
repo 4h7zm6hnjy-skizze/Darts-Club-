@@ -842,3 +842,117 @@ main{padding-top:28px}
 .live-juergen-label{display:flex;align-items:center;gap:8px;line-height:1.4;font-size:13px;color:#e9d2a5;margin:14px 0}.live-juergen-label input{width:20px;height:20px;min-height:auto}
 #liveGuestPad .dart-target{min-height:60px;font-size:22px}
 @media(max-width:600px){.live-panel{padding:14px}.live-scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.live-role-switch button{font-size:12px}}
+
+
+/* v2.2.0 — Vollbild-Spielmodus: Body und Spielbereich bleiben beim Werfen unbeweglich. */
+html.dart-focus-on,body.dart-focus-on{overflow:hidden!important;height:100%!important;overscroll-behavior:none!important}
+body.dart-focus-on .game-current.focus-active{
+ position:fixed!important;inset:0!important;z-index:9999!important;
+ width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;
+ margin:0!important;border:0!important;border-radius:0!important;
+ padding:max(7px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(7px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;
+ display:flex!important;flex-direction:column!important;gap:0!important;
+ background:#081725!important;overflow:hidden!important;overscroll-behavior:none!important;
+ touch-action:manipulation;
+}
+.game-current.focus-active .game-section-head{flex:0 0 auto;min-height:30px;align-items:center;gap:7px;margin:0 0 5px!important;flex-wrap:nowrap}
+.game-current.focus-active .game-section-head>div:first-child{min-width:0;flex:1}
+.game-current.focus-active .game-section-head h2{font-size:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
+.game-current.focus-active .game-section-head .eyebrow,.game-current.focus-active #dartsCurrentMeta,.game-current.focus-active #dartsMatchStatus,.game-current.focus-active #dartsNewGame{display:none!important}
+.game-current.focus-active .game-status-tools{width:auto;gap:5px;flex:none}
+.game-current.focus-active #dartsFocusUndo,.game-current.focus-active #dartsFocusExit{font-size:12px;padding:6px 9px;min-height:29px;white-space:nowrap}
+.game-current.focus-active #dartsFocusExit{border-color:#b47b7b;background:#3c2731;color:#ffe1e1}
+.game-current.focus-active #dartsCurrent:not([hidden]){display:flex!important;flex:1!important;flex-direction:column!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}
+.game-current.focus-active #dartsLegSetBoard{flex:0 0 auto;margin:0 0 4px;padding:3px 8px;border-radius:9px}
+.game-current.focus-active .leg-set-title{font-size:10px;margin:0;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-current.focus-active .leg-set-row{display:none!important}
+.game-current.focus-active #dartsScoreboard{
+ flex:0 0 auto;display:grid!important;grid-template-columns:repeat(var(--focus-cols,2),minmax(0,1fr))!important;
+ gap:5px!important;margin:0 0 5px!important;padding:0!important;
+ width:100%!important;overflow:hidden!important;scroll-snap-type:none!important;
+}
+.game-current.focus-active .game-score-card{min-width:0!important;min-height:0!important;flex:none!important;width:100%!important;padding:5px 6px!important;border-radius:11px!important;scroll-snap-align:none!important;box-shadow:none!important}
+.game-current.focus-active .game-score-top{display:flex;flex-direction:column-reverse;gap:2px}
+.game-current.focus-active .game-score-name{min-width:0;gap:3px}
+.game-current.focus-active .game-score-name .game-mini-avatar{display:none!important}
+.game-current.focus-active .game-score-name strong{font-size:clamp(10px,1.65vw,13px);line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.game-current.focus-active .game-score-name small{display:none!important}
+.game-current.focus-active .game-score-badge{font-size:9px;padding:0;border-radius:0;background:none;line-height:1.1;justify-content:flex-start}
+.game-current.focus-active .game-score-number{font-size:clamp(29px,7.2vw,49px);line-height:1;margin:4px 0 3px;text-align:center}
+.game-current.focus-active .game-score-caption{font-size:9px;gap:3px;white-space:nowrap;overflow:hidden}
+.game-current.focus-active .game-score-caption span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-current.focus-active .game-score-caption b{font-size:9px;padding:2px 4px;letter-spacing:0}
+.game-current.focus-active #dartsCricketTable,.game-current.focus-active #dartsMatchStats,.game-current.focus-active #dartsTurnHistory,.game-current.focus-active .game-subsection,.game-current.focus-active .game-toolbar-bottom{display:none!important}
+.game-current.focus-active #dartsLive:not([hidden]){display:flex!important;flex:1!important;flex-direction:column!important;min-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important}
+.game-current.focus-active .game-live-heading{display:none!important}
+.game-current.focus-active .game-shot-strip{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:5px;flex:0 0 auto;margin:0 0 5px}
+.game-current.focus-active .game-dart-slots{gap:4px}
+.game-current.focus-active .stage-slot{min-height:39px;padding:2px;border-radius:8px;gap:0}
+.game-current.focus-active .stage-slot small{font-size:8px}
+.game-current.focus-active .stage-slot strong{font-size:17px}
+.game-current.focus-active .game-shot-total{padding:2px;border-radius:8px;gap:1px}
+.game-current.focus-active .game-shot-total small{font-size:9px;letter-spacing:0}
+.game-current.focus-active .game-shot-total strong{font-size:17px}
+.game-current.focus-active .game-live-meta{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;flex:0 0 auto;gap:5px;margin:0 0 5px!important}
+.game-current.focus-active .live-meta-card{padding:4px 6px;border-radius:8px;min-width:0;max-height:45px;overflow:hidden}
+.game-current.focus-active .live-meta-card small{font-size:8px;line-height:1.2;margin:0;color:#b2d8dc;letter-spacing:0}
+.game-current.focus-active .live-meta-card strong{display:block;font-size:12px;line-height:1.25;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.game-current.focus-active .game-live-meta .live-meta-card:nth-child(n+3){display:none!important}
+.game-current.focus-active .game-input-board{flex:1!important;min-height:0!important;display:flex!important;flex-direction:column!important;gap:4px!important;overflow:hidden!important;margin:0!important;padding:5px!important;border-radius:12px}
+.game-current.focus-active .game-input-board .dart-input-title,.game-current.focus-active .game-special-hint{display:none!important}
+.game-current.focus-active .game-ring-buttons{flex:0 0 auto;gap:5px;margin:0!important}
+.game-current.focus-active .game-ring-buttons button{min-height:0!important;height:clamp(32px,5.1dvh,43px)!important;padding:0!important;border-radius:8px;font-size:clamp(12px,2.6dvh,17px)}
+.game-current.focus-active .game-target-buttons{flex:1!important;min-height:0!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:5px!important;overflow:hidden!important}
+.game-current.focus-active .dart-target{width:100%!important;height:100%!important;min-height:0!important;min-width:0!important;padding:0!important;border-radius:9px!important;font-size:clamp(16px,3dvh,29px)!important;touch-action:manipulation}
+.game-current.focus-active .game-special-booking{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;flex:0 0 auto;gap:5px!important;margin:0!important}
+.game-current.focus-active .special-toggle{min-height:0!important;height:clamp(27px,4.5dvh,40px)!important;padding:2px 3px!important;border-radius:8px!important;font-size:clamp(9px,1.6dvh,12px)!important;line-height:1.05}
+.game-current.focus-active .game-action-row{display:grid!important;grid-template-columns:1fr 1.22fr!important;flex:0 0 auto;gap:5px!important;margin:0!important}
+.game-current.focus-active .game-action-row button{height:clamp(36px,6dvh,50px)!important;min-height:0!important;padding:3px 6px!important;border-radius:9px!important;font-size:clamp(11px,1.9dvh,16px)!important}
+.game-current.focus-active .game-action-row .game-next-btn{font-weight:900}
+.game-current.focus-active #dartsWinner:not([hidden]){display:block!important;margin:auto 0;max-height:100%;overflow:hidden}
+@media(max-width:550px){
+ .game-current.focus-active .game-score-name strong{font-size:10px}
+ .game-current.focus-active .game-score-number{font-size:clamp(22px,6.3vw,39px)}
+ .game-current.focus-active .game-score-caption{font-size:8px}
+ .game-current.focus-active .game-score-caption b{font-size:8px}
+ .game-current.focus-active .game-section-head h2{font-size:14px}
+}
+@media(max-height:570px) and (orientation:landscape){
+ .game-current.focus-active #dartsCurrent:not([hidden]){display:grid!important;grid-template-columns:minmax(0,29%) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:7px;row-gap:3px}
+ .game-current.focus-active #dartsLegSetBoard{grid-column:1/-1;grid-row:1;margin:0;padding:1px 6px}
+ .game-current.focus-active #dartsScoreboard{grid-column:1;grid-row:2;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-content:start;margin:0!important;gap:3px!important}
+ .game-current.focus-active .game-score-card{padding:3px!important;border-radius:6px!important}
+ .game-current.focus-active .game-score-number{font-size:clamp(20px,4.8vh,31px);margin:2px 0}
+ .game-current.focus-active .game-score-caption{font-size:8px}
+ .game-current.focus-active #dartsLive:not([hidden]){grid-column:2;grid-row:2;min-height:0}
+ .game-current.focus-active .game-shot-strip{grid-template-columns:1fr 100px;margin-bottom:3px}
+ .game-current.focus-active .stage-slot{min-height:26px;padding:0}
+ .game-current.focus-active .stage-slot small{font-size:7px}
+ .game-current.focus-active .stage-slot strong{font-size:13px}
+ .game-current.focus-active .game-shot-total small{font-size:8px}
+ .game-current.focus-active .game-shot-total strong{font-size:13px}
+ .game-current.focus-active .game-live-meta{display:none!important}
+ .game-current.focus-active .game-input-board{padding:3px!important;gap:3px!important}
+ .game-current.focus-active .game-ring-buttons button{height:clamp(25px,7dvh,34px)!important}
+ .game-current.focus-active .game-target-buttons{gap:3px!important}
+ .game-current.focus-active .dart-target{font-size:clamp(15px,4dvh,22px)!important;border-radius:5px!important}
+ .game-current.focus-active .special-toggle{height:clamp(23px,6dvh,30px)!important;font-size:10px!important}
+ .game-current.focus-active .game-action-row button{height:clamp(26px,7dvh,35px)!important;font-size:11px!important}
+ .game-current.focus-active #dartsWinner:not([hidden]){grid-column:2;grid-row:2}
+}
+@media(max-height:630px) and (orientation:portrait){
+ .game-current.focus-active #dartsLegSetBoard{display:none!important}
+ .game-current.focus-active .game-score-card{padding:3px 5px!important}
+ .game-current.focus-active .game-score-number{font-size:clamp(21px,6vw,32px);margin:2px 0}
+ .game-current.focus-active .stage-slot{min-height:28px}
+ .game-current.focus-active .game-shot-total small{display:none}
+ .game-current.focus-active .live-meta-card{padding:2px 4px}
+ .game-current.focus-active .game-shot-strip{margin-bottom:3px}
+}
+
+/* Navigation der normalen App darf die feste Spielschaltfläche nicht überdecken. */
+body.dart-focus-on .bottom-nav,body.dart-focus-on .sidebar,body.dart-focus-on .dart-brand-showcase,body.dart-focus-on .topbar,body.dart-focus-on #updateBanner{display:none!important}
+.game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(1),
+.game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(3),
+.game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(n+5){display:none!important}
+.game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(4){display:block!important}

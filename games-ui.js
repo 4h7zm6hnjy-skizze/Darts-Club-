@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v2.0.0 */
+/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v2.2.0 */
 (function(){
 'use strict';
 const E=window.DartsGameEngine;
@@ -13,6 +13,7 @@ let gameMenuOpen=true;
 let specialBooking='none';
 let callerEnabled=false;
 let statsWindow='10';
+let focusActive=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('de-DE',{maximumFractionDigits:2}).format(n||0);
 const getState=()=>api.getState();
@@ -137,7 +138,7 @@ function renderScores(match,r){
 }
 
 function renderLiveMeta(match,r){
- const box=$('dartsLiveMeta'); if(!box||r.finished)return;
+ const box=$('dartsLiveMeta'); if(!box||r.finished)return; box.classList.toggle('x01-live',E.isX01(match.mode));
  const id=r.currentPlayerId, p=r.players[id], report=E.playerReport(match,id); const avg=turnAverageLabel(match,r);
  const draft=E.isX01(match.mode)?draftStatus(match,p):null;
  const stagedPoints=draft?draft.points:staged.reduce((a,d)=>a+E.dartValue(d),0);
@@ -205,10 +206,38 @@ function renderGameHistory(match,r){
   return `<div class="match-stat-player"><h4>${esc(playerName(id))}</h4><div class="match-stat-grid">${lines.map(([name,value])=>`<div><small>${esc(name)}</small><strong>${esc(value)}</strong></div>`).join('')}</div></div>`;
  }).join('');
 }
+// Vollbild ist ausschließlich ein Anzeigezustand; er wird nicht in die Dart-/Kassendaten geschrieben.
+function syncFocusUI(){
+ const panel=document.querySelector('#view-games .game-current');
+ if(!panel)return;
+ const game=currentGame();
+ const open=$('dartsFocusEnter'), close=$('dartsFocusExit'), undo=$('dartsFocusUndo');
+ if(!game && focusActive)focusActive=false;
+ panel.classList.toggle('focus-active',focusActive);
+ document.body.classList.toggle('dart-focus-on',focusActive);
+ document.documentElement.classList.toggle('dart-focus-on',focusActive);
+ if(open)open.hidden=!game||focusActive;
+ if(close)close.hidden=!focusActive;
+ if(undo){undo.hidden=!focusActive; undo.disabled=!game?.turns?.length;}
+ const board=$('dartsScoreboard');
+ if(board&&game)board.style.setProperty('--focus-cols',String(Math.min(4,Math.max(1,game.playerIds.length))));
+}
+function openFocus(){
+ if(!currentGame())return;
+ focusActive=true;
+ syncFocusUI();
+ $('dartsFocusExit')?.focus({preventScroll:true});
+}
+function closeFocus(){
+ if(!focusActive)return;
+ focusActive=false;
+ syncFocusUI();
+ $('dartsFocusEnter')?.focus({preventScroll:true});
+}
 function renderCurrent(){
  const game=currentGame(); $('dartsCurrent').hidden=!game; $('dartsNoGame').hidden=!!game; if(!game)return;
  const r=E.replay(game),finished=r.finished;
- $('dartsCurrentTitle').textContent=modeName(game.mode);
+ $('dartsCurrentTitle').textContent=E.isX01(game.mode)?`X01 · ${game.options.start} · Leg ${r.leg}`:modeName(game.mode);
  $('dartsCurrentMeta').textContent=`${gameDate(game)} · ${game.turns.length} Aufnahmen${game.mode==='x01'?' · Best of '+(game.options.bestOfSets||1)+' Sets, '+game.options.bestOfLegs+' Legs':''}`;
  $('dartsMatchStatus').textContent=finished?'Beendet':'Laufend';
  const legBoard=$('dartsLegSetBoard');
@@ -282,7 +311,7 @@ function renderStats(){
   return `<article class="player-pro-card"><div class="player-pro-head">${avatar(player)}<div><h4>${esc(player.name)}</h4><small>${a.games} Spiele · ${a.wins} Siege · ${a.legs} gewonnene Legs</small></div></div><div class="game-trend-panel"><div class="game-trend-heading"><strong>PPR-Verlauf nach abgeschlossenen Legs</strong><span>${series.length} Legs · ${esc(statsWindow==='all'?'alle Spiele':'letzte '+statsWindow+' Spiele')}</span></div>${legTrendSvg(series)}${averageDelta(a,prior)}</div><div class="player-pro-table"><div class="player-pro-row head"><span>Statistik</span><span>Ø</span><span>Best</span></div>${rows.map(([n,v,b])=>`<div class="player-pro-row"><span>${esc(n)}</span><strong>${esc(String(v))}</strong><strong>${esc(String(b))}</strong></div>`).join('')}</div><div class="player-hit-grid"><div><small>60+</small><strong>${a.score60}</strong></div><div><small>100+</small><strong>${a.score100}</strong></div><div><small>140+</small><strong>${a.score140}</strong></div><div><small>180</small><strong>${a.score180}</strong></div></div><div class="game-muted game-stat-footnote">Alle Werte stammen aus gespeicherten Spielen. Keine hochgerechneten Ergebnisse.</div></article>`;
  }).join(''):'<div class="game-muted">Noch keine Spielerstatistiken in der Auswahl.</div>';
 }
-function render(){if(!api||!$('view-games'))return;renderSetup();renderCurrent();renderStats();}
+function render(){if(!api||!$('view-games'))return;renderSetup();renderCurrent();renderStats();syncFocusUI();}
 function togglePlayer(id){ if(selectedPlayers.includes(id))selectedPlayers=selectedPlayers.filter(x=>x!==id); else if(selectedPlayers.length>=6){toast('Maximal sechs Spieler pro Partie.');return;} else selectedPlayers.push(id); refresh(); }
 function newGame(){
  const mode=$('dartsMode').value;
@@ -291,7 +320,7 @@ function newGame(){
  if(mode==='cricket-cut'&&selectedPlayers.length<2){toast('Cut-Throat braucht mindestens zwei Spieler.');return;}
  const opts={start:Number($('dartsStart').value),doubleOut:$('dartsDoubleOut').checked,bestOfLegs:Number($('dartsBestOf').value),bestOfSets:Number($('dartsBestOfSets').value),rounds:Number($('dartsRoundLimit').value),aroundBull:$('dartsAroundBull').checked};
  const current=currentGame(); if(current&&!E.replay(current).finished && !confirm('Aktuelle Partie verlassen und eine neue starten? Die alte Partie bleibt gespeichert.'))return;
- try{ const m=E.createMatch({mode,playerIds:selectedPlayers,options:opts}); getState().dartMatches.push(m); getState().activeDartMatchId=m.id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); toast(`${modeName(mode)} gestartet.`); $('dartsCurrent').scrollIntoView({block:'start',behavior:'smooth'});}catch(err){toast(err.message);} }
+ try{ const m=E.createMatch({mode,playerIds:selectedPlayers,options:opts}); getState().dartMatches.push(m); getState().activeDartMatchId=m.id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); openFocus(); toast(`${modeName(mode)} gestartet.`);}catch(err){toast(err.message);} }
 function recordTurn(){
  const game=currentGame();if(!game||!staged.length)return;
  const throwerId=E.replay(game).currentPlayerId;
@@ -339,13 +368,16 @@ function deleteGame(){
  getState().dartMatches=getState().dartMatches.filter(g=>g.id!==game.id);
  getState().activeDartMatchId=getState().dartMatches.at(-1)?.id||null;
  for(const id of linked)api.voidDartJuergenGroup?.(id);
- staged=[];specialBooking='none';api.persist();render();toast('Partie gelöscht.');
+ staged=[];specialBooking='none';closeFocus();api.persist();render();toast('Partie gelöscht.');
 }
 function selectMode(id){$('dartsMode').value=id;renderSetup();}
-function loadGame(id){ if(!gameById(id))return; getState().activeDartMatchId=id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); $('dartsCurrent').scrollIntoView({block:'start',behavior:'smooth'}); }
+function loadGame(id){ if(!gameById(id))return; getState().activeDartMatchId=id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); openFocus(); }
 function init(obj){ api=obj; const view=$('view-games');
  view.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
+  if(b.id==='dartsFocusEnter'){openFocus();return;}
+  if(b.id==='dartsFocusExit'){closeFocus();return;}
+  if(b.id==='dartsFocusUndo'){undoTurn();return;}
   if(b.dataset.mode){selectMode(b.dataset.mode);return;}
   if(b.dataset.gamePlayer){togglePlayer(b.dataset.gamePlayer);return;}
   if(b.dataset.ring){ring=Number(b.dataset.ring);renderDartPadIf();return;}
@@ -365,8 +397,9 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.id==='dartsUndoTurn'){undoTurn();return;}
   if(b.id==='dartsDeleteGame'){deleteGame();return;}
   if(b.id==='dartsNewGame'){gameMenuOpen=!gameMenuOpen;renderSetup();return;}
-  if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;selectedPlayers=[...g.playerIds];$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
+  if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;closeFocus();selectedPlayers=[...g.playerIds];$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
  });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
  $('dartsMode').addEventListener('change',renderSetup); $('dartsStatsMode').addEventListener('change',e=>{statsMode=e.target.value;renderStats();}); $('dartsStatsPeriod').addEventListener('change',e=>{statsPeriod=e.target.value;renderStats();}); render(); }
 function renderDartPadIf(){ const g=currentGame(); if(g)renderDartPad(g,E.replay(g)); }
 window.DartsGameUI={init,render};

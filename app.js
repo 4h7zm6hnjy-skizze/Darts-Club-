@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v2.1.0: lokaler Dartabend mit Turnieransicht */
+/* JÜRGEN DARTKASSE — offline-first app, v2.2.0: lokaler Dartabend mit Turnieransicht */
 'use strict';
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
