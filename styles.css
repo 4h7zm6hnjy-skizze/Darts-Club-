@@ -398,3 +398,72 @@ body::before{
     font-size:11px;
   }
 }
+
+/* 1.5.3 – iOS Home Screen web app: logo clearly visible outside the status bar */
+.dart-brand-showcase{display:none}
+@media(max-width:920px){
+  .topbar{
+    position:relative;
+    top:auto;
+    z-index:10;
+    background:#081424 !important;
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+    box-shadow:0 1px 0 rgba(241,195,89,.14);
+    min-height:74px;
+    height:74px;
+    padding:10px 18px;
+  }
+  .mobile-brand{display:flex;min-width:0}
+  .mobile-brand .brand-mark{width:46px;height:46px;flex-basis:46px}
+  .mobile-brand strong{font-size:20px}
+  .mobile-brand small{font-size:9px}
+  .dart-brand-showcase{
+    display:flex;
+    align-items:center;
+    gap:17px;
+    padding:16px;
+    margin:-11px 0 23px;
+    min-height:123px;
+    position:sticky;
+    top:78px;
+    z-index:35;
+    background:#0c2231;
+    border:1px solid rgba(239,195,91,.45);
+    border-radius:20px;
+    box-shadow:0 14px 34px rgba(0,0,0,.34);
+    isolation:isolate;
+  }
+  .dart-brand-showcase::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(circle at 8% 12%,rgba(21,213,194,.16),transparent 42%);
+    pointer-events:none;z-index:-1;
+  }
+  .dart-brand-showcase img{
+    width:88px;height:88px;flex:0 0 88px;
+    object-fit:cover;border-radius:18px;
+    border:2px solid rgba(244,197,91,.54);
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .dart-brand-showcase-copy{min-width:0;display:flex;flex-direction:column;gap:5px}
+  .dart-brand-showcase-copy strong{
+    font-size:clamp(23px,5.5vw,34px);line-height:1;
+    font-weight:900;letter-spacing:.12em;color:#fff5cd;
+  }
+  .dart-brand-showcase-copy span{font-size:14px;font-weight:850;letter-spacing:.27em;color:#66e4d5}
+  .dart-brand-showcase-copy small{font-size:11px;color:#d6c596;white-space:normal}
+}
+@media(max-width:600px){
+  .topbar{height:74px;min-height:74px;padding:10px 15px}
+  .dart-brand-showcase{top:78px;margin:-5px 0 19px;min-height:108px;padding:12px;gap:13px}
+  .dart-brand-showcase img{width:76px;height:76px;flex-basis:76px;border-radius:16px}
+  .dart-brand-showcase-copy strong{font-size:25px}
+  .dart-brand-showcase-copy span{font-size:11px;letter-spacing:.22em}
+  .dart-brand-showcase-copy small{font-size:10px}
+}
+/* On older installed iPhone PWAs the status-bar blur may extend down from
+   the top. Keep the persistent brand panel outside the frosted system strip. */
+@media(max-width:920px) and (display-mode:standalone){
+  .topbar{padding-top:max(8px,env(safe-area-inset-top));height:auto;min-height:74px}
+  .dart-brand-showcase{top:max(88px,env(safe-area-inset-top));}
+}
