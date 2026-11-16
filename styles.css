@@ -278,3 +278,35 @@ body::before{
   .juergen-action b{font-size:20px}
   .juergen-action strong{font-size:26px}
 }
+
+
+/* v1.5.0: independent historical paper scorecard */
+#paperHistoryPanel{margin-top:22px}
+.paper-table-container{margin-top:14px}
+.paper-scroll{width:100%;overflow:auto;border:1px solid rgba(130,162,194,.20);border-radius:14px}
+.paper-table{width:100%;border-collapse:collapse;min-width:530px;font-variant-numeric:tabular-nums}
+.paper-table th,.paper-table td{padding:11px 12px;text-align:center;border-bottom:1px solid rgba(130,162,194,.14);font-size:13px}
+.paper-table thead th{background:rgba(9,39,51,.96);color:#7eeddc;position:sticky;top:0;z-index:1}
+.paper-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.paper-table tbody th{color:#f4e7bf;font-weight:800;white-space:nowrap}
+.paper-table tbody td{color:#e1edf6}
+.paper-table .paper-absent{color:#ffc26b;font-weight:750;font-size:11px}
+.paper-table .paper-empty{color:#91a6b9;font-style:italic}
+.paper-table td small{display:block;font-size:10px;color:#ffc26b;margin-top:3px}
+
+
+/* v1.5.0 – Lokale Spielerprofil-Fotos (Kamera/Mediathek) */
+.avatar.has-photo,.player-photo-preview.has-photo{padding:0;overflow:hidden;background:#0d2438;border:1px solid rgba(244,197,91,.35)}
+.avatar img,.player-photo-preview img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.avatar.has-photo{border-radius:50%}
+.player-photo-edit{margin:18px 0 4px;display:flex;gap:16px;align-items:center;padding:14px;border-radius:16px;border:1px solid rgba(120,164,192,.21);background:linear-gradient(125deg,rgba(14,43,55,.8),rgba(10,22,40,.86))}
+.player-photo-preview{width:90px;height:90px;flex:0 0 90px;display:grid;place-items:center;border:2px solid rgba(244,197,91,.35);border-radius:18px;background:linear-gradient(145deg,#184b51,#0d253d);color:#dfffea;font-size:38px;font-weight:850;overflow:hidden}
+.player-photo-controls{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;flex:1}
+.player-photo-controls .field-label{margin:0;font-size:13px}
+.player-photo-controls button{white-space:normal;text-align:center}
+.player-photo-controls small{font-size:11px;color:#9dbbca;line-height:1.4}
+.player-photo-controls .danger-text{color:#ffb0a9}
+.player-chip .avatar{width:28px;height:28px;flex:0 0 28px}
+.stat-header .avatar{width:46px;height:46px;flex:0 0 46px}
+.session-person .avatar{width:32px;height:32px;flex:0 0 32px}
+@media(max-width:430px){.player-photo-edit{gap:10px;padding:12px}.player-photo-preview{width:76px;height:76px;flex-basis:76px}.player-photo-controls button{font-size:12px;padding:9px 11px}.inline-actions{gap:3px}.square-button{padding:7px}}

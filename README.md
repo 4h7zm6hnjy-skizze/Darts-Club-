@@ -1,32 +1,33 @@
-# Jürgen Dartkasse – Design-Update 1.4.0
+# Jürgen Dartkasse – Update 1.5.0
 
-Dieses Update modernisiert das gesamte Erscheinungsbild der Web-App und ersetzt das App-Logo durch ein neues Dart-Motiv.
+Dieses Paket ergänzt das vorhandene GitHub-Pages-Projekt `4h7zm6hnjy-skizze/Darts-Club-`. **Nur Programmdateien, keine persönlichen Spielerdaten**, gehören auf GitHub.
 
-## Neu in 1.4.0
-- neues **Dart-App-Logo** mit Dartscheibe, drei Darts und Champion-Krone
-- stärkerer **Dart-Look** in der gesamten App
-- überarbeitete **Farben, Karten, Schaltflächen und Navigation**
-- gleiche Funktionen wie zuvor, aber optisch deutlich hochwertiger
-- bestehende lokale Daten bleiben erhalten
+## Neuer privater Import direkt in der App
+- Unter **Mehr → Backup & Export → Papierliste 2026 importieren** lässt sich die separate private JSON-Datei aus der Dateien-App auswählen.
+- Der Import übernimmt nur sicher dokumentierte Punkte und die exakt angegebenen Spieltage.
+- `0` bedeutet anwesend, null Treffer; `%` bedeutet abwesend. Leere Papierfelder bleiben unbestimmt.
+- Es werden **keine erfundenen Einzelwürfe, Kronen oder Zahlungen** angelegt. Der Kassenstand bleibt unverändert.
+- Vorhandene Spieler werden nach Namen wiederverwendet, neue Spieler nur ergänzend hinzugefügt.
+- Doppelte Importe werden ausgelassen. Ein bestehender Würfereintrag am selben Tag wird nicht mit der Papierzeile doppelt gezählt.
 
-## Enthaltene Dateien
-- index.html
-- app.js
-- styles.css
-- sw.js
-- version.json
-- manifest.webmanifest
-- icon-192.png
-- icon-512.png
-- apple-touch-icon.png
-- favicon-64.png
+## Neue Profilfotos für jeden Spieler
+- Unter **Spieler → Kamera-Symbol / Spieler bearbeiten** kann über **Kamera oder Mediathek** ein Bild ausgewählt werden.
+- Die Fotoauswahl erfolgt über den Systemdialog des iPhones (Kamera/Mediathek, sofern verfügbar).
+- Vor dem Speichern wird das Bild **lokal** auf 256 × 256 Pixel zugeschnitten und als JPEG komprimiert.
+- Foto erscheint bei Spieler-Auswahl, Spielerstatistik und Spieltagsübersicht.
+- Foto lässt sich ändern oder entfernen. Die lokale JSON-Datensicherung enthält auch die Profilbilder.
 
 ## Installation
-1. Vorher in der App ein JSON-Backup erstellen.
-2. Alle Dateien aus dieser ZIP entpacken.
-3. In GitHub in das Hauptverzeichnis des Repositories `Darts-Club-` hochladen.
-4. Vorhandene Dateien ersetzen und committen.
-5. Danach die veröffentlichte App öffnen und unter **Mehr → Auf Update prüfen** kontrollieren, ob **Version 1.4.0** angezeigt wird.
+1. In der vorhandenen App unter **Mehr** zuerst ein **vollständiges JSON-Backup** erzeugen.
+2. Dieses ZIP entpacken und die **sechs enthaltenen Update-Dateien** im Hauptverzeichnis von GitHub hochladen; gleichnamige Dateien ersetzen und den Commit bestätigen.
+3. Die veröffentlichte Web-App auf Version **1.5.0** aktualisieren, ohne die installierte App oder deren Speicher zu löschen.
+4. Erst danach die **separate Datei `Juergenliste-2026-Privater-Import.json`** in der App über den neuen Papierlisten-Import auswählen.
+5. Nach dem Import die Einträge unter **Spieler & Statistik → Importierte Spieltage** prüfen und erneut ein vollständiges Backup erstellen.
 
-## Hinweis
-Dieses Update ändert nur das Design und die App-Icons. Die Spiel- und Kassendaten bleiben lokal auf dem Gerät gespeichert.
+**Wichtig:** Die private JSON-Importdatei gehört nicht in das öffentliche GitHub-Repository. Die Dateien aus dem Update-ZIP enthalten keine persönlichen Daten.
+
+## Kompatibilität und Grenzen
+- Bisherige Schlüssel für `localStorage` und IndexedDB bleiben erhalten.
+- Alte Backups ohne Profilbilder/Papierlisten sind kompatibel.
+- Fotoauswahl und Offline-Update konnten im Chromium-Browser getestet werden; die Auswahloptionen im iOS-Dateidialog und das Verhalten der installierten iPhone-Web-App sind nach der Veröffentlichung zu prüfen.
+- Safari und die installierte Home-Bildschirm-App können getrennte Datenspeicher haben; vor Änderungen immer ein Backup auf dem Gerät erzeugen.
