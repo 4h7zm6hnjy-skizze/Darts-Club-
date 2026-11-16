@@ -1,5 +1,5 @@
 {
-  "version": "1.9.1",
+  "version": "2.0.0",
   "released": "2026-11-16",
-  "notes": "Reparatur: fehlende ensureChosen-Funktion, Jürgen-Kasse bleibt bei Spielmodulfehlern erreichbar, sichere Start- und Datenspeicherprüfung ohne leeres Überschreiben."
+  "notes": "Profi-Spiel-Layout mit Turnieranzeige, großen Spielerfeldern und neuer Dart-Eingabe."
 }

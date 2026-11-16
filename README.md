@@ -1,11 +1,20 @@
-# Darts-Club Reparatur 1.9.1
+JÜRGEN DARTKASSE – Update v2.0.0 Profi-Spiel-Layout
 
-**Wichtig: App nicht löschen und keine Website-Daten entfernen.**
+Enthaltene Änderungen
+- neuer Spielbereich im Turnier-/Scorer-Stil
+- große Spielerfelder oben mit Restpunktzahl, Name und PPR/MPR
+- drei Dart-Slots für die aktuelle Aufnahme
+- prominente Anzeige der aktuellen Aufnahme
+- neues Eingabefeld mit Single / Double / Triple als große Auswahl
+- Jürgen-/Perfekter-Jürgen-Buchung direkt im Spielbereich sichtbar
+- Button „Nächster Spieler“ für die Aufnahme
+- Versionsnummer auf 2.0.0 angehoben
 
-- Repariert den Startabbruch durch fehlende Funktion `ensureChosen()` in `games-ui.js`.
-- Fehler im Dart-Spielmodus können den Start der Jürgen-Kasse nicht mehr blockieren.
-- Schutz vor automatischem Überschreiben gespeicherter Daten bei fehlgeschlagenem Datenladen.
-- Timeout für IndexedDB, statt endlos hängender Startansicht.
-- Version und Offline-Cache 1.9.1.
-
-Bitte vor allen neuen Eingaben prüfen, ob deine bisherigen Spieler, Papierliste und Kassenbeträge wieder sichtbar sind. Falls nicht, **keine neuen Spieler anlegen**, sondern melden.
+Dateien im Update
+- index.html
+- styles.css
+- app.js
+- games-engine.js
+- games-ui.js
+- sw.js
+- version.json

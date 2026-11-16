@@ -11,11 +11,11 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=1.9.1">
+  <link rel="stylesheet" href="./styles.css?v=2.0.0">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=1.9.1" defer></script>
-  <script src="./games-ui.js?v=1.9.1" defer></script>
-  <script src="./app.js?v=1.9.1" defer></script>
+  <script src="./games-engine.js?v=2.0.0" defer></script>
+  <script src="./games-ui.js?v=2.0.0" defer></script>
+  <script src="./app.js?v=2.0.0" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -29,7 +29,7 @@
         <button class="nav-btn" data-view="cash"><span class="nav-icon">€</span> Kassenbuch</button>
         <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span> Einstellungen</button>
       </nav>
-      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">1.7.0</span><br>© Marcel Hentschel 2026</small></div>
+      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">2.0.0</span><br>© Marcel Hentschel 2026</small></div>
     </aside>
     <div class="main-wrap">
       <header class="topbar" hidden></header>
@@ -45,7 +45,7 @@
             <small id="storageStatus" class="brand-status">Daten werden lokal gesichert</small>
           </div>
           <div class="dart-brand-showcase-actions">
-            <span class="version-pill">v<span class="version-value">1.7.0</span></span>
+            <span class="version-pill">v<span class="version-value">2.0.0</span></span>
             <button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button>
           </div>
         </div>
@@ -100,13 +100,17 @@
               <div id="dartsCurrent" hidden>
                 <div id="dartsLegSetBoard" class="game-leg-set-board" hidden></div><div id="dartsScoreboard" class="game-scoreboard"></div>
                 <div id="dartsCricketTable" class="game-cricket-table" hidden></div>
-                <div id="dartsLive" class="game-live">
-                  <div class="game-live-heading"><h3 id="dartsTurnTitle">Wer ist am Zug?</h3><button id="dartsCallerToggle" type="button" class="outline-btn small" aria-pressed="false">🔈 Caller aus</button></div><p id="dartsTurnInfo" class="game-muted"></p><div id="dartsLiveMeta" class="game-live-meta"></div>
-                  <div class="dart-input-title">Trefferart wählen</div>
-                  <div id="dartsRingButtons" class="game-ring-buttons"><button data-ring="1" class="active">Single</button><button data-ring="2">Double</button><button data-ring="3">Triple</button></div>
-                  <div class="dart-input-title">Spezialwurf mitbuchen</div><div id="dartsSpecialBooking" class="game-special-booking"></div><p class="game-muted game-special-hint">Nur bei drei getroffenen Feldern 1, 5 und 20: Single/Double = Jürgen, alle Triple = perfekter Jürgen. Bei Rücknahme wird die zugehörige Buchung ebenfalls storniert.</p>
-                  <div class="dart-input-title">Feld treffen</div><div id="dartsTargetButtons" class="game-target-buttons"></div>
-                  <div class="game-draft"><div><div id="dartsTurnPreview" class="game-draft-darts"></div><strong id="dartsDraftScore">0 Punkte</strong></div><div class="game-draft-actions"><button id="dartsRemoveStaged" class="outline-btn small">↶ Dart entfernen</button><button id="dartsConfirmTurn" class="primary-btn">Aufnahme buchen</button></div></div>
+                <div id="dartsLive" class="game-live game-live-pro">
+                  <div class="game-live-heading"><div><h3 id="dartsTurnTitle">Wer ist am Zug?</h3><p id="dartsTurnInfo" class="game-muted"></p></div><button id="dartsCallerToggle" type="button" class="outline-btn small" aria-pressed="false">🔈 Caller aus</button></div>
+                  <div class="game-shot-strip"><div id="dartsTurnPreview" class="game-dart-slots"></div><div class="game-shot-total"><small>Aktuelle Aufnahme</small><strong id="dartsDraftScore">0 Punkte</strong></div></div>
+                  <div id="dartsLiveMeta" class="game-live-meta"></div>
+                  <div class="game-input-board">
+                    <div class="dart-input-title">Trefferart wählen</div>
+                    <div id="dartsRingButtons" class="game-ring-buttons"><button data-ring="1" class="active">Single</button><button data-ring="2">Double</button><button data-ring="3">Triple</button></div>
+                    <div class="dart-input-title">Feld treffen</div><div id="dartsTargetButtons" class="game-target-buttons"></div>
+                    <div class="dart-input-title">Jürgen mitbuchen</div><div id="dartsSpecialBooking" class="game-special-booking"></div><p class="game-muted game-special-hint">Nur bei 1, 5 und 20: Single/Double = Jürgen, alle Triple = perfekter Jürgen. Die Buchung wird mit der Aufnahme gespeichert.</p>
+                    <div class="game-action-row"><button id="dartsRemoveStaged" class="outline-btn small">↶ Letzten Dart löschen</button><button id="dartsConfirmTurn" class="primary-btn game-next-btn">Nächster Spieler</button></div>
+                  </div>
                 </div>
                 <div id="dartsWinner" class="game-winner" hidden></div>
                 <div class="game-toolbar-bottom"><button id="dartsUndoTurn" class="outline-btn small">Letzte Aufnahme rückgängig</button><button id="dartsDeleteGame" class="outline-btn small game-danger">Partie löschen</button></div>
@@ -141,7 +145,7 @@
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELTAGE</span><h2>Spieltag wählen</h2></div></div><p class="panel-intro">Wähle ein Datum. Für bereits erfasste Spieltage werden die vorhandenen Punkte angezeigt. Neue Daten erhalten einen eigenen Spieltag; Zahlungen und der Kassenstand bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">Datum auswählen</button></div>
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">03 / SICHERUNG</span><h2>Backup & Export</h2></div></div><p class="panel-intro">Alle Daten bleiben auf diesem Gerät. Sichere sie regelmäßig als Datei, insbesondere vor Updates oder einem Gerätewechsel.</p><div class="button-stack"><button id="exportBackup" class="primary-btn full">↓ Vollständiges JSON-Backup</button><button id="importBackup" class="outline-btn full">↑ Backup wiederherstellen</button><button id="importPaper" class="outline-btn full">↑ Papierliste 2026 importieren</button><button id="restorePrevious" class="outline-btn full" hidden>↶ Stand vor letztem Import zurückholen</button><button id="exportCsvSettings" class="outline-btn full">↓ Buchungen als CSV</button></div><input type="file" id="backupFile" accept="application/json,.json" hidden><input type="file" id="paperFile" accept="application/json,.json" hidden></div>
-              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">1.7.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
+              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">2.0.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
             </div>
           </div>
           <div class="footer-warning">Hinweis: Offline-Speicher auf Mobilgeräten kann vom Betriebssystem gelöscht werden. Das JSON-Backup ist deine zusätzliche Sicherung.<br>© Marcel Hentschel 2026</div>

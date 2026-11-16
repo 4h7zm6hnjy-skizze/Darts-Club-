@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v1.9.1: Profi-Spielmodus mit Checkout-Hinweisen */
+/* JÜRGEN DARTKASSE — offline-first app, v2.0.0: Profi-Spiel-Layout mit Turnieransicht */
 'use strict';
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '2.0.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';

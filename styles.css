@@ -746,3 +746,78 @@ main{padding-top:28px}
 
 /* v1.9.1 safe-start diagnostics; data never auto-replaced on load */
 .app-safe-warning{margin:0 0 18px;padding:14px 16px;border:1px solid #f1c369;border-radius:14px;background:#443016;color:#fff0c2;font-weight:700;line-height:1.5;}
+
+
+/* v2.0.0 — Profi-Spiel-Layout im Turnierstil */
+.game-current{background:linear-gradient(180deg,rgba(12,33,54,.98),rgba(8,23,41,.98))}
+.game-current .game-section-head{margin-bottom:10px}
+.game-scoreboard{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;margin:14px 0 18px}
+.game-score-card{min-width:min(260px,72vw);flex:0 0 min(260px,72vw);padding:18px 16px;border-radius:20px;background:linear-gradient(180deg,#30363e,#2b3038);border-color:rgba(255,255,255,.18);scroll-snap-align:start}
+.game-score-card.active{background:linear-gradient(180deg,#bf2e2e,#b82e2e);border-color:#f0d0b0;box-shadow:0 12px 26px rgba(0,0,0,.22)}
+.game-score-card.winner{background:linear-gradient(180deg,#8c6820,#4c3814);border-color:#efcf82}
+.game-score-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.game-score-name{align-items:flex-start;gap:10px;font-size:12px}
+.game-score-name>div{display:flex;flex-direction:column;min-width:0}
+.game-score-name strong{font-size:15px;color:#fff8e2}
+.game-score-name small{font-size:11px;color:rgba(255,255,255,.78)}
+.game-score-badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.22);font-size:11px;font-weight:900;color:#fff6d4;white-space:nowrap}
+.game-score-number{font-size:clamp(56px,8vw,88px);line-height:1;margin:16px 0 12px;color:#fffef7;text-align:center}
+.game-score-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#f6e8b6}
+.game-score-caption b{padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.23);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.game-leg-set-board{padding:16px 18px;border-radius:20px;background:linear-gradient(135deg,rgba(69,51,29,.95),rgba(17,39,61,.97));border-color:rgba(239,205,120,.42)}
+.game-live-pro{margin-top:0;border-top:none;padding-top:0}
+.game-live-heading{margin-bottom:14px}
+.game-live-heading h3{font-size:clamp(24px,4vw,34px);margin:0;color:#fff7e0}
+.game-live-heading .game-muted{margin:4px 0 0;font-size:13px}
+.game-shot-strip{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px;margin-bottom:14px}
+.game-dart-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stage-slot{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:88px;padding:12px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(245,240,228,.08),rgba(255,255,255,.03));text-align:center}
+.stage-slot small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#aac5d2}
+.stage-slot strong{font-size:28px;color:#f9f5e8;line-height:1.05}
+.stage-slot.filled{background:linear-gradient(180deg,rgba(99,215,195,.24),rgba(44,90,95,.18));border-color:rgba(109,236,212,.42)}
+.game-shot-total{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;padding:12px;border-radius:18px;border:1px solid rgba(238,199,102,.28);background:linear-gradient(180deg,rgba(57,46,23,.92),rgba(30,31,33,.94))}
+.game-shot-total small{color:#f0d492;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.game-shot-total strong{font-size:34px;color:#fff6d7;text-align:center;line-height:1.1}
+.game-live-meta{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 18px}
+.live-meta-card{padding:15px 14px;border-radius:16px;background:linear-gradient(180deg,rgba(25,48,71,.96),rgba(12,31,50,.96));border:1px solid rgba(136,183,211,.18)}
+.live-meta-card small{font-size:10px;color:#9fd4db}
+.live-meta-card strong{font-size:20px;line-height:1.2}
+.game-input-board{padding:14px;border-radius:22px;border:1px solid rgba(110,148,171,.24);background:linear-gradient(180deg,rgba(8,21,37,.68),rgba(11,24,42,.82))}
+.dart-input-title{font-size:12px;color:#d7e7ed;letter-spacing:.16em;margin:8px 0 10px}
+.game-ring-buttons{gap:10px;margin-bottom:8px}
+.game-ring-buttons button{min-height:64px;border-radius:18px;font-size:26px;font-weight:900;background:linear-gradient(180deg,#243445,#25384b);border-color:#5f7184;color:#f7f1de}
+.game-ring-buttons button.active{background:linear-gradient(180deg,#3a8c77,#2b6c63);border-color:#b6f0df;color:#fff8ed}
+.game-ring-buttons button[data-ring="2"].active{background:linear-gradient(180deg,#305778,#25405e)}
+.game-ring-buttons button[data-ring="3"].active{background:linear-gradient(180deg,#8d6a2b,#6d4f1f);border-color:#efd39a}
+.game-target-buttons{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.dart-target{min-height:82px;border-radius:18px;font-size:32px;border:1px solid rgba(165,188,204,.24);background:linear-gradient(180deg,#e8e0ce,#ddd2bf);color:#3d4045;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+.dart-target:nth-child(odd){background:linear-gradient(180deg,#f0e7d8,#e1d7c5)}
+.dart-target.bull25{background:linear-gradient(180deg,#b3eadf,#6dd6bb);color:#123438;border-color:#8ee8d4}
+.dart-target.bull50{background:linear-gradient(180deg,#f5d483,#e2a935);color:#402a07;border-color:#ffdf97}
+.dart-target.miss{background:linear-gradient(180deg,#9d5a58,#7d4745);color:#fff1eb;border-color:#cc8c8b}
+.game-special-booking{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.special-toggle{min-height:58px;border-radius:16px;background:linear-gradient(180deg,#1d2f44,#182839);border-color:rgba(151,177,196,.22)}
+.special-toggle.active{background:linear-gradient(180deg,rgba(59,126,115,.93),rgba(120,88,35,.95));color:#fffbe9}
+.game-action-row{display:grid;grid-template-columns:1fr 1.1fr;gap:10px;margin-top:14px}
+.game-next-btn{min-height:66px;font-size:22px;border-radius:18px;font-weight:900;letter-spacing:.01em;background:linear-gradient(180deg,#efb53c,#d99016);color:#2e2411}
+.game-toolbar-bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.match-stat-player,.player-pro-card,.game-total-stat{background:linear-gradient(180deg,rgba(16,37,58,.98),rgba(9,24,41,.98))}
+@media(max-width:900px){
+ .game-live-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-shot-strip{grid-template-columns:1fr}
+ .game-score-card{min-width:min(240px,78vw);flex-basis:min(240px,78vw)}
+}
+@media(max-width:600px){
+ .game-score-card{min-width:calc(100vw - 74px);flex-basis:calc(100vw - 74px);padding:15px 14px}
+ .game-score-number{font-size:74px}
+ .game-dart-slots{gap:8px}
+ .stage-slot{min-height:74px;padding:10px 8px}
+ .stage-slot strong{font-size:23px}
+ .game-shot-total strong{font-size:28px}
+ .game-live-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .game-input-board{padding:12px}
+ .game-ring-buttons button{min-height:58px;font-size:18px}
+ .game-target-buttons{gap:8px}
+ .dart-target{min-height:72px;font-size:26px}
+ .game-special-booking,.game-action-row,.game-toolbar-bottom{grid-template-columns:1fr}
+}
