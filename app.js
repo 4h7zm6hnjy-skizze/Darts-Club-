@@ -1,9 +1,13 @@
-/* JÜRGEN DARTKASSE — offline-first app, v1.5.0: Papierliste + Profilfotos */
+/* JÜRGEN DARTKASSE — offline-first app, v1.5.1: historische Spieler-Abrechnung */
 'use strict';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
+// Preis der dokumentierten Papierliste vom September bis November 2026.
+// Dieser Satz wird bei späteren Änderungen des Live-Preises NICHT verändert.
+const HISTORIC_PAPER_SOURCE = 'juergenliste-2026-foto-01';
+const HISTORIC_PAPER_RATE_CENTS = 30;
 const $ = id => document.getElementById(id);
 const moneyFmt = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 const intFmt = new Intl.NumberFormat('de-DE');
@@ -119,17 +123,39 @@ function getChampion(slot){
   return {title:base.title,subtitle:base.subtitle,name:current.name||'Noch offen',image:current.image||''};
 }
 
+// Historische Striche werden NUR für die bekannte Papierliste mit dem dort
+// ausdrücklich angegebenen Satz von 0,30 EUR bewertet. Andere Listen ohne
+// dokumentierten Preis bekommen keine fiktiven Gebühren.
+function paperRateCents(entry){
+  if(Number.isSafeInteger(entry.unitCents)&&entry.unitCents>=0&&entry.unitCents<=1000000000)return entry.unitCents;
+  return entry.sourceId===HISTORIC_PAPER_SOURCE?HISTORIC_PAPER_RATE_CENTS:null;
+}
+function paperAccounting(entries){
+  let points=0,billed=0,unpriced=0,unknown=0;
+  for(const entry of entries){
+    if(entry.points===null){if(entry.attendance!=='absent')unknown++;continue;}
+    if(!Number.isSafeInteger(entry.points)||entry.points<0)continue;
+    points+=entry.points;
+    const rate=paperRateCents(entry);
+    if(rate===null){unpriced+=entry.points;continue;}
+    billed+=entry.points*rate;
+  }
+  return {points,billed,unpriced,unknown};
+}
 function calcTotals(){
-  let billed=0,paid=0,cash=0,points=0;
+  let liveBilled=0,paid=0,cash=0,livePoints=0;
   for(const e of state.events){
     if(e.voided)continue;
-    if(e.type==='hit'){billed+=e.amount;points+=(e.points||1);}
+    if(e.type==='hit'){liveBilled+=e.amount;livePoints+=(e.points||1);}
     if(e.type==='payment'){paid+=e.amount;cash+=e.amount;}
     if(e.type==='income')cash+=e.amount;
     if(e.type==='expense')cash-=e.amount;
     if(e.type==='correction')cash+=e.amount;
   }
-  return {billed,paid,cash,points,owed:billed-paid};
+  const paper=paperAccounting(state.paperEntries||[]);
+  const billed=liveBilled+paper.billed;
+  return {billed,liveBilled,paperBilled:paper.billed,paid,cash,points:livePoints+paper.points,
+    paperPoints:paper.points,paperUnpriced:paper.unpriced,paperUnknown:paper.unknown,owed:billed-paid};
 }
 function logicalThrows(sessionId=null){
   const groups=new Map();
@@ -165,9 +191,16 @@ function collectStats(id, predicate=null){
 function paperPoints(id,filter=()=>true){return (state.paperEntries||[]).filter(e=>e.playerId===id&&Number.isInteger(e.points)&&filter(e)).reduce((a,e)=>a+e.points,0);}
 function paperStatsFor(id,filter=()=>true){
   const entries=(state.paperEntries||[]).filter(e=>e.playerId===id&&filter(e));
-  return {points:entries.filter(e=>Number.isInteger(e.points)).reduce((n,e)=>n+e.points,0),days:entries.length,unknown:entries.filter(e=>e.points===null && e.attendance!=='absent').length};
+  return {...paperAccounting(entries),days:entries.length};
 }
-function combinedStats(base,extra){return {...base,points:base.points+extra.points,paperPoints:extra.points,paperUnknown:extra.unknown};}
+function combinedStats(base,extra){return {...base,
+  liveBilled:base.billed,
+  billed:base.billed+extra.billed,
+  owed:base.owed+extra.billed,
+  paperBilled:extra.billed,
+  paperUnpriced:extra.unpriced,
+  points:base.points+extra.points,paperPoints:extra.points,paperUnknown:extra.unknown
+};}
 function personStats(id,sessionId=null){
   const date=sessionId?sessionDate(state.sessions.find(s=>s.id===sessionId)):null;
   return combinedStats(collectStats(id,e=>!sessionId||e.sessionId===sessionId),paperStatsFor(id,e=>!sessionId||e.date===date));
@@ -436,14 +469,14 @@ function renderPlayers(){
   $('statsYear').innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join(''); if(!years.includes(statsYearValue)) statsYearValue=years[0]||currentYearDefault(); $('statsYear').value=statsYearValue; $('statsMonth').value=statsMonthValue;
   const sessionId=statsSession==='all'?null:statsSession==='active'?state.activeSessionId:statsSession;
   if(!players.length){$('playersList').innerHTML='<div class="panel empty-state">Noch keine Spieler angelegt. Tippe auf „Spieler hinzufügen“.</div>'; return;}
-  $('playersList').innerHTML=players.map(p=>{ const total=personStats(p.id), session=personStats(p.id,sessionId), month=monthStats(p.id,statsMonthValue), year=yearStats(p.id,statsYearValue); const deleteBtn=!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)&&!(state.paperEntries||[]).some(e=>e.playerId===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''; return `<div class="player-stat ${p.archived?'inactive':''} ${p.absent?'absent-card':''}"><div class="stat-header">${avatarMarkup(p)}<div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':p.absent?'Abwesend · ':''}${session.points} bekannte Punkte in der Auswahl${session.paperUnknown?' · Papierfeld leer':''}${session.paperPoints?' · '+session.paperPoints+' aus Papierliste':''}</small></div><div class="inline-actions"><button class="square-button player-photo-action" data-photo-player="${esc(p.id)}" title="Profilfoto ändern" aria-label="Foto für ${esc(p.name)} ändern">📷</button><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button>${!p.archived?`<button class="square-button" data-absent-player="${esc(p.id)}" title="${p.absent?'Als anwesend markieren':'Als abwesend markieren'}">${p.absent?'☀':'☾'}</button>`:''}<button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${deleteBtn}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${session.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte: ${session.perfectThrown}</span>${p.absent?'<span class="flag-pill absent-pill">Abwesend</span>':''}</div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>Gebühren gesamt</small></div><div><b>${euro(total.paid)}</b><small>Bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':'Offen'}</small></div></div><div class="period-grid"><div class="period-box"><span>Monat ${esc(statsMonthValue)}</span><b>${month.points}${month.paperUnknown?'+':''}</b><small>${month.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${month.paperPoints} Papierliste · ${month.juergenThrown} Jürgen · ${month.perfectThrown} Kronen</small></div><div class="period-box"><span>Jahr ${esc(statsYearValue)}</span><b>${year.points}${year.paperUnknown?'+':''}</b><small>${year.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${year.paperPoints} Papierliste · ${year.juergenThrown} Jürgen · ${year.perfectThrown} Kronen</small></div></div><div class="player-point-summary"><div><b>${session.points}${session.paperUnknown?'+':''}</b><small>${session.paperUnknown?'Bekannte Punkte · Papierfeld leer':'Punkte in der Auswahl'}</small></div><div><b>${total.points}${total.paperUnknown?'+':''}</b><small>${total.paperUnknown?'Bekannte Punkte gesamt (Papierfeld leer)':'Punkte gesamt'}</small></div></div></div>`; }).join('');
+  $('playersList').innerHTML=players.map(p=>{ const total=personStats(p.id), session=personStats(p.id,sessionId), month=monthStats(p.id,statsMonthValue), year=yearStats(p.id,statsYearValue); const deleteBtn=!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)&&!(state.paperEntries||[]).some(e=>e.playerId===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''; return `<div class="player-stat ${p.archived?'inactive':''} ${p.absent?'absent-card':''}"><div class="stat-header">${avatarMarkup(p)}<div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':p.absent?'Abwesend · ':''}${session.points} bekannte Punkte in der Auswahl${session.paperUnknown?' · Papierfeld leer':''}${session.paperPoints?' · '+session.paperPoints+' aus Papierliste':''}</small></div><div class="inline-actions"><button class="square-button player-photo-action" data-photo-player="${esc(p.id)}" title="Profilfoto ändern" aria-label="Foto für ${esc(p.name)} ändern">📷</button><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button>${!p.archived?`<button class="square-button" data-absent-player="${esc(p.id)}" title="${p.absent?'Als anwesend markieren':'Als abwesend markieren'}">${p.absent?'☀':'☾'}</button>`:''}<button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${deleteBtn}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${session.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte: ${session.perfectThrown}</span>${p.absent?'<span class="flag-pill absent-pill">Abwesend</span>':''}</div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>${total.paperBilled?'Gebühren inkl. Papierliste (rechnerisch)':'Gebühren gesamt'}</small></div><div><b>${euro(total.paid)}</b><small>In App bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':total.paperBilled?'Rechnerisch offen':'Offen'}</small></div></div><div class="paper-fee-detail"><span>Papierliste: <strong>${euro(total.paperBilled)}</strong> aus ${total.paperPoints} Strichen</span><span>App-Jürgen: <strong>${euro(total.liveBilled)}</strong></span></div><div class="period-grid"><div class="period-box"><span>Monat ${esc(statsMonthValue)}</span><b>${month.points}${month.paperUnknown?'+':''}</b><small>${month.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${month.paperPoints} Papierliste (${euro(month.paperBilled)} rechnerisch) · ${month.juergenThrown} Jürgen · ${month.perfectThrown} Kronen</small></div><div class="period-box"><span>Jahr ${esc(statsYearValue)}</span><b>${year.points}${year.paperUnknown?'+':''}</b><small>${year.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${year.paperPoints} Papierliste (${euro(year.paperBilled)} rechnerisch) · ${year.juergenThrown} Jürgen · ${year.perfectThrown} Kronen</small></div></div><div class="player-point-summary"><div><b>${session.points}${session.paperUnknown?'+':''}</b><small>${session.paperUnknown?'Bekannte Punkte · Papierfeld leer':'Punkte in der Auswahl'}</small></div><div><b>${total.points}${total.paperUnknown?'+':''}</b><small>${total.paperUnknown?'Bekannte Punkte gesamt (Papierfeld leer)':'Punkte gesamt'}</small></div></div></div>`; }).join('');
 }
 function renderPaperTable(){
   const root=$('paperTable'); if(!root)return;
   const days=[...new Set((state.paperEntries||[]).map(e=>e.date))].sort();
   if(!days.length){root.innerHTML='<div class="empty-state">Noch keine historische Papierliste importiert.</div>';return;}
   const players=state.players.filter(p=>(state.paperEntries||[]).some(e=>e.playerId===p.id));
-  root.innerHTML=`<div class="paper-scroll"><table class="paper-table"><thead><tr><th>Datum</th>${players.map(p=>`<th>${esc(p.name)}</th>`).join('')}<th>Erfasste Punkte</th></tr></thead><tbody>${days.map(date=>{
+  root.innerHTML=`<div class="paper-scroll"><table class="paper-table"><thead><tr><th>Datum</th>${players.map(p=>`<th>${esc(p.name)}</th>`).join('')}<th>Erfasste Punkte</th><th>Rechnerisch 0,30 €/Strich</th></tr></thead><tbody>${days.map(date=>{
     const day=paperDaySummary(date);
     const cells=players.map(p=>{
       const e=paperEntry(date,p.id);
@@ -452,7 +485,8 @@ function renderPaperTable(){
       if(e.points===null)return '<td class="paper-empty" title="Auf dem Papier leer">–</td>';
       return `<td>${e.points}</td>`;
     }).join('');
-    return `<tr><th>${prettyDate(date)}</th>${cells}<td>${day.entries.some(e=>e.points===null&&e.attendance!=='absent')?'<span class="paper-empty">– (nicht eingetragen)</span>':`<strong>${day.points}</strong>`}</td></tr>`;
+    const amount=paperAccounting(day.entries);
+    return `<tr><th>${prettyDate(date)}</th>${cells}<td>${day.entries.some(e=>e.points===null&&e.attendance!=='absent')?'<span class="paper-empty">– (nicht eingetragen)</span>':`<strong>${day.points}</strong>`}</td><td>${euro(amount.billed)}${amount.unknown?' + unbekannt':''}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function validatePaperFile(raw){
@@ -515,7 +549,7 @@ async function importPaperList(file){
   }catch(err){toast('Import fehlgeschlagen: '+(err?.message||'ungültige Datei'));}
   finally{$('paperFile').value='';}
 }
-function renderCash(){ const t=calcTotals(); $('cashBalance').textContent=euro(t.cash); $('cashOwed').textContent=euro(t.owed); $('cashBilled').textContent=euro(t.billed); const log=state.events.filter(e=>!e.voided&&e.type!=='hit').slice(-100).reverse(); const descriptions={payment:'Spielerzahlung',income:'Sonstige Einnahme',expense:'Ausgabe',correction:'Kassenkorrektur'}; $('cashJournal').innerHTML=log.length?log.map(e=>{const negative=e.type==='expense'||(e.type==='correction'&&e.amount<0); const who=e.type==='payment'?` · ${esc(person(e.playerId)?.name||'Unbekannt')}`:''; return `<div class="event-row"><div class="event-icon ${e.type==='expense'?'expense':e.type==='payment'?'payment':''}">${negative?'−':'+'}</div><div class="event-meta"><b>${descriptions[e.type]}${who}</b><small>${when(e.at)}${e.note?' · '+esc(e.note):''}</small></div><div class="event-sum ${negative?'negative':''}">${negative?'−':'+'} ${euro(Math.abs(e.amount))}</div><button class="mini-remove" data-void="${esc(e.id)}" title="Buchung stornieren" aria-label="Buchung stornieren">×</button></div>`; }).join(''):'<div class="empty-state">Noch keine Kassenbuchungen vorhanden.</div>'; }
+function renderCash(){ const t=calcTotals(); $('cashBalance').textContent=euro(t.cash); $('cashOwed').textContent=euro(t.owed); $('cashBilled').textContent=euro(t.billed); if($('paperFeeInfo')){$('paperFeeInfo').hidden=!t.paperPoints; $('paperFeeInfo').textContent=t.paperPoints?`Papierliste: ${t.paperPoints} bekannte Striche × dokumentierte 0,30 € = ${euro(t.paperBilled)} rechnerischer Betrag. Historische Zahlungen und die Anzahl perfekter Jürgen sind aus dem Foto nicht belegbar. „Rechnerisch offen“ enthält daher gegebenenfalls bereits bezahlte Beträge; der tatsächliche Kassenstand wird nicht verändert.`:'';} const log=state.events.filter(e=>!e.voided&&e.type!=='hit').slice(-100).reverse(); const descriptions={payment:'Spielerzahlung',income:'Sonstige Einnahme',expense:'Ausgabe',correction:'Kassenkorrektur'}; $('cashJournal').innerHTML=log.length?log.map(e=>{const negative=e.type==='expense'||(e.type==='correction'&&e.amount<0); const who=e.type==='payment'?` · ${esc(person(e.playerId)?.name||'Unbekannt')}`:''; return `<div class="event-row"><div class="event-icon ${e.type==='expense'?'expense':e.type==='payment'?'payment':''}">${negative?'−':'+'}</div><div class="event-meta"><b>${descriptions[e.type]}${who}</b><small>${when(e.at)}${e.note?' · '+esc(e.note):''}</small></div><div class="event-sum ${negative?'negative':''}">${negative?'−':'+'} ${euro(Math.abs(e.amount))}</div><button class="mini-remove" data-void="${esc(e.id)}" title="Buchung stornieren" aria-label="Buchung stornieren">×</button></div>`; }).join(''):'<div class="empty-state">Noch keine Kassenbuchungen vorhanden.</div>'; }
 function renderSettings(){ $('basePrice').value=inputMoney(state.settings.baseCents); renderPricePreview(); $('currentSessionInfo').textContent=`Aktives Datum: ${prettyDate(sessionDate(getSession()))} · ${getSession()?.name||'Spieltag'}`; $('restorePrevious').hidden=!localGet(RESTORE_KEY); $('networkStatus').textContent=navigator.onLine?'Online / offlinefähig':'Gerade offline'; }
 function renderPricePreview(){ let v=parseMoney($('basePrice').value); if(v===null)v=0; if($('previewSingle'))$('previewSingle').textContent=euro(v); if($('previewTriple'))$('previewTriple').textContent=`${euro(v)} insgesamt`; }
 function semverParts(v){return String(v).split('.').map(x=>Number(x)||0);} function newer(remote,local){const a=semverParts(remote),b=semverParts(local); for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true; if((a[i]||0)<(b[i]||0))return false;} return false;}
