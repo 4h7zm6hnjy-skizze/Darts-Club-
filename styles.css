@@ -1437,3 +1437,65 @@ body.dart-focus-on .game-current.focus-active #dartsFocusExit{
   body.dart-focus-on .game-current.focus-active .game-live-meta.x01-live .live-meta-checkout strong{font-size:11px!important}
   body.dart-focus-on .game-current.focus-active .game-score-name strong{font-size:12px!important}
 }
+
+
+/* 3.4.2 – Professional final-score screen. Display-only: no score or cash changes. */
+.game-winner.game-final-screen{
+  background:radial-gradient(ellipse at 50% 0%,rgba(241,195,99,.19),transparent 53%),linear-gradient(155deg,#253e41,#172f40 55%,#1d2834);
+  color:#f8f5ea;border:1px solid #d5b66e;border-radius:21px;
+  padding:clamp(15px,3vw,25px);margin:10px 0 0;
+  text-align:center;box-shadow:0 10px 32px rgba(0,0,0,.18);
+}
+.game-final-kicker{font-size:clamp(11px,2.6vw,13px);font-weight:850;letter-spacing:.16em;color:#ffe3a0}
+.game-final-trophy{font-size:clamp(40px,10vw,66px);line-height:1.12;margin:8px 0 2px}
+.game-final-screen h3.game-final-name{font-size:clamp(30px,8vw,50px);line-height:1.12;font-weight:900;color:#fff;margin:3px 0;overflow-wrap:anywhere}
+.game-final-label{color:#88f1d8;font-weight:850;font-size:clamp(15px,3.8vw,19px)}
+.game-final-screen p.game-final-mode{font-size:clamp(13px,3.1vw,16px);line-height:1.4;color:#f1e4c4;margin:8px 0 12px}
+.game-final-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:6px 0 10px}
+.game-final-stat{min-width:0;padding:12px 6px;background:#12293c;border:1px solid #597888;border-radius:12px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.game-final-stat small{color:#d3e5ed;font-size:clamp(10px,2.45vw,12px);font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.game-final-stat strong{font-size:clamp(17px,5vw,26px);color:#fff4c8;line-height:1.1}
+.game-final-legs{border:1px solid #527789;border-radius:12px;background:rgba(7,26,41,.57);padding:10px 12px;margin:0 0 12px;text-align:left}
+.game-final-legs-title{color:#ffe2a7;font-size:12px;letter-spacing:.06em;font-weight:800;margin-bottom:5px}
+.game-final-legs-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:6px 0;border-top:1px solid rgba(162,194,207,.18);font-size:13px;color:#e4f1f4}
+.game-final-legs-row span{font-weight:700;overflow-wrap:anywhere}
+.game-final-legs-row b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.game-final-legs-row.is-winner{color:#b3ffe5}
+.game-final-actions{display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin:5px 0}
+.game-final-actions button{min-height:49px;border-radius:12px;font-weight:850;font-size:clamp(12px,3.1vw,15px);padding:9px 11px;line-height:1.25;white-space:normal}
+.game-final-replay{background:linear-gradient(115deg,#6ee6cd,#f5d477)!important;color:#09242e!important;border:1px solid #ffeab4!important}
+.game-final-setup{background:#1a374d!important;border:1px solid #82a7bb!important;color:#f7f7f4!important}
+.game-final-screen p.game-final-note{color:#c6dfe7;font-size:12px;line-height:1.45;margin:9px 0 0}
+@media(max-width:380px){
+ .game-final-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-final-stat{padding:8px 5px}
+ .game-final-actions{grid-template-columns:1fr}
+ .game-final-actions button{min-height:42px}
+}
+/* Finished games should use the space after the scoreboard, not vertically center a small card. */
+.game-current.focus-active #dartsCurrent.is-finished:not([hidden]){
+ overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;
+ min-height:0!important;max-height:100%!important;align-content:start;
+}
+.game-current.focus-active #dartsCurrent.is-finished #dartsWinner:not([hidden]){
+ margin:6px 0 9px!important;max-height:none!important;overflow:visible!important;
+ flex:1 0 auto!important;min-height:0!important;
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+}
+@media(max-height:590px) and (orientation:landscape){
+ .game-current.focus-active #dartsCurrent.is-finished:not([hidden]){overflow-y:auto!important;}
+ .game-current.focus-active #dartsCurrent.is-finished #dartsWinner:not([hidden]){grid-column:2;grid-row:2;margin:0!important;min-height:0!important;justify-content:flex-start!important;}
+ .game-final-screen{padding:8px 10px!important}
+ .game-final-trophy{font-size:27px;margin:2px 0}
+ .game-final-kicker{font-size:9px}
+ .game-final-screen h3.game-final-name{font-size:24px}
+ .game-final-screen p.game-final-mode{font-size:11px;margin:3px 0 6px}
+ .game-final-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:3px 0 5px}
+ .game-final-stat{padding:6px 2px}
+ .game-final-stat small{font-size:9px}
+ .game-final-stat strong{font-size:16px}
+ .game-final-legs{padding:5px 7px;margin-bottom:5px}
+ .game-final-legs-row{padding:2px 0;font-size:10px}
+ .game-final-actions button{min-height:32px;font-size:10px;padding:5px}
+ .game-final-screen p.game-final-note{font-size:9px;margin:4px 0 0}
+}

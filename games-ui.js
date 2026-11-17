@@ -243,13 +243,92 @@ function renderSpecialButtons(){
  root.innerHTML=defs.map(([id,label])=>`<button class="special-toggle ${specialBooking===id?'active':''}" data-special="${id}" type="button">${id==='perfect'?'👑 ':id==='juergen'?'◎ ':''}${esc(label)}</button>`).join('');
 }
 
+// Result presentation uses only the recorded darts and replayed match state.
+function matchRuleLabel(match){
+ if(match.mode==='x01'){
+  const rule=match.options.masterOut?'Master-Out':match.options.doubleOut?'Double-Out':'Straight-Out';
+  return `${match.options.start} ${rule}${match.options.doubleIn?' · Double-In':''}`;
+ }
+ return match.mode==='finish170'?'170 Checkout-Training':modeName(match.mode);
+}
+function finalResults(match,r){
+ const winner=r.winnerId, report=E.playerReport(match,winner);
+ const isX01=match.mode==='x01';
+ const hasFinalCheckout=isX01 && r.legHistory.length && r.legHistory[r.legHistory.length-1].winnerId===winner;
+ const lastFinish=hasFinalCheckout?r.legHistory[r.legHistory.length-1].finish:0;
+ const stats=[];
+ if(isX01){
+  stats.push(['3-Dart-Ø',fmt(report.average3)]);
+  stats.push(['Geworfene Darts',String(report.darts)]);
+  stats.push(['Letztes Finish',lastFinish?String(lastFinish):'–']);
+  stats.push(['Bestes Finish',report.highFinish?String(report.highFinish):'–']);
+ } else if(match.mode==='finish170'){
+  stats.push(['3-Dart-Ø',fmt(report.average3)]);
+  stats.push(['Geworfene Darts',String(report.darts)]);
+  stats.push(['Restpunkte',String(r.players[winner].remaining)]);
+  stats.push(['Aufnahmen',String(r.history.length)]);
+ } else if(E.isCricket(match.mode)){
+  stats.push(['MPR',fmt(report.mpr)]);
+  stats.push(['Marks',String(r.players[winner].cricketMarks)]);
+  stats.push(['Darts',String(report.darts)]);
+  stats.push(['Aufnahmen',String(r.history.length)]);
+ } else {
+  stats.push(['Ergebnis',String(r.players[winner].score)]);
+  stats.push(['Darts',String(report.darts)]);
+  stats.push(['Runden',String(report.visits)]);
+  stats.push(['Aufnahmen',String(r.history.length)]);
+ }
+ const legs=isX01?`<div class="game-final-legs" aria-label="Ergebnis der Legs und Sets"><div class="game-final-legs-title">Leg- und Set-Ergebnis</div>${match.playerIds.map(id=>{
+  const legCount=r.legHistory.filter(h=>h.winnerId===id).length;
+  return `<div class="game-final-legs-row ${id===winner?'is-winner':''}"><span>${esc(playerName(id))}</span><b>${legCount} ${legCount===1?'Leg':'Legs'}</b><b>${r.players[id].sets} ${r.players[id].sets===1?'Set':'Sets'}</b></div>`;
+ }).join('')}</div>`:'';
+ return `<div class="game-final-kicker">PARTIE ABGESCHLOSSEN</div>
+  <div class="game-final-trophy" aria-hidden="true">🏆</div>
+  <h3 class="game-final-name">${esc(playerName(winner))}</h3>
+  <div class="game-final-label">Gewonnen</div>
+  <p class="game-final-mode">${esc(matchRuleLabel(match))} beendet · ${r.history.length} Aufnahmen</p>
+  <div class="game-final-stats">${stats.map(([label,value])=>`<div class="game-final-stat"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`).join('')}</div>
+  ${legs}
+  <div class="game-final-actions"><button id="dartsReplay" class="primary-btn game-final-replay" type="button">↻ Revanche starten</button><button id="dartsReplaySetup" class="outline-btn game-final-setup" type="button">Andere Partie einstellen</button></div>
+  <p class="game-final-note">Revanche: gleiche Spieler und Regeln. Die bisherige Partie bleibt gespeichert.</p>`;
+}
+function rematchFinishedGame(){
+ const prior=currentGame();if(!prior||!E.replay(prior).finished)return;
+ if(prior.playerIds.some(id=>id!==E.BOT_ID&&!getState().players.some(p=>p.id===id))){toast('Ein Spielerprofil fehlt. Bitte eine neue Partie einstellen.');return;}
+ try{
+  const next=E.createMatch({mode:prior.mode,playerIds:[...prior.playerIds],options:{...prior.options}});
+  getState().dartMatches.push(next);
+  getState().activeDartMatchId=next.id;
+  selectedPlayers=next.playerIds.filter(id=>id!==E.BOT_ID);
+  staged=[];specialBooking='none';ring=1;gameMenuOpen=false;
+  if(botTimer){clearTimeout(botTimer);botTimer=null;}
+  api.persist();render();openFocus();toast('Revanche gestartet. Die letzte Partie bleibt gespeichert.');
+ }catch(err){toast('Revanche konnte nicht gestartet werden: '+err.message);}
+}
+function openReplaySetup(){
+ const prior=currentGame();if(!prior)return;
+ const opt=prior.options||{};
+ selectedPlayers=prior.playerIds.filter(id=>id!==E.BOT_ID);
+ $('dartsMode').value=prior.mode;
+ $('dartsStart').value=String(opt.start||501);
+ $('dartsBestOf').value=String(opt.bestOfLegs||1);
+ $('dartsBestOfSets').value=String(opt.bestOfSets||1);
+ $('dartsOutRule').value=opt.masterOut?'master':opt.doubleOut?'double':'straight';
+ $('dartsDoubleIn').checked=!!opt.doubleIn;
+ $('dartsBotEnabled').checked=prior.playerIds.includes(E.BOT_ID);
+ $('dartsBotLevel').value=opt.botLevel||'medium';
+ $('dartsRoundLimit').value=String(opt.rounds||20);
+ $('dartsAroundBull').checked=!!opt.aroundBull;
+ closeFocus();gameMenuOpen=true;renderSetup();
+ $('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});
+}
 function renderDartPad(match,r){
  const isBot=!r.finished&&r.currentPlayerId===E.BOT_ID;const status=$('dartsBotWaiting');if(status)status.hidden=!isBot;
  if(isBot){$('dartsLive').hidden=true;$('dartsWinner').hidden=true;scheduleBot(match);return;}
  $('dartsLive').hidden=r.finished; $('dartsWinner').hidden=!r.finished;
  if(r.finished){
-  const w=r.winnerId;
-  $('dartsWinner').innerHTML=`<div class="game-win-icon">🏆</div><h3>${esc(playerName(w))}</h3><p>${esc(modeName(match.mode))} beendet · ${match.turns.length} Aufnahmen erfasst</p><button id="dartsReplay" class="primary-btn">Neue Partie mit diesen Spielern</button>`;
+  $('dartsWinner').classList.add('game-final-screen');
+  $('dartsWinner').innerHTML=finalResults(match,r);
   return;
  }
  const player=playerName(r.currentPlayerId); const ps=r.players[r.currentPlayerId];
@@ -339,6 +418,7 @@ function closeFocus(){
 function renderCurrent(){
  const game=currentGame(); $('dartsCurrent').hidden=!game; $('dartsNoGame').hidden=!!game; if(!game)return;
  const r=E.replay(game),finished=r.finished;
+ $('dartsCurrent').classList.toggle('is-finished',finished);
  $('dartsCurrentTitle').textContent=E.isX01(game.mode)?`X01 · ${game.options.start} · Leg ${r.leg}`:modeName(game.mode);
  $('dartsCurrentMeta').textContent=`${gameDate(game)} · ${game.turns.length} Aufnahmen${game.mode==='x01'?' · Best of '+(game.options.bestOfSets||1)+' Sets, '+game.options.bestOfLegs+' Legs':''}`;
  $('dartsMatchStatus').textContent=finished?'Beendet':'Laufend';
@@ -464,7 +544,7 @@ function recordTurn(){
   staged=[];specialBooking='none';api.persist();render();
   const r=E.replay(updated);
   say(r.finished?`${playerName(r.winnerId)} gewinnt!`:`${playerName(throwerId)}: ${points} Punkte`);
-  if(r.finished)toast(`${playerName(r.winnerId)} gewinnt die Partie!`);
+  // Die Siegerehrung ist sichtbar – keine überlagernde Toastmeldung über den Revanche-Tasten.
  }catch(err){toast(err.message);}
 }
 function undoTurn(){
@@ -525,7 +605,8 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.id==='dartsUndoTurn'){undoTurn();return;}
   if(b.id==='dartsDeleteGame'){deleteGame();return;}
   if(b.id==='dartsNewGame'){gameMenuOpen=!gameMenuOpen;renderSetup();return;}
-  if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;closeFocus();selectedPlayers=g.playerIds.filter(x=>x!==E.BOT_ID);if($('dartsBotEnabled'))$('dartsBotEnabled').checked=g.playerIds.includes(E.BOT_ID);$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
+  if(b.id==='dartsReplay'){rematchFinishedGame();return;}
+  if(b.id==='dartsReplaySetup'){openReplaySetup();return;}
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
  window.addEventListener('resize',()=>{if(focusActive)syncFocusUI();});

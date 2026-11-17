@@ -1,5 +1,5 @@
 {
-  "version": "3.4.1",
+  "version": "3.4.2",
   "released": "2026-11-17",
-  "notes": "Lesbarkeit im Vollbild-Spielmodus: Checkout-Text ohne Abschneiden, größere Spielerbeschriftungen, aussagekräftige X01-Zeile, deutlich erkennbare aktive/deaktivierte Schaltflächen. Keine Änderung der Kassen- und Spielregeln."
+  "notes": "Siegeransicht: kompakter Ergebnisbildschirm mit Pokal, konkretem X01-Finishmodus, Average, Darts, letztem und bestem Finish, Legs und Sets sowie direkter Revanche mit identischen Spielern und Regeln. Bisherige Partien und Jürgen-Kasse bleiben erhalten."
 }
