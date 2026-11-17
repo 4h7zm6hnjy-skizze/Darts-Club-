@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v2.2.0 */
+/* JÜRGEN DARTKASSE · own Dart-Spielmodus (offline) v3.1.0 */
 (function(){
 'use strict';
 const E=window.DartsGameEngine;
@@ -202,7 +202,7 @@ function renderDartPad(match,r){
  $('dartsConfirmTurn').disabled=!staged.length; $('dartsRemoveStaged').disabled=!staged.length;
  renderSpecialButtons();
  $('dartsTargetButtons').innerHTML=Array.from({length:20},(_,i)=>20-i).map(n=>`<button class="dart-target" data-number="${n}">${n}</button>`).join('')+
- `<button class="dart-target bull25" data-number="25" data-force-m="1">25</button><button class="dart-target bull50" data-number="25" data-force-m="2">Bull</button><button class="dart-target miss" data-number="0" data-force-m="0">Miss</button>`;
+ `<button class="dart-target bull25" data-number="25" data-force-m="1">25</button><button class="dart-target bull50" data-number="25" data-force-m="2">Bull</button><button class="dart-target miss" data-number="0" data-force-m="0">Miss</button><button class="dart-target miss" data-number="0" data-force-m="0" data-aim="double">D-Miss</button>`;
 }
 
 function scheduleBot(match){
@@ -254,6 +254,7 @@ function openFocus(){
 }
 function closeFocus(){
  if(!focusActive)return;
+ if(wakeLock){try{wakeLock.release().catch(()=>{});}catch{}wakeLock=null;}
  focusActive=false;
  syncFocusUI();
  $('dartsFocusEnter')?.focus({preventScroll:true});
@@ -377,7 +378,7 @@ function recordTurn(){
   const index=getState().dartMatches.findIndex(g=>g.id===game.id);
   getState().dartMatches[index]=updated;
   if(specialBooking!=='none'){
-   const groupId=api.addJuergenForThrower(throwerId,isPerfect,game.createdAt);
+   const groupId=api.addJuergenForThrower(throwerId,isPerfect,game.createdAt,true);
    if(!groupId){getState().dartMatches[index]=game;toast('Jürgen-Buchung fehlgeschlagen. Spielzug nicht übernommen.');return;}
    updated.turns.at(-1).juergenGroupId=groupId;
   }
@@ -415,6 +416,7 @@ function init(obj){ api=obj; const view=$('view-games');
  view.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
   if(b.id==='dartsFocusEnter'){openFocus();return;}
+  if(b.id==='dartsWakeLock'){toggleWakeLock();return;}
   if(b.id==='dartsFocusExit'){closeFocus();return;}
   if(b.id==='dartsFocusUndo'){undoTurn();return;}
   if(b.dataset.mode){selectMode(b.dataset.mode);return;}
@@ -426,7 +428,7 @@ function init(obj){ api=obj; const view=$('view-games');
    if(staged.length>=3){toast('Maximal drei Darts pro Aufnahme.');return;}
    const n=Number(b.dataset.number); const forced=b.dataset.forceM!==undefined?Number(b.dataset.forceM):null; const m=forced!==null?forced:(n===0?0:n===25?Math.min(ring,2):ring);
    if(n===25 && m===3){toast('Triple 25 gibt es nicht.'); return;}
-   staged.push({n,m}); renderDartPadIf(); return;
+   staged.push({n,m,...(b.dataset.aim==='double'?{aim:'double'}:{})}); renderDartPadIf(); return;
   }
   if(b.dataset.statsWindow){statsWindow=b.dataset.statsWindow;renderStats();return;}
   if(b.dataset.openGame){loadGame(b.dataset.openGame);return;}
@@ -454,5 +456,18 @@ function init(obj){ api=obj; const view=$('view-games');
  });
  render(); }
 function renderDartPadIf(){ const g=currentGame(); if(g)renderDartPad(g,E.replay(g)); }
-window.DartsGameUI={init,render,renderPlayerProfiles,activateMatch:loadGame};
+function stagePhotoDart(d){
+ const match=currentGame();
+ if(!match||E.replay(match).finished||E.replay(match).currentPlayerId===E.BOT_ID)return false;
+ if(!E.normalDart(d)||staged.length>=3)return false;
+ staged.push({n:d.n,m:d.m});document.querySelector('[data-view="games"]')?.click();render();openFocus();toast('Foto-Treffer zur aktuellen Aufnahme hinzugefügt. Bitte prüfen und bestätigen.');return true;
+}
+let wakeLock=null;
+async function toggleWakeLock(){
+ const b=$('dartsWakeLock');
+ if(wakeLock){try{await wakeLock.release()}catch{}wakeLock=null;if(b)b.textContent='☀ Bildschirm an';return;}
+ if(!('wakeLock' in navigator)){toast('Dieses Gerät unterstützt das Wachhalten des Bildschirms nicht.');return;}
+ try{wakeLock=await navigator.wakeLock.request('screen');if(b)b.textContent='☀ Aktiv';wakeLock.addEventListener('release',()=>{wakeLock=null;if(b)b.textContent='☀ Bildschirm an'});}catch{toast('Bildschirm konnte nicht wach gehalten werden.');}
+}
+window.DartsGameUI={init,render,renderPlayerProfiles,activateMatch:loadGame,stagePhotoDart,toggleWakeLock};
 })();

@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "released": "2026-11-17",
-  "notes": "Komplettupdate: Profi-Center mit Liga, K.-o., Gruppen, Teamduell, DartBot, Trainingszentrum, X01-Regeln, Spieleranalysen, CSV/PDF-Druck, Kamera-Ansicht und Offline-LAN-Reconnect-Hinweisen."
+  "notes": "Stabiler Dartabend: Sicherungspunkte, Speicherdiagnose, mehrfach gesendete WLAN-Würfe gegen Doppelbuchung geschützt, Zuschaueransicht, Club-Rangliste, Turnierfolge und manuell kalibrierte Foto-Trefferhilfe."
 }

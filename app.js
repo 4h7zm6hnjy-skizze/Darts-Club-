@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v3.0.0: Profi-Center Komplettupdate */
+/* JÜRGEN DARTKASSE — offline-first app, v3.1.0: Profi-Center Komplettupdate */
 'use strict';
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.1.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -216,7 +216,7 @@ function paperDaySummary(date){
   return {entries,points:entries.reduce((sum,e)=>sum+(Number.isInteger(e.points)?e.points:0),0)};
 }
 
-function recordEvents(list){state.events.push(...list.map(e=>({id:uid(),at:now(),voided:false,...e}))); persist(); render();}
+function recordEvents(list,{defer=false}={}){state.events.push(...list.map(e=>({id:uid(),at:now(),voided:false,...e})));if(!defer){persist();render();}}
 function recordEvent(e){recordEvents([e]);}
 
 function validateImported(obj){
@@ -302,8 +302,8 @@ function openIDB(){return new Promise(resolve=>{
   let done=false;
   const finish=db=>{if(done){if(db)try{db.close();}catch{}return;}done=true;clearTimeout(timer);if(!db)idbUnavailable=true;resolve(db);};
   const timer=setTimeout(()=>finish(null),3500);
-  let req; try{req=indexedDB.open(DB_NAME,1);}catch{finish(null);return;}
-  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('data'))req.result.createObjectStore('data');};
+  let req; try{req=indexedDB.open(DB_NAME,2);}catch{finish(null);return;}
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('data'))req.result.createObjectStore('data');if(!req.result.objectStoreNames.contains('snapshots'))req.result.createObjectStore('snapshots',{keyPath:'id'});};
   req.onsuccess=()=>finish(req.result); req.onerror=()=>finish(null); req.onblocked=()=>finish(null);
 });}
 function idbGet(){return new Promise(resolve=>{
@@ -317,7 +317,7 @@ function idbPut(value){return new Promise(resolve=>{if(!idb){resolve(false);retu
 function persist(){
   state.revision++; state.updatedAt=now();
   const saved=localSet(STORAGE_KEY,JSON.stringify(state));
-  idbPut(state).then(ok=>{if(!ok&&!saved)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';});
+  idbPut(state).then(ok=>{if(!ok&&!saved)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';if(ok)maybeAutoSnapshot();});
   if(!saved&&!idb)$('storageStatus').textContent='Speicherung nicht möglich – Backup erstellen!';
   try{window.DartLocalLive?.broadcast();}catch(err){console.warn('LAN-Synchronisierung:',err);}
 }
@@ -346,6 +346,68 @@ async function loadData(){
 }
 
 function blobDownload(name,text,type){const blob=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);}
+// This is an additional local recovery history, not an export to a different device.
+let lastAutoSnapshot=0;
+function writeSnapshot(copy){return new Promise(resolve=>{
+ if(!idb||!idb.objectStoreNames.contains('snapshots')){resolve(false);return;}
+ try{
+  const tx=idb.transaction('snapshots','readwrite'),store=tx.objectStore('snapshots');
+  store.put({id:'snap-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),at:now(),revision:copy.revision,data:copy});
+  tx.oncomplete=()=>resolve(true);tx.onabort=()=>resolve(false);tx.onerror=()=>resolve(false);
+ }catch{resolve(false);}
+});}
+function readSnapshots(){return new Promise(resolve=>{
+ if(!idb||!idb.objectStoreNames.contains('snapshots')){resolve([]);return;}
+ try{const tx=idb.transaction('snapshots','readonly');const req=tx.objectStore('snapshots').getAll();req.onsuccess=()=>resolve((req.result||[]).sort((a,b)=>b.at.localeCompare(a.at)));req.onerror=()=>resolve([]);}catch{resolve([]);}
+});}
+async function pruneSnapshots(){
+ const all=await readSnapshots();if(all.length<=5||!idb)return;
+ try{const tx=idb.transaction('snapshots','readwrite'),store=tx.objectStore('snapshots');for(const r of all.slice(5))store.delete(r.id);}catch{}
+}
+async function createSnapshot(showToast=true){
+ // Never create a recovery snapshot from an unvalidated state.
+ try{
+  const copy=validateImported(JSON.parse(JSON.stringify(state)));
+  const ok=await writeSnapshot(copy);if(ok){lastAutoSnapshot=Date.now();await pruneSnapshots();if(showToast)toast('Lokaler Wiederherstellungspunkt erstellt.');}
+  else if(showToast)toast('Lokale Sicherung nicht möglich. Bitte vollständiges JSON-Backup exportieren.');
+  return ok;
+ }catch(err){if(showToast)toast('Sicherung fehlgeschlagen: '+(err.message||'Speicherfehler'));return false;}
+}
+function maybeAutoSnapshot(){
+ if(Date.now()-lastAutoSnapshot<30*60*1000)return;
+ lastAutoSnapshot=Date.now();createSnapshot(false);
+}
+async function displaySnapshots(){
+ const target=$('storageRecoveryList');if(!target)return;
+ const all=await readSnapshots();target.innerHTML=all.length?all.map(r=>`<div class="recovery-item"><span><b>${esc(new Date(r.at).toLocaleString('de-DE'))}</b><small>Revision ${r.revision} · nur dieses Gerät</small></span><button type="button" class="outline-btn small" data-restore-snapshot="${esc(r.id)}">Wiederherstellen</button></div>`).join(''):'<p class="game-muted">Noch keine lokalen Wiederherstellungspunkte verfügbar.</p>';
+}
+async function restoreSnapshot(id){
+ const all=await readSnapshots();const found=all.find(x=>x.id===id);
+ if(!found){toast('Sicherung nicht gefunden.');return;}
+ let restored;try{restored=validateImported(found.data);}catch(err){toast('Sicherung ungültig: '+err.message);return;}
+ if(!confirm(`Diesen Datenstand vom ${new Date(found.at).toLocaleString('de-DE')} wiederherstellen? Aktuelle Änderungen seitdem gehen verloren. Vorher bitte ein vollständiges JSON-Backup erstellen.`))return;
+ // Keep another independent restore point, where possible.
+ await createSnapshot(false);
+ const old=localGet(STORAGE_KEY);if(old)localSet(RESTORE_KEY,old);
+ restored.revision=Math.max(state.revision,restored.revision)+1;restored.updatedAt=now();state=restored;
+ persist();toast('Lokaler Datenstand wiederhergestellt. App wird neu gestartet.');
+ const saved=await idbPut(state);if(!saved&&!localGet(STORAGE_KEY)){toast('Wiederherstellung konnte nicht sicher gespeichert werden.');return;}location.reload();
+}
+async function storageDiagnostics(){
+ const target=$('storageDiagOutput');if(!target)return;
+ let used='nicht verfügbar';try{const a=await navigator.storage?.estimate?.();if(a&&Number.isFinite(a.usage))used=(a.usage/1024/1024).toFixed(1)+' MB belegt';}catch{}
+ let offline='nicht verfügbar';try{const names=await caches.keys();offline=names.filter(x=>x.startsWith('juergen-dartkasse-static-')).join(', ')||'noch kein Cache';}catch{}
+ let snapshots=(await readSnapshots()).length;
+ let reg='nicht verfügbar';try{const x=await navigator.serviceWorker?.getRegistration?.();reg=x?'registriert':'nicht registriert';}catch{}
+ target.textContent=`Version ${APP_VERSION}\nSpeicher: ${idb?'IndexedDB aktiv':'IndexedDB nicht verfügbar'} · ${localGet(STORAGE_KEY)?'lokale Kopie':'keine lokale Kopie'}\nBelegung: ${used}\nWiederherstellungspunkte: ${snapshots}\nOffline: ${offline}\nService Worker: ${reg}\nSpieler: ${state.players.length} · Partien: ${state.dartMatches.length} · Jürgen-Ereignisse: ${state.events.length}\nAktuelle Datenrevision: ${state.revision}\nNetzwerk: ${navigator.onLine?'Browser meldet online':'offline'}\nHinweis: Diese Anzeige übermittelt keine Daten an einen Server.`;
+}
+function wireRecoveryHandlers(){
+ const create=$('storageSnapshotCreate'),list=$('storageSnapshotList'),diag=$('storageDiagButton'),results=$('storageRecoveryList');
+ if(create)create.onclick=async()=>{await createSnapshot();displaySnapshots()};
+ if(list)list.onclick=displaySnapshots;
+ if(diag)diag.onclick=storageDiagnostics;
+ if(results)results.onclick=e=>{const b=e.target.closest('[data-restore-snapshot]');if(b)restoreSnapshot(b.dataset.restoreSnapshot)};
+}
 function backup(){ const payload={backupType:'juergen-dartkasse',version:APP_VERSION,exportedAt:now(),data:state}; blobDownload(`Juergen-Dartkasse-Backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json'); toast('Backup gespeichert.'); }
 function csvEscape(v){const s=String(v??''); return /[;"\n\r]/.test(s)?'"'+s.replaceAll('"','""')+'"':s;}
 function exportCSV(){
@@ -431,7 +493,7 @@ function savePlayer(e){
 function toggleArchive(id){ const p=person(id); if(!p) return; const action=p.archived?'reaktivieren':'archivieren'; if(!confirm(`${p.name} ${action}? Bisherige Treffer und Buchungen bleiben erhalten.`))return; p.archived=!p.archived; if(p.archived) p.absent=false; if(selectedPlayerId===id && (p.archived||p.absent)) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.archived?'Spieler archiviert.':'Spieler reaktiviert.'); }
 function toggleAbsent(id){ const p=person(id); if(!p||p.archived) return; p.absent=!p.absent; if(selectedPlayerId===id && p.absent) selectedPlayerId=throwerPlayers()[0]?.id||null; if(!selectedPlayerId) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.absent?`${p.name} als abwesend markiert.`:`${p.name} ist wieder anwesend.`); }
 function deletePlayer(id){ const p=person(id); if(!p) return; if((state.events.some(e=>e.playerId===id||e.thrownBy===id)||(state.paperEntries||[]).some(e=>e.playerId===id)||(state.dartMatches||[]).some(g=>g.playerIds.includes(id))||(state.proTournaments||[]).some(t=>t.playerIds.includes(id))||(state.proTraining||[]).some(t=>t.playerId===id))|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
-function addJuergen(perfect){
+function addJuergen(perfect,defer=false){
   const thrower=person(selectedPlayerId);
   if(!thrower || thrower.archived || isAbsentForSelectedDate(thrower)){toast('Bitte zuerst einen anwesenden Spieler auswählen.'); return null;}
   const recipients = perfect ? state.players.filter(p=>p.id!==thrower.id) : [thrower];
@@ -441,7 +503,7 @@ function addJuergen(perfect){
   // Die Centbeträge werden auf die Empfänger verteilt; Punkte bleiben je 1.
   const pricePerRecipient=perfect?Math.floor(price/recipients.length):price;
   const remainingCents=perfect?price%recipients.length:0;
-  recordEvents(recipients.map((p,i)=>({type:'hit',kind:perfect?'perfect':'juergen',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target:null,mult:null,points:1,perfect,groupId,amount:pricePerRecipient+(i<remainingCents?1:0)})));
+  recordEvents(recipients.map((p,i)=>({type:'hit',kind:perfect?'perfect':'juergen',playerId:p.id,thrownBy:thrower.id,sessionId:state.activeSessionId,target:null,mult:null,points:1,perfect,groupId,amount:pricePerRecipient+(i<remainingCents?1:0)})),{defer});
   toast(perfect?`Perfekter Jürgen! ${recipients.length} andere Spieler bekommen je 1 Punkt. Gesamtpreis: ${euro(price)}.`:`Jürgen! 1 Punkt für ${thrower.name} · ${euro(price)}.`);
   return groupId;
 }
@@ -459,14 +521,14 @@ function canBookDartJuergen(throwerId,perfect,matchCreatedAt){
   if(!p||p.archived||isAbsentOnDate(p,date))return false;
   return !perfect||state.players.some(other=>other.id!==throwerId);
 }
-function addJuergenForThrower(throwerId,perfect,matchCreatedAt){
+function addJuergenForThrower(throwerId,perfect,matchCreatedAt,defer=false){
   if(!canBookDartJuergen(throwerId,perfect,matchCreatedAt))return null;
   const previousPlayer=selectedPlayerId, previousSession=state.activeSessionId;
   const date=dateFromTimestamp(matchCreatedAt);
   let session=state.sessions.find(item=>sessionDate(item)===date);
   if(!session){session={id:uid(),name:`Spieltag ${prettyDate(date)}`,date,createdAt:now()};state.sessions.push(session);}
   selectedPlayerId=throwerId;state.activeSessionId=session.id;
-  try{return addJuergen(perfect);}finally{selectedPlayerId=previousPlayer;state.activeSessionId=previousSession;}
+  try{return addJuergen(perfect,defer);}finally{selectedPlayerId=previousPlayer;state.activeSessionId=previousSession;}
 }
 // Spielmodus: gebuchte Jürgen sind über ihre Gruppen-ID mit einer Dart-Aufnahme verknüpft.
 // Bei einer Rücknahme wird nur die zugehörige Buchung storniert.
@@ -668,6 +730,7 @@ async function forceUpdateNow(){
 async function checkForUpdate(){ const status=$('updateStatus'); if(!['http:','https:'].includes(location.protocol)){status.textContent='Bei einer lokal geöffneten HTML-Datei kann kein Online-Update installiert werden.'; toast('Update-Prüfung erfordert eine veröffentlichte Website.'); return;} if(!navigator.onLine){status.textContent='Keine Internetverbindung. Die App bleibt offline nutzbar.'; toast('Offline: Update-Prüfung nicht möglich.'); return;} status.textContent='Prüfe die veröffentlichte Version …'; try{ const res=await fetch(`./version.json?check=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw Error('Versionsdatei nicht erreichbar'); const info=await res.json(); if(typeof info.version!=='string'||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.version)) throw Error('Ungültige Versionsdatei'); if(registration) await registration.update(); if(registration?.waiting){markUpdateAvailable(); return;} if(newer(info.version,APP_VERSION)){status.textContent=`Neue Version ${info.version} erkannt. Über „Aktualisierte App-Dateien neu laden“ kannst du die Version direkt öffnen.`; toast(`Version ${info.version} auf dem Server erkannt.`);} else{status.textContent=`Version ${APP_VERSION} ist laut Server aktuell. Zuletzt geprüft: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.`; toast('App ist auf dem aktuellen Stand.');} }catch(err){status.textContent=`Update konnte nicht geprüft werden: ${err.message}`; toast('Update-Prüfung fehlgeschlagen.');} }
 function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','http:'].includes(location.protocol)) return; navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloadAfterUpdate){reloadAfterUpdate=false; location.reload();}}); navigator.serviceWorker.register('./sw.js').then(reg=>{ registration=reg; if(reg.waiting&&navigator.serviceWorker.controller) markUpdateAvailable(); reg.addEventListener('updatefound',()=>{const installing=reg.installing; if(!installing)return; installing.addEventListener('statechange',()=>{if(installing.state==='installed'&&navigator.serviceWorker.controller)markUpdateAvailable();});}); }).catch(()=>{$('installHint').textContent='Offline-Installation benötigt HTTPS und einen Browser mit Service-Worker-Unterstützung.';}); }
 function setupEvents(){
+ wireRecoveryHandlers();
   try{window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});}
   catch(err){console.error('Dart-Spielmodus konnte nicht gestartet werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Fehler im Spielmodus. Die Jürgen-Kasse wurde getrennt gestartet. Bitte zuerst ein JSON-Backup erstellen.';}}
   try{window.DartsPro?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Profi-Center konnte nicht gestartet werden:',err);}
@@ -707,5 +770,5 @@ function setupEvents(){
 
 (async()=>{
  try{await loadData();setupEvents();render();const b=$('startupFailure');if(b)b.hidden=true;initServiceWorker();}
- catch(err){console.error('App-Start angehalten, um vorhandene Daten zu schützen:',err);const b=$('startupFailure');if(b){b.hidden=false;b.textContent='Daten konnten nicht sicher geladen werden. Es wurde nichts überschrieben. Bitte die App nicht löschen und keine leeren Backups importieren. Öffne die Website in Safari und prüfe das Update.';}document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);}
+ catch(err){console.error('App-Start angehalten, um vorhandene Daten zu schützen:',err);wireRecoveryHandlers();displaySnapshots();const b=$('startupFailure');if(b){b.hidden=false;b.textContent='Daten konnten nicht sicher geladen werden. Es wurde nichts überschrieben. Bitte die App nicht löschen und keine leeren Backups importieren. Öffne die Website in Safari und prüfe das Update.';}document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);}
 })();

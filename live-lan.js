@@ -1,4 +1,4 @@
-/* Jürgen Dartkasse – local, serverless iPhone/Android LAN session (beta) v3.0.0 */
+/* Jürgen Dartkasse – local, serverless iPhone/Android LAN session (beta) v3.1.0 */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
@@ -6,7 +6,7 @@ const E=()=>window.DartsGameEngine;
 const MAX_SIGNAL=12000;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const rnd=()=>{if(crypto?.randomUUID)return crypto.randomUUID();const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a).map(v=>v.toString(16).padStart(2,'0')).join('');};
-let api=null,role='host',sessionId='',hostPeers=new Map(),guestPeer=null,lastOffer='',lastAnswer='',staged=[],ring=1,pendingThrow='',currentSnapshot=null;
+let api=null,role='host',sessionId='',hostPeers=new Map(),guestPeer=null,lastOffer='',lastAnswer='',staged=[],ring=1,pendingThrow='',pendingPayload=null,currentSnapshot=null,spectator=false;
 let importedCode='',recentMailbox='';
 // One authoritative deduplication store per local session, independent of peer reconnects.
 const processedTurns=new Map();
@@ -77,6 +77,9 @@ function hostOnMessage(p,msg){if(!msg||typeof msg!=='object')return;
  if(msg.type==='turn'){
   const rid=String(msg.rid||'');if(!/^[-a-zA-Z0-9]{8,100}$/.test(rid))return;
   if(processedTurns.has(rid)){send(p,processedTurns.get(rid));return;}
+   // Even after reconnect/reload, a confirmed throw must never be charged twice.
+   const already=api.getState().dartMatches?.some(g=>g.id===msg.matchId && g.turns?.some(t=>t.lanRequestId===rid));
+   if(already){const ack={type:'ack',rid};processedTurns.set(rid,ack);send(p,ack);return;}
   if(p.seen.has(rid))return;
   p.seen.add(rid);if(p.seen.size>1000)p.seen.clear();
   const match=api.getState().dartMatches?.find(g=>g.id===api.getState().activeDartMatchId);
@@ -89,8 +92,8 @@ function hostOnMessage(p,msg){if(!msg||typeof msg!=='object')return;
   if(isJ&&!juergenKind){send(p,{type:'error',message:'Jürgen benötigt genau 1, 5 und 20 (Single/Double oder alle Triple).',rid});return;}
   if(isJ&&!api.canBookDartJuergen(p.playerId,juergenKind==='perfect',match.createdAt)){send(p,{type:'error',message:'Jürgen-Buchung für diesen Spieler nicht möglich.',rid});return;}
   try{
-   const updated=E().nextTurn(match,darts);const s=api.getState();const idx=s.dartMatches.findIndex(g=>g.id===match.id);s.dartMatches[idx]=updated;
-   if(isJ){const groupId=api.addJuergenForThrower(p.playerId,juergenKind==='perfect',match.createdAt);if(!groupId){s.dartMatches[idx]=match;send(p,{type:'error',message:'Jürgen-Buchung fehlgeschlagen.',rid});return;}updated.turns.at(-1).juergenGroupId=groupId;}
+   const updated=E().nextTurn(match,darts);const s=api.getState();const idx=s.dartMatches.findIndex(g=>g.id===match.id);s.dartMatches[idx]=updated;updated.turns.at(-1).lanRequestId=rid;
+   if(isJ){const groupId=api.addJuergenForThrower(p.playerId,juergenKind==='perfect',match.createdAt,true);if(!groupId){s.dartMatches[idx]=match;send(p,{type:'error',message:'Jürgen-Buchung fehlgeschlagen.',rid});return;}updated.turns.at(-1).juergenGroupId=groupId;}
    api.persist();api.render();const acknowledgement={type:'ack',rid};processedTurns.set(rid,acknowledgement);if(processedTurns.size>3000)processedTurns.delete(processedTurns.keys().next().value);send(p,acknowledgement);broadcast();
   }catch(err){send(p,{type:'error',message:err.message||'Wurf abgelehnt.',rid});}
  }
@@ -120,8 +123,8 @@ function guestOnMessage(msg){if(msg.type==='welcome'){uiStatus('liveGuestState',
  else if(msg.type==='snapshot'){currentSnapshot=msg.snapshot;renderGuest();}
  else if(msg.type==='status'){uiStatus('liveGuestState',String(msg.message||''));}
  else if(msg.type==='approved'){guestPeer.approved=true;guestPeer.playerId=msg.playerId;uiStatus('liveGuestState','Profil freigegeben. Du kannst bei deinem Zug werfen.');renderGuest();}
- else if(msg.type==='error'){pendingThrow='';uiStatus('liveGuestState','Abgelehnt: '+String(msg.message||''));renderGuest();}
- else if(msg.type==='ack'){if(pendingThrow===msg.rid){pendingThrow='';staged=[];$('liveGuestJuergen').checked=false;uiStatus('liveGuestState','Wurf auf dem Haupthandy gespeichert.');renderGuest();}}
+ else if(msg.type==='error'){pendingThrow='';pendingPayload=null;uiStatus('liveGuestState','Abgelehnt: '+String(msg.message||''));renderGuest();}
+ else if(msg.type==='ack'){if(pendingThrow===msg.rid){pendingThrow='';pendingPayload=null;staged=[];$('liveGuestJuergen').checked=false;uiStatus('liveGuestState','Wurf auf dem Haupthandy gespeichert.');renderGuest();}}
 }
 function renderGuest(){if(!currentSnapshot)return;const g=guestPeer;if(!g)return;
  const claim=$('liveGuestClaimBox');claim.hidden=!g.dc||g.dc.readyState!=='open'||g.approved;
@@ -135,23 +138,27 @@ function renderGuest(){if(!currentSnapshot)return;const g=guestPeer;if(!g)return
  $('liveGuestPad').hidden=!myTurn;
  $('liveGuestDarts').textContent=staged.length?staged.map(E().dartLabel).join(' · '):'Noch kein Dart';
  $('liveGuestSend').disabled=!myTurn||!staged.length||!!pendingThrow;
- $('liveGuestTargets').innerHTML=Array.from({length:20},(_,i)=>20-i).map(n=>`<button type="button" class="dart-target" data-lnum="${n}">${n}</button>`).join('')+'<button type="button" class="dart-target bull25" data-lnum="25" data-lmult="1">25</button><button type="button" class="dart-target bull50" data-lnum="25" data-lmult="2">Bull</button><button type="button" class="dart-target miss" data-lnum="0" data-lmult="0">Miss</button>';
+ const retry=$('liveGuestRetry');if(retry){retry.hidden=!pendingPayload;retry.disabled=!g.dc||g.dc.readyState!=='open'||!g.approved;}
+ $('liveGuestTargets').innerHTML=Array.from({length:20},(_,i)=>20-i).map(n=>`<button type="button" class="dart-target" data-lnum="${n}">${n}</button>`).join('')+'<button type="button" class="dart-target bull25" data-lnum="25" data-lmult="1">25</button><button type="button" class="dart-target bull50" data-lnum="25" data-lmult="2">Bull</button><button type="button" class="dart-target miss" data-lnum="0" data-lmult="0">Miss</button><button type="button" class="dart-target miss" data-lnum="0" data-lmult="0" data-laim="double">D-Miss</button>';
  $('liveGuestRings').querySelectorAll('[data-lring]').forEach(b=>b.classList.toggle('active',Number(b.dataset.lring)===ring));
 }
 function askClaim(){if(!guestPeer?.dc||guestPeer.dc.readyState!=='open')return;send(guestPeer,{type:'claim',playerId:$('liveGuestPlayer').value});}
 function sendGuestTurn(){const m=currentSnapshot?.match;if(!m||!guestPeer?.approved||m.currentId!==guestPeer.playerId||pendingThrow||!staged.length)return;
  const kind=$('liveGuestJuergen').checked?E().juergenType(staged):null;
  if($('liveGuestJuergen').checked&&!kind){uiStatus('liveGuestState','Jürgen benötigt 1, 5 und 20 in einer gültigen Kombination.');return;}
- pendingThrow=rnd();if(!send(guestPeer,{type:'turn',rid:pendingThrow,matchId:m.id,darts:staged.map(x=>({...x})),juergen:!!kind})){pendingThrow='';uiStatus('liveGuestState','Keine Verbindung zum Haupthandy.');return;}uiStatus('liveGuestState','Wurf an das Haupthandy gesendet. Warte auf Bestätigung.');renderGuest();}
+ pendingThrow=rnd();pendingPayload={type:'turn',rid:pendingThrow,matchId:m.id,darts:staged.map(x=>({...x})),juergen:!!kind};if(!send(guestPeer,pendingPayload)){pendingThrow='';pendingPayload=null;uiStatus('liveGuestState','Keine Verbindung zum Haupthandy.');return;}uiStatus('liveGuestState','Wurf an das Haupthandy gesendet. Warte auf Bestätigung.');renderGuest();}
 async function copyCode(code){if(!code)return;try{await navigator.clipboard.writeText(code);api?.toast('Verbindungscode kopiert.');}catch{const el=$('liveHandoffCode');el.value=code;el.focus();el.select();api?.toast('Code markieren und kopieren.');}}
 function startUI(){if(!$('view-live'))return;
  $('liveRoleHost').onclick=()=>chooseRole('host');$('liveRoleGuest').onclick=()=>chooseRole('guest');
  $('liveHostStart').onclick=startHost;$('liveHostStop').onclick=()=>{if(confirm('Verbindungen dieses Dartabends trennen?'))stopHost()};$('liveHostInvite').onclick=invite;
  $('liveHostApplyAnswer').onclick=()=>applyAnswer($('liveHostAnswer').value.trim()||lastMailbox());
  $('liveGuestConnect').onclick=()=>guestPrepare($('liveGuestOffer').value.trim());$('liveGuestClaim').onclick=askClaim;$('liveGuestSend').onclick=sendGuestTurn;
+ $('liveGuestRetry').onclick=()=>{if(!pendingPayload||!guestPeer?.approved){uiStatus('liveGuestState','Zuerst die Verbindung wiederherstellen und Profil freigeben.');return;}if(send(guestPeer,pendingPayload))uiStatus('liveGuestState','Gleiche Aufnahme erneut gesendet. Die Spielleitung prüft die Wurf-ID.');};
+ $('liveSpectatorEnter').onclick=()=>{if(!currentSnapshot?.match){uiStatus('liveGuestState','Zuerst verbinden und eine Partie starten.');return;}spectator=true;document.body.classList.add('dart-spectator-on');};
+ $('liveSpectatorExit').onclick=()=>{spectator=false;document.body.classList.remove('dart-spectator-on');};
  $('liveGuestUndo').onclick=()=>{staged.pop();renderGuest()};$('liveCopyOffer').onclick=()=>copyCode(lastOffer);$('liveCopyAnswer').onclick=()=>copyCode(lastAnswer);$('liveHandoffCopy').onclick=()=>copyCode(importedCode);
  $('liveHostPeers').addEventListener('click',ev=>{const b=ev.target.closest('[data-live-approve]');if(!b)return;const p=hostPeers.get(b.dataset.liveApprove);if(!p||!p.requestId)return;const existing=[...hostPeers.values()].find(x=>x!==p&&x.playerId===p.requestId);if(existing&&existing.dc?.readyState==='open'){api.toast('Profil ist bereits auf einem anderen verbundenen Handy aktiv.');return;}if(existing){stopPeer(existing);hostPeers.delete(existing.id);}p.playerId=p.requestId;p.requestId=null;send(p,{type:'approved',playerId:p.playerId});renderHostPeers();broadcast();});
- $('liveGuestTargets').addEventListener('click',ev=>{const b=ev.target.closest('[data-lnum]');if(!b||staged.length>=3||pendingThrow)return;const n=Number(b.dataset.lnum),m=b.dataset.lmult!==undefined?Number(b.dataset.lmult):ring;if(n===25&&m===3)return;staged.push({n,m});renderGuest()});
+ $('liveGuestTargets').addEventListener('click',ev=>{const b=ev.target.closest('[data-lnum]');if(!b||staged.length>=3||pendingThrow)return;const n=Number(b.dataset.lnum),m=b.dataset.lmult!==undefined?Number(b.dataset.lmult):ring;if(n===25&&m===3)return;staged.push({n,m,...(b.dataset.laim==='double'?{aim:'double'}:{})});renderGuest()});
  $('liveGuestRings').addEventListener('click',ev=>{const b=ev.target.closest('[data-lring]');if(!b)return;ring=Number(b.dataset.lring);renderGuest()});
  window.addEventListener('hashchange',importHash);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tryMailbox()});
  const hashCode=new URL(location.href).hash.match(/(?:^#|&)dlc=([^&]+)/)?.[1];if(hashCode){void importHash()}

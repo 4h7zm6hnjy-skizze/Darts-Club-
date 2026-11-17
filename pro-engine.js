@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · offline tournament, bot and statistics engine v3.0.0 */
+/* JÜRGEN DARTKASSE · offline tournament, bot and statistics engine v3.1.0 */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.DartsProEngine=api;})(typeof globalThis!=='undefined'?globalThis:null,function(){
 'use strict';
 const BOT_ID='__dartbot__';

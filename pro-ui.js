@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · locally stored Profi-Center v3.0.0 */
+/* JÜRGEN DARTKASSE · locally stored Profi-Center v3.1.0 */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
@@ -43,8 +43,8 @@ function renderTournaments(){const list=$('proTournamentList'),details=$('proTou
  const all=tourneys();if(!all.some(t=>t.id===selectedTournament))selectedTournament=all.at(-1)?.id||'';
  list.innerHTML=all.length?all.slice().reverse().map(tournamentItemHtml).join(''):'<p class="game-muted">Noch kein Turnier angelegt. Wähle links die Spieler und den Turniertyp.</p>';
  const t=all.find(x=>x.id===selectedTournament);if(!t){details.innerHTML='<p class="game-muted">Wähle ein Turnier aus.</p>';return;}
- const res=P.resolveFixtures(t,matches());const order=[...new Set(res.fixtures.map(f=>f.stage))];const results=res.fixtures.filter(f=>f.winnerId).length;
- details.innerHTML=`<div class="pro-details-head"><div><h3>${esc(t.name)}</h3><p class="game-muted">${results}/${res.fixtures.length} Begegnungen entschieden · lokal gespeichert</p></div><div class="pro-tools"><button class="outline-btn small" type="button" data-pro-export-tournament>CSV</button><button class="outline-btn small" type="button" data-pro-print-tournament>Drucken / PDF</button><button class="outline-btn small" type="button" data-pro-delete-tournament>Turnier löschen</button></div></div>${tournamentStandings(t,res)}${order.map(stage=>`<h4 class="pro-stage-head">${esc(stage)}</h4><div class="pro-fixtures">${res.fixtures.filter(f=>f.stage===stage).map(f=>fixtureHtml(t,f)).join('')}</div>`).join('')}`;
+ const res=P.resolveFixtures(t,matches());const order=[...new Set(res.fixtures.map(f=>f.stage))];const results=res.fixtures.filter(f=>f.winnerId).length;const next=res.fixtures.find(f=>f.ready&&!f.winnerId&&!f.matchId&&t.type!=='teams');
+ details.innerHTML=`<div class="pro-details-head"><div><h3>${esc(t.name)}</h3><p class="game-muted">${results}/${res.fixtures.length} Begegnungen entschieden · lokal gespeichert</p></div><div class="pro-tools"><button class="outline-btn small" type="button" data-pro-export-tournament>CSV</button><button class="outline-btn small" type="button" data-pro-print-tournament>Drucken / PDF</button><button class="outline-btn small" type="button" data-pro-delete-tournament>Turnier löschen</button></div></div>${next?`<div class="pro-next-match"><div><small>NÄCHSTE BEGEGNUNG</small><strong>${esc(name(next.a))} gegen ${esc(name(next.b))}</strong><span>${esc(next.stage)}</span></div><button type="button" class="primary-btn" data-pro-next="${esc(next.id)}">Nächste Partie starten</button></div>`:''}${tournamentStandings(t,res)}${order.map(stage=>`<h4 class="pro-stage-head">${esc(stage)}</h4><div class="pro-fixtures">${res.fixtures.filter(f=>f.stage===stage).map(f=>fixtureHtml(t,f)).join('')}</div>`).join('')}`;
 }
 function selectedFixture(id){const t=tourneys().find(x=>x.id===selectedTournament);return {t,fixture:t?P.resolveFixtures(t,matches()).fixtures.find(x=>x.id===id):null};}
 function startFixture(id){const {t,fixture:f}=selectedFixture(id);if(!t||!f||!f.ready||f.matchId||f.winnerId||t.type==='teams')return;
@@ -95,7 +95,32 @@ function commitTraining(){const s=trainSession;if(!s||!trainStaged.length)return
  trainNotice=bust?'Bust: Restpunktzahl für nächste Aufnahme wiederhergestellt.':'Aufnahme erfasst.';renderTraining();}
 function reportTable(id){const all=matches().filter(g=>g.playerIds.includes(id));const a=P.playerAnalytics(all,id),dr=P.trainingSummary(trainings(),id);const summaries=all.map(g=>{const replay=E.replay(g),report=E.playerReport(g,id);return {date:g.createdAt.slice(0,10),mode:g.mode,opponents:g.playerIds.filter(x=>x!==id).map(name).join(', '),status:replay.finished?(replay.winnerId===id?'Sieg':'Niederlage'):'Läuft',average:report.average3,darts:report.darts,highFinish:report.highFinish};});
  return {a,dr,summaries};}
-function playerAnalyticsMarkup(id,games){const a=P.playerAnalytics(games,id);const dr=P.trainingSummary(trainings(),id);const list=a.headToHead||[];return `<div class="pro-profile-extras"><h4>Erweiterte Dart-Analyse</h4><div class="pro-extra-grid"><div><small>Bestes gewonnenes Leg</small><strong>${a.bestLeg??'–'}${a.bestLeg?' Darts':''}</strong></div><div><small>Längstes gewonnenes Leg</small><strong>${a.worstLeg??'–'}${a.worstLeg?' Darts':''}</strong></div><div><small>Ø Darts pro gewonnenem Leg</small><strong>${a.legDarts??'–'}</strong></div><div><small>Training erfolgreich</small><strong>${dr.successPct===null?'–':fmt(dr.successPct)+' %'}</strong></div></div>${a.segments.length?`<h5>Trefferverteilung nach Zahlen</h5><div class="pro-segment-hits">${a.segments.map(([label,count])=>`<span>${esc(label)} <b>${count}</b></span>`).join('')}</div>`:''}${list.length?`<h5>Direkte Duelle</h5><div class="pro-h2h">${list.map(x=>`<div><span>${esc(name(x.id))}</span><strong>${x.wins} S · ${x.losses} N</strong></div>`).join('')}</div>`:''}<p class="game-muted">Trefferverteilung nach erfassten Zahlen; keine kameraerkannte Dartposition. Bestes und längstes Leg beziehen sich ausschließlich auf gewonnene X01-Legs.</p></div>`;}
+function moreStats(id,games){
+ const xs=games.filter(g=>g.mode==='x01'&&g.playerIds.includes(id)).sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
+ const last=xs.slice(-5);let fiveDarts=0,fivePoints=0;
+ let peak=0;let finishes=new Map();let won=0;
+ for(const g of xs){const r=E.replay(g),rep=E.playerReport(g,id);peak=Math.max(peak,rep?.highFinish||0);
+  if(r.finished&&r.winnerId===id)won++;
+  for(const h of r.history){if(h.playerId===id&&h.win){const lastDart=h.darts?.at(-1);if(lastDart&&lastDart.startsWith('D'))finishes.set(lastDart,(finishes.get(lastDart)||0)+1);}}
+ }
+ for(const g of last){const x=E.playerReport(g,id);fiveDarts+=x.darts||0;fivePoints+=x.totalPoints||0;}
+ const favorite=[...finishes].sort((a,b)=>b[1]-a[1])[0];
+ return {five:last.length,form:fiveDarts?Number((fivePoints/fiveDarts*3).toFixed(2)):null,favorite:favorite?.[0]||null,finish:peak,wins:won,played:xs.length};
+}
+function renderClub(){
+ const target=$('proClubLeaderboard');if(!target||!api)return;
+ const records=matches().filter(g=>g.mode==='x01');const rows=own().players.map(player=>{
+  const games=records.filter(g=>g.playerIds.includes(player.id));let pts=0,darts=0,firstPts=0,firstDarts=0,oneEighties=0;
+  let highest=0,wins=0,finished=0;
+  for(const g of games){const r=E.replay(g),report=E.playerReport(g,player.id);
+   pts+=report.totalPoints||0;darts+=report.darts||0;firstPts+=(r.players[player.id].first9Score||0);firstDarts+=(r.players[player.id].first9Darts||0);
+   oneEighties+=report.scores180||0;highest=Math.max(highest,report.highFinish||0);if(r.finished){finished++;if(r.winnerId===player.id)wins++;}
+  }
+  return {id:player.id,name:player.name,darts,games:games.length,avg:darts?pts/darts*3:null,first:firstDarts?firstPts/firstDarts*3:null,wins,finished,oneEighties,highest,form:moreStats(player.id,games).form};
+ }).sort((a,b)=>{const tier=x=>x.darts>=9?2:x.darts>0?1:0;return tier(b)-tier(a)||(b.avg??-1)-(a.avg??-1)||b.wins-a.wins||a.name.localeCompare(b.name,'de');});
+ target.innerHTML=rows.length?rows.map((x,i)=>`<article class="pro-rank-row"><div class="rank-number">${x.darts?i+1:"–"}</div><div class="rank-main"><strong>${esc(x.name)}</strong><small>${x.games} Partien · ${x.wins} Siege${x.darts<9?' · Average vorläufig':''}</small></div><div class="rank-metric"><b>${x.avg===null?'–':fmt(x.avg)}</b><small>3-Dart-Ø</small></div><div class="rank-metric"><b>${x.form===null?'–':fmt(x.form)}</b><small>Form 5 Spiele</small></div><div class="rank-metric"><b>${x.oneEighties}</b><small>180er</small></div><div class="rank-metric"><b>${x.highest||'–'}</b><small>High Finish</small></div></article>`).join(''):'<p class="game-muted">Noch keine Spieler vorhanden.</p>';
+}
+function playerAnalyticsMarkup(id,games){const extra=moreStats(id,games);const a=P.playerAnalytics(games,id);const dr=P.trainingSummary(trainings(),id);const list=a.headToHead||[];return `<div class="pro-profile-extras"><h4>Erweiterte Dart-Analyse</h4><div class="pro-extra-grid"><div><small>Aktuelle Form (letzte 5 X01-Partien)</small><strong>${extra.form===null?'–':fmt(extra.form)} PPR</strong></div><div><small>Lieblings-Finish-Doppel</small><strong>${esc(extra.favorite||'–')}</strong></div><div><small>Höchstes gespeichertes Finish</small><strong>${extra.finish||'–'}</strong></div><div><small>X01-Siege</small><strong>${extra.wins} / ${extra.played}</strong></div><div><small>Bestes gewonnenes Leg</small><strong>${a.bestLeg??'–'}${a.bestLeg?' Darts':''}</strong></div><div><small>Längstes gewonnenes Leg</small><strong>${a.worstLeg??'–'}${a.worstLeg?' Darts':''}</strong></div><div><small>Ø Darts pro gewonnenem Leg</small><strong>${a.legDarts??'–'}</strong></div><div><small>Training erfolgreich</small><strong>${dr.successPct===null?'–':fmt(dr.successPct)+' %'}</strong></div></div>${a.segments.length?`<h5>Trefferverteilung nach Zahlen</h5><div class="pro-segment-hits">${a.segments.map(([label,count])=>`<span>${esc(label)} <b>${count}</b></span>`).join('')}</div>`:''}${list.length?`<h5>Direkte Duelle</h5><div class="pro-h2h">${list.map(x=>`<div><span>${esc(name(x.id))}</span><strong>${x.wins} S · ${x.losses} N</strong></div>`).join('')}</div>`:''}<p class="game-muted">Trefferverteilung nach erfassten Zahlen; keine kameraerkannte Dartposition. Bestes und längstes Leg beziehen sich ausschließlich auf gewonnene X01-Legs.</p></div>`;}
 function renderReports(){const el=$('proReportPlayer');if(!el)return;const old=el.value;el.innerHTML=own().players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old;const id=el.value;if(!id)return;
  const r=reportTable(id);$('proReportPreview').innerHTML=`<div class="pro-report-stats"><span>${r.summaries.length} Partien</span><span>Bestes Leg: ${r.a.bestLeg??'–'}</span><span>${r.dr.attempts} Trainings</span></div><div class="pro-report-list">${r.summaries.slice(-6).reverse().map(x=>`<div><span>${esc(x.date)} · ${esc(x.mode)} · ${esc(x.opponents)}</span><b>${esc(x.status)}</b></div>`).join('')||'<p class="game-muted">Keine Partien für dieses Spielerprofil.</p>'}</div>`;
 }
@@ -105,12 +130,13 @@ function printMarkup(title,content){const print=$('proPrintSheet');if(!print)ret
 function printPlayer(){const id=$('proReportPlayer').value;if(!player(id))return;const r=reportTable(id);const table=`<table><thead><tr><th>Datum</th><th>Spielart</th><th>Gegner</th><th>Ergebnis</th><th>Average</th></tr></thead><tbody>${r.summaries.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.mode)}</td><td>${esc(x.opponents)}</td><td>${esc(x.status)}</td><td>${fmt(x.average)}</td></tr>`).join('')}</tbody></table><p>Bestes gewonnenes Leg: ${r.a.bestLeg??'–'} Darts · Trainings: ${r.dr.attempts} / geschafft ${r.dr.success}</p>`;printMarkup('Dart-Bericht · '+name(id),table);}
 function printTournament(){const t=tourneys().find(x=>x.id===selectedTournament);if(!t)return;const fixtures=P.resolveFixtures(t,matches()).fixtures;printMarkup('Dart-Turnier · '+t.name,`<table><thead><tr><th>Runde</th><th>Spieler A</th><th>Spieler B</th><th>Sieger</th></tr></thead><tbody>${fixtures.map(x=>`<tr><td>${esc(x.stage)}</td><td>${esc(name(x.a))}</td><td>${esc(name(x.b))}</td><td>${esc(x.winnerId?(t.type==='teams'?(x.winnerId==='teamA'?'Team A':'Team B'):name(x.winnerId)):'Offen')}</td></tr>`).join('')}</tbody></table>`);}
 function updateCamera(file){if(cameraUrl){URL.revokeObjectURL(cameraUrl);cameraUrl='';}const image=$('proCameraPreview');if(!image)return;if(!file){image.hidden=true;image.removeAttribute('src');return;}if(!file.type.startsWith('image/')){toast('Bitte ein Foto auswählen.');return;}cameraUrl=URL.createObjectURL(file);image.src=cameraUrl;image.hidden=false;toast('Foto nur lokal geöffnet. Treffer müssen weiterhin manuell erfasst werden.');}
-function render(){if(!api||!$('view-pro'))return;renderTabs();updatePlayerCheckboxes();renderTournaments();renderTraining();renderReports();}
+function render(){if(!api||!$('view-pro'))return;renderTabs();updatePlayerCheckboxes();renderTournaments();renderTraining();renderReports();renderClub();}
 function init(o){api=o;const root=$('view-pro');if(!root)return;
  root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.dataset.proTab){tab=b.dataset.proTab;renderTabs();return;}
  if(b.dataset.proSelect){selectedTournament=b.dataset.proSelect;renderTournaments();return;}
  if(b.dataset.proPlay){startFixture(b.dataset.proPlay);return;}
+ if(b.dataset.proNext){startFixture(b.dataset.proNext);return;}
  if(b.dataset.proOpenmatch){api.goView('games');window.DartsGameUI?.activateMatch(b.dataset.proOpenmatch);return;}
  if(b.dataset.proResult){manualResult(b.dataset.proResult,b.dataset.proSide);return;}
  if(b.dataset.proClear){clearFixture(b.dataset.proClear);return;}
