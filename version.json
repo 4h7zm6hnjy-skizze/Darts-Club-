@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.2.1",
   "released": "2026-11-17",
-  "notes": "Vollbild-Spielmodus: Aktuelle Dart-Partie in einem festen, scrollfreien Spielfenster; große Scores, kompaktes Eingabefeld und Schließen/Zurücknehmen. Neue Partien starten im Vollbild."
+  "notes": "iPhone-Vollbild: klare, vom Statusbereich abgesetzte Spielkopfzeile; feste Sicherheitsabstände im Hoch-/Querformat. Keine Änderungen an Partie- oder Kassenlogik."
 }

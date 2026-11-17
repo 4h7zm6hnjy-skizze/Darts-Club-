@@ -956,3 +956,52 @@ body.dart-focus-on .bottom-nav,body.dart-focus-on .sidebar,body.dart-focus-on .d
 .game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(3),
 .game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(n+5){display:none!important}
 .game-current.focus-active .game-live-meta.x01-live .live-meta-card:nth-child(4){display:block!important}
+
+
+/* v2.2.1 – iOS status-bar safe area / no blurred controls in live game.
+   portrait fallback is intentional: WebKit may report 0px safe-area in installed PWAs. */
+html.dart-focus-on #view-games.active{animation:none!important;transform:none!important;filter:none!important;opacity:1!important}
+body.dart-focus-on .game-current.focus-active{
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;filter:none!important;
+ isolation:isolate;
+}
+body.dart-focus-on .game-current.focus-active .game-section-head{
+ position:relative!important;z-index:3!important;
+ background:#081725!important;
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;filter:none!important;
+ opacity:1!important;text-shadow:none!important;
+ min-height:40px!important;padding:2px 0!important;
+}
+body.dart-focus-on .game-current.focus-active .game-section-head h2{
+ color:#fff9e5!important;font-size:clamp(15px,4vw,19px)!important;
+ line-height:1.22!important;font-weight:900!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsFocusExit,
+body.dart-focus-on .game-current.focus-active #dartsFocusUndo{
+ background:#203243!important;border:1px solid #8baab9!important;
+ color:#fff9e5!important;opacity:1!important;
+ min-height:33px!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsFocusExit{background:#593039!important;border-color:#d2969e!important}
+@media (orientation:portrait){
+ body.dart-focus-on .game-current.focus-active{
+   padding-top:max(94px, calc(env(safe-area-inset-top,0px) + 16px))!important;
+ }
+}
+@media (orientation:portrait) and (max-height:759px){
+ body.dart-focus-on .game-current.focus-active{
+   padding-top:max(74px, calc(env(safe-area-inset-top,0px) + 10px))!important;
+ }
+}
+@media (orientation:portrait) and (max-height:620px){
+ body.dart-focus-on .game-current.focus-active{
+   padding-top:max(62px, env(safe-area-inset-top,0px))!important;
+ }
+}
+@media (orientation:landscape){
+ body.dart-focus-on .game-current.focus-active{
+  padding-top:max(12px,env(safe-area-inset-top,0px))!important;
+ }
+ body.dart-focus-on .game-current.focus-active .game-section-head{min-height:28px!important;padding:0!important}
+ body.dart-focus-on .game-current.focus-active .game-section-head h2{font-size:14px!important}
+}
