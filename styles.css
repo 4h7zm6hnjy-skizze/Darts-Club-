@@ -1312,3 +1312,47 @@ body.elite-tv-open{overflow:hidden!important}
 
 /* Give quick actions visual priority on compact screens; hide only the decorative hero. */
 @media(max-width:660px){#view-games>.game-hero{display:none}.darts-quick-panel{margin-top:12px}}
+
+
+/* LIVE 3.4: gut lesbare Verbindung, Sicherheitsstatus und Wiederaufnahme */
+#view-live{color:#eff8ff}
+#view-live .game-muted{color:#c5d7e5;font-size:clamp(13px,2.1vw,15px);line-height:1.55}
+#view-live .live-panel h2{font-size:clamp(20px,4.5vw,27px)}
+#view-live .live-panel h3{font-size:clamp(17px,3.2vw,21px)}
+#view-live button{font-size:max(14px,1em);line-height:1.3}
+#view-live .live-role-switch button{font-size:clamp(13px,2.5vw,16px);min-height:50px}
+#view-live .live-panel textarea{font-size:14px;line-height:1.4}
+.live-safety-panel{border:1px solid #398c9c;background:linear-gradient(145deg,#13344a,#0a263c);border-radius:15px;padding:15px 17px;margin:10px 0 16px;color:#e7f7ff}
+.live-safety-panel strong{color:#7df3e2;font-size:15px}
+.live-safety-panel p{font-size:13px;margin:8px 0 11px;line-height:1.6;color:#d4e6f0}
+.live-local-result{background:#092438;border-left:4px solid #50d6ca;margin:12px 0 0;padding:12px 13px;color:#ecfaff;white-space:pre-line;font-size:13px;line-height:1.55}
+.live-connection-health,.live-connection-mini{display:flex;align-items:center;gap:11px;border:1px solid #546f82;border-radius:12px;background:#102c3d;padding:13px 14px;color:#f8fcff;font-size:15px;font-weight:800;line-height:1.35;margin:12px 0}
+.live-connection-health:before,.live-connection-mini:before{content:"";display:block;flex:none;width:12px;height:12px;background:#a8b9c9;border-radius:100%;box-shadow:0 0 0 3px #a8b9c930}
+.live-connection-health[data-connection=connected],.live-connection-mini[data-connection=connected]{background:#103a35;border-color:#59d6ac}
+.live-connection-health[data-connection=connected]:before,.live-connection-mini[data-connection=connected]:before{background:#54e4ae;box-shadow:0 0 0 3px #54e4ae30}
+.live-connection-health[data-connection=waiting],.live-connection-mini[data-connection=waiting]{border-color:#e4bd74;background:#433722}
+.live-connection-health[data-connection=waiting]:before,.live-connection-mini[data-connection=waiting]:before{background:#ffcd6c}
+.live-connection-health[data-connection=warning],.live-connection-mini[data-connection=warning],.live-connection-health[data-connection=error],.live-connection-mini[data-connection=error]{border-color:#ff977e;background:#462922}
+.live-connection-health[data-connection=warning]:before,.live-connection-mini[data-connection=warning]:before,.live-connection-health[data-connection=error]:before,.live-connection-mini[data-connection=error]:before{background:#ff9279}
+.live-wizard-guide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0 18px}
+.live-wizard-guide span{display:block;border:1px solid #365c71;background:#10283b;border-radius:10px;padding:10px;color:#e6f6fc;font-size:13px;font-weight:700;line-height:1.4}
+.live-pending-warning{border:2px solid #f3bd6c;background:#42301c;color:#fff6e9;padding:16px;border-radius:15px;line-height:1.55;font-size:15px;font-weight:700;margin:12px 0}
+.live-pending-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
+.live-pending-actions button{min-height:50px;margin:0}
+.live-pending-actions button[hidden],.live-pending-warning[hidden],.live-connection-mini[hidden]{display:none!important}
+.live-peer-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+#liveGuestTurnInfo{font-size:15px;font-weight:700;color:#f4f8ff}
+#liveGuestBoard .live-score-person b{font-size:clamp(14px,2.5vw,19px);color:#fff}
+#liveGuestBoard .live-score-person strong{color:#fff;line-height:1.1}
+#liveGuestBoard .live-score-person small{color:#d0e5f1;font-size:12px}
+body.dart-spectator-on #liveGuestConnectionMini{display:none!important}
+@media(max-width:420px){.live-wizard-guide{grid-template-columns:1fr 1fr}.live-wizard-guide span{font-size:12px}.live-pending-actions{grid-template-columns:1fr}}
+@media(min-width:720px){.live-wizard-guide{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* LIVE 3.4: minimale Lesbarkeit auf dem Handy */
+#view-live .game-muted{font-size:15px}
+#view-live .live-alert,#view-live .live-status{font-size:15px;line-height:1.55}
+#view-live .live-wizard-guide span{font-size:14px}
+#view-live .live-local-result,#view-live .live-safety-panel p{font-size:14px}
+#view-live .live-peer{font-size:14px}
+#view-live .live-code-box .game-muted{font-size:15px}

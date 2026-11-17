@@ -1,5 +1,5 @@
 {
-  "version": "3.3.0",
+  "version": "3.4.0",
   "released": "2026-11-17",
-  "notes": "Spielabend-Komfort: gespeicherte Schnellstart-Favoriten mit Spielern und Regeln (auch im JSON-Backup), direkte Fortsetzung offener Partien, größere und kontrastreiche Schaltflächen. Vorhandene Daten und Kassenlogik bleiben unverändert."
+  "notes": "Dartabend LIVE: verständlicher Verbindungsstatus und Gerätecheck, sichere Vormerkung nicht bestätigter Würfe über einen App-Neustart, Statusabgleich nach Wiederverbindung, identische Wurf-ID beim erneuten Senden, verbesserte iPhone/Android-Anleitung."
 }
