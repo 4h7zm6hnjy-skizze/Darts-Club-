@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.2.1",
   "released": "2026-11-17",
-  "notes": "Elite Center: nachvollziehbares Club-Elo, Form, echte Wurf-Heatmap, persönliche Trainingshinweise, direkter Duellvergleich, Checkout-Rechner, CSV/PDF-Partiebericht und TV-Scoreboard. Alle bisherigen Funktionen und Datenformate bleiben erhalten."
+  "notes": "Lesbarkeit: besserer Kontrast und Mindestschriftgrößen; iPhone-Statusleisten-Abstand der Zuschaueransicht; gut sichtbarer Schließen-Knopf; klare Anzeige ohne aktive Partie und Direktstart ins Spielcenter."
 }

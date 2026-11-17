@@ -1,4 +1,4 @@
-/* DARTS CLUB ELITE · purely read-only local game insights v3.2.0 */
+/* DARTS CLUB ELITE · purely read-only local game insights v3.2.1 */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id), A=window.DartsEliteEngine, E=window.DartsGameEngine;
@@ -42,8 +42,8 @@ function renderCheckout(){const v=$('eliteCheckoutNumber'),rule=$('eliteCheckout
  const d=E.checkoutRoute(checkValue,checkDarts,checkRule==='double',checkRule==='master');
  holder.innerHTML=d?`<div class="elite-checkout-result">${d.map(x=>`<span>${esc(E.dartLabel(x))}</span>`).join('<span class="elite-plus">+</span>')}</div><p>Eine mögliche Route für <b>${checkValue}</b> Restpunkte mit höchstens ${checkDarts} Darts. Keine Treffer-Garantie.</p>`:`<p>Für <b>${checkValue}</b> Restpunkte gibt es mit dieser Regel und ${checkDarts} ${checkDarts===1?'Dart':'Darts'} keine gefundene direkte Checkout-Route. Erst herunterspielen.</p>`;
 }
-function renderTV(){const root=$('eliteTvOverlay');if(!root)return;root.hidden=!tv;if(!tv)return;
- const m=matches().find(x=>x.id===state().activeDartMatchId);if(!m){$('eliteTvBoard').innerHTML='<p>Keine aktive Dart-Partie. Starte zuerst eine Partie im Spielcenter.</p>';$('eliteTvStatus').textContent='Zuschaueransicht';return;}
+function renderTV(){const root=$('eliteTvOverlay');if(!root)return;root.hidden=!tv;document.body.classList.toggle('elite-tv-open',tv);if(!tv)return;
+ const m=matches().find(x=>x.id===state().activeDartMatchId);if(!m){$('eliteTvBoard').innerHTML='<div class="elite-tv-empty"><span aria-hidden="true" class="elite-tv-empty-icon">🎯</span><h3>Keine Partie aktiv</h3><p>Starte im Spielcenter eine Dart-Partie. Danach werden hier die Spielernamen, Punkte und der aktuelle Werfer gut lesbar angezeigt.</p><button type="button" id="eliteTvStart" class="elite-tv-start">Zum Spielcenter</button></div>';$('eliteTvStatus').textContent='Zuschaueransicht';return;}
  try{const r=E.replay(m);$('eliteTvStatus').textContent=r.finished?'Partie beendet':'Aktive Partie · '+m.mode.toUpperCase();
   $('eliteTvBoard').innerHTML=m.playerIds.map(id=>{const s=r.players[id];if(!s)return '';const active=r.currentPlayerId===id&&!r.finished;return `<div class="elite-tv-card ${active?'elite-tv-active':''}"><small>${active?'AM ZUG':r.winnerId===id?'SIEGER':'SPIELER'}</small><strong>${esc(name(id))}</strong><b>${E.isX01(m.mode)?s.remaining:s.score}</b><span>Ø ${s.darts?num(s.pointsThrown/s.darts*3):'–'} · Legs ${s.legs} · Sets ${s.sets}</span></div>`;}).join('');}
  catch{$('eliteTvBoard').textContent='Spielstand konnte nicht geladen werden.';}
@@ -65,7 +65,8 @@ function init(x){api=x;const root=$('view-elite');if(!root)return;
  $('eliteMatchSelect').addEventListener('change',e=>{matchId=e.target.value;renderMatches();});
  [$('eliteCheckoutNumber'),$('eliteCheckoutRule'),$('eliteCheckoutDarts')].forEach(x=>x.addEventListener('change',()=>{checkValue=Number($('eliteCheckoutNumber').value);checkRule=$('eliteCheckoutRule').value;checkDarts=Number($('eliteCheckoutDarts').value);renderCheckout();}));
  $('eliteCheckoutNumber').addEventListener('input',()=>{checkValue=Number($('eliteCheckoutNumber').value);renderCheckout();});
- $('eliteTvClose').addEventListener('click',()=>{tv=false;renderTV();});
+ $('eliteTvClose').addEventListener('click',()=>{tv=false;renderTV();$('eliteTvOpen')?.focus();});
+ $('eliteTvOverlay').addEventListener('click',e=>{if(e.target.closest('#eliteTvStart')){tv=false;renderTV();api.goView('games');}});
  document.addEventListener('keydown',e=>{if(tv&&e.key==='Escape'){tv=false;renderTV();}});
 }
 window.DartsElite={init,render};

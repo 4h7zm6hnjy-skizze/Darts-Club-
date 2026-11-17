@@ -1215,3 +1215,79 @@ body.dart-spectator-on #liveGuestTurnInfo{font-size:18px;text-align:center}
 body.elite-view-on .dart-brand-showcase{position:relative!important;top:auto!important}
 
 .elite-rank-row{width:100%;text-align:left;font:inherit}
+
+/* v3.2.1 – Lesbarkeit: iPhone-Statusleiste, Zuschauer-Vollbild und kleinste Displays */
+:root{color-scheme:dark}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body.elite-tv-open{overflow:hidden!important}
+/* Text needs readable contrast throughout the normal app, not just in the score view. */
+.page-heading p,.panel-intro,.game-muted{color:#c6dbe7!important;font-size:max(13px,0.9em);line-height:1.55}
+.metric-label,.metric-sub,.action-tile small,.stat-foot,.subdued{color:#bbccde}
+#view-elite .elite-hero p,#view-elite .elite-match-result span{color:#d2e3ee;opacity:1}
+#view-elite .elite-rank-row small,#view-elite .elite-hit-row small,
+#view-elite .elite-duel small,#view-elite .elite-summary-grid small{font-size:max(12px,0.84em);opacity:1;color:#cfe1ec}
+#view-elite .elite-hit-row{font-size:14px}
+@media(max-width:920px){.mobile-nav-btn{min-width:0;flex:1 1 0;font-size:clamp(10px,2.85vw,12px);line-height:1.25;padding:4px 2px}}
+/* Standalone Safari can report 0 safe-area; reserve a status-bar strip anyway. */
+.elite-tv-overlay{
+ position:fixed!important;inset:0!important;
+ z-index:999999!important;
+ isolation:isolate;
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ filter:none!important;
+ padding:
+   max(88px,calc(env(safe-area-inset-top,0px) + 24px))
+   max(17px,env(safe-area-inset-right,0px))
+   max(24px,calc(env(safe-area-inset-bottom,0px) + 12px))
+   max(17px,env(safe-area-inset-left,0px))!important;
+ background:linear-gradient(165deg,#10334f 0%,#081e34 46%,#05101e 100%)!important;
+ gap:14px;
+ color:#fff!important;
+ -webkit-overflow-scrolling:touch;
+}
+.elite-tv-overlay *{filter:none!important;text-shadow:none!important}
+.elite-tv-header{flex:none;gap:12px;align-items:center;min-width:0}
+.elite-tv-header>div{min-width:0}
+.elite-tv-header small{font-size:clamp(12px,3.3vw,15px)!important;font-weight:800;letter-spacing:.035em;color:#aaf2ff!important;line-height:1.4}
+.elite-tv-header h2{color:#fff!important;font-size:clamp(23px,5.7vw,36px)!important;font-weight:900;line-height:1.2;margin:6px 0 0;overflow-wrap:anywhere}
+#eliteTvClose{flex:none;min-height:50px;min-width:106px;max-width:48%;padding:10px 13px!important;white-space:normal;line-height:1.25;font-size:clamp(14px,3.6vw,18px)!important;font-weight:850;color:#062033!important;background:#edfbff!important;border:2px solid #fff!important;box-shadow:0 2px 14px #00142675}
+#eliteTvClose:focus-visible,.elite-tv-start:focus-visible{outline:3px solid #f8d765!important;outline-offset:3px}
+.elite-tv-board{min-height:0;align-content:center;gap:12px}
+.elite-tv-card{min-width:0;border-width:2px;background:#123a55;color:#fff;gap:8px}
+.elite-tv-card small{font-size:clamp(12px,2.9vw,16px);color:#c9f7ff}
+.elite-tv-card strong{font-size:clamp(21px,5vw,35px);line-height:1.2}
+.elite-tv-card b{font-variant-numeric:tabular-nums;font-size:clamp(54px,12vw,136px)}
+.elite-tv-card span{font-size:clamp(14px,3vw,22px);color:#ebf8fc;line-height:1.4}
+.elite-tv-overlay footer{flex:none;font-size:clamp(12px,3vw,15px)!important;color:#d8ecf6!important;opacity:1!important;line-height:1.45;margin-top:4px}
+.elite-tv-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:clamp(18px,5vw,35px);width:min(100%,540px);margin:auto;text-align:center;border:2px solid #437892;border-radius:20px;background:#12344e;box-shadow:0 12px 36px #0003;color:#fff}
+.elite-tv-empty-icon{font-size:40px;line-height:1.2}
+.elite-tv-empty h3{font-size:clamp(23px,5vw,32px);line-height:1.2;margin:0;font-weight:900;color:#fff}
+.elite-tv-empty p{font-size:clamp(15px,3.5vw,20px);line-height:1.55;color:#e0f3ff;margin:0;max-width:38ch}
+.elite-tv-start{padding:14px 20px;min-height:50px;border:2px solid #b6ffe8;border-radius:12px;background:#79f5d3;color:#072d2b;font-size:16px;font-weight:900;margin-top:8px}
+@media(orientation:landscape){
+ .elite-tv-overlay{padding-top:max(56px,calc(env(safe-area-inset-top,0px) + 13px))!important;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))!important;gap:8px}
+ .elite-tv-header h2{font-size:clamp(21px,4vw,29px)!important}
+ #eliteTvClose{min-height:44px}
+ .elite-tv-card{min-height:135px}
+ .elite-tv-empty{padding:13px 20px;gap:6px;max-width:600px}
+ .elite-tv-empty-icon{font-size:30px}
+ .elite-tv-empty p{font-size:14px}
+ .elite-tv-start{min-height:44px;padding:8px 16px;margin-top:2px}
+}
+@media(max-width:400px){
+ .elite-tv-header{gap:8px}
+ .elite-tv-header small{font-size:12px!important}
+ #eliteTvClose{min-width:100px;padding:9px!important}
+ .elite-tv-card b{font-size:clamp(50px,14vw,67px)}
+ .elite-tv-board{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.elite-tv-overlay{scroll-behavior:auto}}
+/* On compact phones, give the complete score card enough vertical space.
+   Vertical scrolling is preferable to clipping the 3-dart average. */
+@media(max-width:400px){
+ .elite-tv-card{min-height:166px;padding:12px 10px;gap:6px}
+ .elite-tv-card small{font-size:12px}
+ .elite-tv-card strong{font-size:clamp(19px,5.2vw,24px)}
+ .elite-tv-card b{font-size:clamp(50px,13.5vw,65px)}
+ .elite-tv-card span{font-size:14px}
+}
