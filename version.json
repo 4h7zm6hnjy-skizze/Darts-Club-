@@ -1,5 +1,5 @@
 {
-  "version": "3.4.2",
+  "version": "3.4.3",
   "released": "2026-11-17",
-  "notes": "Siegeransicht: kompakter Ergebnisbildschirm mit Pokal, konkretem X01-Finishmodus, Average, Darts, letztem und bestem Finish, Legs und Sets sowie direkter Revanche mit identischen Spielern und Regeln. Bisherige Partien und Jürgen-Kasse bleiben erhalten."
+  "notes": "Kompakte Siegerkarte ohne vertikale Leerflächen, kontrastreiche Spielkopfzeile und lokaler Spielbericht mit Spielervergleich, Aufnahmenverlauf und Drucken/als PDF sichern. Keine Änderungen an Kasse und Spielregeln."
 }

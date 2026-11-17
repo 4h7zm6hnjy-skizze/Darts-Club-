@@ -1499,3 +1499,111 @@ body.dart-focus-on .game-current.focus-active #dartsFocusExit{
  .game-final-actions button{min-height:32px;font-size:10px;padding:5px}
  .game-final-screen p.game-final-note{font-size:9px;margin:4px 0 0}
 }
+
+
+/* v3.4.3 – compact finished score, clear toolbar, offline print report */
+body.dart-focus-on .game-current.focus-active .game-section-head h2{
+  color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;
+  opacity:1!important;filter:none!important;text-shadow:none!important;
+  font-weight:850!important;letter-spacing:0!important;
+  font-size:clamp(15px,4.1vw,18px)!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsFocusUndo{
+  background:#294357!important;color:#ffffff!important;
+  border:1px solid #c1dce5!important;font-weight:850!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsCurrent.is-finished:not([hidden]){
+  overflow-y:auto!important;overflow-x:hidden!important;
+  justify-content:flex-start!important;align-content:start!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsCurrent.is-finished #dartsWinner:not([hidden]){
+  display:flex!important;flex-direction:column!important;
+  flex:0 0 auto!important;align-self:stretch!important;
+  justify-content:flex-start!important;align-items:stretch!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:5px 0 12px!important;padding:clamp(12px,3.5vw,19px)!important;
+}
+.game-final-trophy{font-size:clamp(34px,8vw,46px);margin:4px 0 1px}
+.game-final-screen h3.game-final-name{font-size:clamp(27px,7vw,40px);margin:0}
+.game-final-screen p.game-final-mode{margin:5px 0 8px}
+.game-final-stats{margin:3px 0 8px}
+.game-final-stat{padding:9px 5px}
+.game-final-legs{padding:8px 11px;margin-bottom:8px}
+.game-final-legs-row{padding:5px 0}
+.game-final-actions{margin:2px 0}
+.game-final-report-button{grid-column:1/-1;border-color:#8fd3cc!important;
+ background:#16404b!important;color:#fff!important;min-height:43px!important;}
+.game-final-screen p.game-final-note{font-size:11px;line-height:1.35;margin:5px 0 0}
+@media(max-width:380px){
+ .game-final-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-final-actions{grid-template-columns:1fr}
+ .game-final-actions button{min-height:42px}
+}
+@media(max-height:590px) and (orientation:landscape){
+ body.dart-focus-on .game-current.focus-active #dartsCurrent.is-finished #dartsWinner:not([hidden]){
+  grid-column:2;grid-row:2;justify-content:flex-start!important;min-height:0!important;
+  padding:7px 10px!important;
+ }
+ .game-final-report-button{min-height:32px!important}
+ .game-final-trophy{font-size:25px;margin:2px 0}
+ .game-final-screen h3.game-final-name{font-size:23px}
+}
+/* The report is an in-app preview, never an upload. Native dialog overlays the game. */
+.darts-report-dialog{
+ position:fixed;inset:auto;max-width:min(94vw,780px);width:min(94vw,780px);
+ max-height:min(90dvh,950px);padding:0;border:1px solid #74b6c4;border-radius:17px;
+ background:#10283b;color:#f5fbff;overflow:auto;
+ box-shadow:0 24px 65px #000b;
+}
+.darts-report-dialog::backdrop{background:rgba(0,8,19,.86)}
+.darts-report-controls{position:sticky;top:0;z-index:2;background:#10283b;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:13px 16px;border-bottom:1px solid #527184}
+.darts-report-controls h2{font-size:clamp(18px,4vw,24px);margin:0;color:#fff}
+.darts-report-controls button{min-height:42px;white-space:normal;flex:none;font-size:13px}
+.darts-report-preview{padding:clamp(12px,3.5vw,24px)}
+.darts-report-head{border-bottom:1px solid #567c8b;padding-bottom:13px;margin-bottom:17px}
+.darts-report-kicker{color:#ffdf92;font-size:11px;font-weight:850;letter-spacing:.075em}
+.darts-report-head h2{font-size:clamp(21px,5vw,30px);line-height:1.25;margin:9px 0 5px;color:#fff;overflow-wrap:anywhere}
+.darts-report-head p,.darts-report-footnote{color:#c7dce5;font-size:13px;line-height:1.45;margin:3px 0}
+.darts-report-preview section{margin:14px 0 18px}
+.darts-report-preview h3,.darts-final-print-sheet h3{font-size:17px;color:#ffe4ab;margin:0 0 10px}
+.darts-report-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.darts-report-table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}
+.darts-report-table th,.darts-report-table td{border-bottom:1px solid #526b7b;padding:9px 8px;white-space:normal;vertical-align:top}
+.darts-report-table thead th{background:#21445a;color:#fff;font-weight:800}
+.darts-report-table tbody th{color:#e2f7fb;font-weight:800}
+.darts-report-table tbody td{color:#f4f7fc;font-variant-numeric:tabular-nums}
+.darts-report-turns{min-width:455px}
+.darts-report-controls-bottom{position:sticky;bottom:0;background:#10283b;border-top:1px solid #527184;
+ padding:12px 16px;display:grid;gap:5px}
+.darts-report-controls-bottom button{min-height:48px;font-size:15px}
+.darts-report-controls-bottom p{color:#ccdae4;font-size:12px;margin:0;line-height:1.4}
+.darts-final-print-sheet{display:none}
+@media print{
+ /* Overrides the older Pro-Center report print sheet without changing its default printing. */
+ html.dart-focus-on,body.dart-focus-on{height:auto!important;overflow:visible!important}
+ body.dart-final-print-active > *:not(#dartsFinalPrintSheet){display:none!important}
+ body.dart-final-print-active #proPrintSheet{display:none!important;visibility:hidden!important}
+ body.dart-final-print-active #dartsFinalPrintSheet,
+ body.dart-final-print-active #dartsFinalPrintSheet *{visibility:visible!important}
+ body.dart-final-print-active #dartsFinalPrintSheet{
+  display:block!important;position:static!important;inset:auto!important;
+  overflow:visible!important;width:100%!important;color:#111!important;
+  background:#fff!important;font:10pt/1.4 Arial,sans-serif!important;
+  padding:0!important;margin:0!important;max-width:none!important;
+ }
+ body.dart-final-print-active .darts-report-head{border-color:#aaa;break-after:avoid}
+ body.dart-final-print-active .darts-report-kicker{color:#333}
+ body.dart-final-print-active .darts-report-head h2{color:#111;font-size:19pt}
+ body.dart-final-print-active .darts-report-head p,
+ body.dart-final-print-active .darts-report-footnote{color:#444}
+ body.dart-final-print-active .darts-final-print-sheet h3{color:#111;break-after:avoid}
+ body.dart-final-print-active .darts-report-table-wrap{overflow:visible!important}
+ body.dart-final-print-active .darts-report-table{font-size:9pt;min-width:0!important;table-layout:auto}
+ body.dart-final-print-active .darts-report-table th,
+ body.dart-final-print-active .darts-report-table td{color:#111!important;background:#fff!important;border:1px solid #bbb!important;padding:5px 6px}
+ body.dart-final-print-active .darts-report-table thead{display:table-header-group}
+ body.dart-final-print-active .darts-report-table tr{break-inside:avoid}
+ @page{size:A4;margin:12mm}
+}

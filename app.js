@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v3.4.2: Dart Elite Analytics */
+/* JÜRGEN DARTKASSE — offline-first app, v3.4.3: Dart Elite Analytics */
 'use strict';
-const APP_VERSION = '3.4.2';
+const APP_VERSION = '3.4.3';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';

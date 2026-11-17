@@ -289,8 +289,55 @@ function finalResults(match,r){
   <p class="game-final-mode">${esc(matchRuleLabel(match))} beendet · ${r.history.length} Aufnahmen</p>
   <div class="game-final-stats">${stats.map(([label,value])=>`<div class="game-final-stat"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`).join('')}</div>
   ${legs}
-  <div class="game-final-actions"><button id="dartsReplay" class="primary-btn game-final-replay" type="button">↻ Revanche starten</button><button id="dartsReplaySetup" class="outline-btn game-final-setup" type="button">Andere Partie einstellen</button></div>
-  <p class="game-final-note">Revanche: gleiche Spieler und Regeln. Die bisherige Partie bleibt gespeichert.</p>`;
+  <div class="game-final-actions"><button id="dartsReplay" class="primary-btn game-final-replay" type="button">↻ Revanche starten</button><button id="dartsReplaySetup" class="outline-btn game-final-setup" type="button">Andere Partie einstellen</button><button id="dartsFinalReportOpen" class="outline-btn game-final-report-button" type="button">▤ Spielbericht ansehen / PDF</button></div>
+  <p class="game-final-note">Revanche mit denselben Spielern und Regeln · Die abgeschlossene Partie bleibt gespeichert.</p>`;
+}
+// Read-only match report. It uses the same replay / player reports as the scoreboard.
+function finalReportHtml(match, replay){
+ const win=replay.winnerId;
+ const names=match.playerIds.map(playerName);
+ const isX=E.isX01(match.mode);
+ const isCr=E.isCricket(match.mode);
+ const stats=match.playerIds.map(id=>E.playerReport(match,id));
+ const formattedDate=value=>{const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'}):'–';};
+ const time=formattedDate(match.finishedAt||replay.history.at(-1)?.at||match.createdAt);
+ const rows=[
+  ['Geworfene Darts',stats.map(x=>String(x.darts))],
+  [isCr?'Marks pro Runde':isX?'3-Dart-Average':'Punkte',stats.map(x=>isCr?fmt(x.mpr):isX?fmt(x.average3):String(x.score))],
+  ... (isX?[
+    ['First-9-Ø',stats.map(x=>x.first9?fmt(x.first9):'–')],
+    ['100+ Aufnahmen',stats.map(x=>String(x.scores100))],
+    ['140+ Aufnahmen',stats.map(x=>String(x.scores140))],
+    ['180 Aufnahmen',stats.map(x=>String(x.scores180))],
+    ['Bestes Finish',stats.map(x=>x.highFinish?String(x.highFinish):'–')],
+    ['Legs',match.playerIds.map(id=>String(replay.legHistory.filter(h=>h.winnerId===id).length))],
+    ['Sets',stats.map(x=>String(x.sets))]
+   ]:[]),
+  ['Aufnahmen',stats.map(x=>String(x.visits))],
+  ['Busts',stats.map(x=>String(x.busts))]
+ ];
+ const playerTable=`<div class="darts-report-table-wrap"><table class="darts-report-table"><thead><tr><th scope="col">Kennzahl</th>${names.map((n,i)=>`<th scope="col">${esc(n)}${match.playerIds[i]===win?' · Sieger':''}</th>`).join('')}</tr></thead><tbody>${rows.map(([label,values])=>`<tr><th scope="row">${esc(label)}</th>${values.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+ const shots=replay.history.map((h,i)=>`<tr><td>${i+1}</td><td>${esc(playerName(h.playerId))}</td><td>${esc(h.darts.join(' · '))}</td><td>${h.bust?'Bust':esc(String(h.score))}</td><td>${isX?esc(h.win?'0 · Finish':String(h.remaining)):esc(String(h.points))}</td></tr>`).join('');
+ const turnTable=`<div class="darts-report-table-wrap"><table class="darts-report-table darts-report-turns"><thead><tr><th scope="col">Nr.</th><th scope="col">Spieler</th><th scope="col">Darts</th><th scope="col">Aufnahme</th><th scope="col">${isX?'Rest':'Gesamt'}</th></tr></thead><tbody>${shots}</tbody></table></div>`;
+ return `<header class="darts-report-head"><div class="darts-report-kicker">JÜRGEN DARTKASSE · LOKALER SPIELBERICHT</div><h2>${esc(matchRuleLabel(match))} – ${esc(playerName(win))} gewinnt</h2><p>${esc(time)} · ${replay.history.length} Aufnahmen · ${names.length} Teilnehmer</p></header><section><h3>Spielervergleich</h3>${playerTable}</section><section><h3>Aufnahmenverlauf</h3>${turnTable}</section><p class="darts-report-footnote">Dieser Bericht basiert ausschließlich auf den lokal gespeicherten Würfen. Kassenbuchungen werden nicht verändert.</p>`;
+}
+function showFinalReport(){
+ const match=currentGame();if(!match)return;
+ const result=E.replay(match);if(!result.finished)return;
+ const dialog=$('dartsFinalReportDialog'),preview=$('dartsFinalReportPreview'),printSheet=$('dartsFinalPrintSheet');
+ if(!dialog||!preview||!printSheet)return;
+ const html=finalReportHtml(match,result);
+ preview.innerHTML=html;printSheet.innerHTML=html;
+ try{dialog.showModal();}catch(err){toast('Spielbericht konnte nicht geöffnet werden.');}
+}
+function printFinalReport(){
+ const printSheet=$('dartsFinalPrintSheet'),dialog=$('dartsFinalReportDialog');
+ if(!printSheet?.innerHTML)return;
+ if(dialog?.open)dialog.close();
+ document.body.classList.add('dart-final-print-active');
+ const cleanup=()=>document.body.classList.remove('dart-final-print-active');
+ window.addEventListener('afterprint',cleanup,{once:true});
+ try{window.print();}catch(err){cleanup();toast('Druckdialog nicht verfügbar. Bitte im Browser erneut versuchen.');}
 }
 function rematchFinishedGame(){
  const prior=currentGame();if(!prior||!E.replay(prior).finished)return;
@@ -327,6 +374,8 @@ function renderDartPad(match,r){
  if(isBot){$('dartsLive').hidden=true;$('dartsWinner').hidden=true;scheduleBot(match);return;}
  $('dartsLive').hidden=r.finished; $('dartsWinner').hidden=!r.finished;
  if(r.finished){
+  // A delayed earlier start notification must not cover the result buttons.
+  const oldToast=$('toast');if(oldToast)oldToast.classList.remove('show');
   $('dartsWinner').classList.add('game-final-screen');
   $('dartsWinner').innerHTML=finalResults(match,r);
   return;
@@ -605,9 +654,12 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.id==='dartsUndoTurn'){undoTurn();return;}
   if(b.id==='dartsDeleteGame'){deleteGame();return;}
   if(b.id==='dartsNewGame'){gameMenuOpen=!gameMenuOpen;renderSetup();return;}
+  if(b.id==='dartsFinalReportOpen'){showFinalReport();return;}
   if(b.id==='dartsReplay'){rematchFinishedGame();return;}
   if(b.id==='dartsReplaySetup'){openReplaySetup();return;}
  });
+ const dlg=$('dartsFinalReportDialog');
+ dlg?.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='dartsFinalReportClose'){dlg.close();return;}if(b.id==='dartsFinalReportPrint'){printFinalReport();return;}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
  window.addEventListener('resize',()=>{if(focusActive)syncFocusUI();});
  $('dartsMode').addEventListener('change',renderSetup);
