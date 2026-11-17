@@ -88,7 +88,7 @@ function commitTraining(){const s=trainSession;if(!s||!trainStaged.length)return
  }
  let left=s.remaining,bust=false,win=false,actual=0,points=0;
  for(const dart of darts){actual++;const value=E.dartValue(dart),next=left-value;if(next<0||next===1||(next===0&&dart.m!==2)){bust=true;break;}left=next;points+=value;if(next===0){win=true;break;}}
- s.used+=win?actual:3;
+ s.used+=actual;
  if(!bust){s.remaining=left;s.points+=points;}
  if(win){finishTraining(true);return;}
  if(s.used>=9){finishTraining(false);return;}
@@ -146,7 +146,7 @@ function init(o){api=o;const root=$('view-pro');if(!root)return;
  if(b.dataset.proPrintTournament!==undefined){printTournament();return;}
  if(b.id==='proTrainStart'){startTraining();return;}
  if(b.dataset.trainRing){trainRing=Number(b.dataset.trainRing);renderTraining();return;}
- if(b.dataset.trainNum!==undefined){if(!trainSession||trainStaged.length>=3)return;const n=Number(b.dataset.trainNum),m=b.dataset.trainM!==undefined?Number(b.dataset.trainM):trainRing;trainStaged.push({n,m});renderTraining();return;}
+ if(b.dataset.trainNum!==undefined){if(!trainSession||trainStaged.length>=3)return;if(trainSession.mode.startsWith('checkout')&&trainSession.used+trainStaged.length>=9){toast('Maximal neun Darts pro Checkout-Training.');return;}const n=Number(b.dataset.trainNum),m=b.dataset.trainM!==undefined?Number(b.dataset.trainM):trainRing;trainStaged.push({n,m});renderTraining();return;}
  if(b.dataset.proTrainUndo!==undefined){trainStaged.pop();renderTraining();return;}
  if(b.dataset.proTrainCommit!==undefined){commitTraining();return;}
  if(b.dataset.proTrainCancel!==undefined){if(!confirm('Training ohne Speichereintrag abbrechen?'))return;trainSession=null;trainStaged=[];renderTraining();return;}

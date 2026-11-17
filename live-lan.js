@@ -76,12 +76,13 @@ function hostOnMessage(p,msg){if(!msg||typeof msg!=='object')return;
  }
  if(msg.type==='turn'){
   const rid=String(msg.rid||'');if(!/^[-a-zA-Z0-9]{8,100}$/.test(rid))return;
+  if((api.getState().lanVoidedRequests||[]).includes(rid)){
+   send(p,{type:'error',rid,message:'Diese Aufnahme wurde vom Spielleiter zurückgenommen. Sie wird nicht erneut gebucht.'});return;
+  }
   if(processedTurns.has(rid)){send(p,processedTurns.get(rid));return;}
    // Even after reconnect/reload, a confirmed throw must never be charged twice.
    const already=api.getState().dartMatches?.some(g=>g.id===msg.matchId && g.turns?.some(t=>t.lanRequestId===rid));
    if(already){const ack={type:'ack',rid};processedTurns.set(rid,ack);send(p,ack);return;}
-  if(p.seen.has(rid))return;
-  p.seen.add(rid);if(p.seen.size>1000)p.seen.clear();
   const match=api.getState().dartMatches?.find(g=>g.id===api.getState().activeDartMatchId);
   if(!match||!p.playerId||msg.matchId!==match.id){send(p,{type:'error',message:'Spiel ist nicht aktiv oder Profil nicht zugewiesen.',rid});return;}
   let r;try{r=E().replay(match);}catch{send(p,{type:'error',message:'Partie kann nicht geprüft werden.',rid});return;}
@@ -108,7 +109,7 @@ async function invite(){if(!sessionId)return;try{
  }catch(err){uiStatus('liveHostState','Einladung fehlgeschlagen: '+err.message);}}
 async function applyAnswer(token){try{const signal=await unpackSignal(token);if(signal.kind!=='answer')throw Error('Bitte einen Antwort-Code verwenden.');const p=hostPeers.get(signal.peer);if(!p||!sessionId||signal.sid!==sessionId)throw Error('Code gehört nicht zu dieser laufenden Einladung.');await p.pc.setRemoteDescription({type:'answer',sdp:signal.sdp});uiStatus('liveHostState','Antwort übernommen. Warte auf direkte Verbindung …');$('liveHostAnswer').value='';lastOffer='';$('liveHostOfferBox').hidden=true;renderHostPeers();}catch(err){uiStatus('liveHostState','Antwort nicht übernommen: '+err.message);}}
 async function guestPrepare(token){try{
- if(pendingThrow){const proceed=confirm('Ein vorheriger Wurf wurde noch nicht bestätigt. Bitte vor dem erneuten Senden den Spielstand auf dem Haupthandy prüfen. Jetzt neu koppeln?');if(!proceed)return;pendingThrow='';staged=[];}
+ if(pendingThrow){const proceed=confirm('Ein Wurf ist noch nicht bestätigt. Nach der neuen Kopplung kannst du denselben Wurf erneut senden. Vorher den Spielstand am Haupthandy prüfen. Jetzt neu koppeln?');if(!proceed)return;/* Keep the exact request ID and darts until the host confirms them. */}
  if(!ready())throw Error('WebRTC oder QR-Erzeugung fehlen in diesem Browser.');
  const signal=await unpackSignal(token);if(signal.kind!=='offer')throw Error('Bitte einen Einladungs-Code verwenden.');
  if(guestPeer)stopPeer(guestPeer);
@@ -131,6 +132,8 @@ function renderGuest(){if(!currentSnapshot)return;const g=guestPeer;if(!g)return
  if(!claim.hidden){const sel=$('liveGuestPlayer');const existing=sel.value;sel.innerHTML=currentSnapshot.players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');if(currentSnapshot.players.some(p=>p.id===existing))sel.value=existing;}
  const match=currentSnapshot.match;const readyMatch=!!match;
  $('liveGuestGame').hidden=!readyMatch;
+ const retry=$('liveGuestRetry');
+ if(retry){retry.hidden=!pendingPayload;retry.disabled=!g.dc||g.dc.readyState!=='open'||!g.approved;}
  if(!readyMatch)return;
  $('liveGuestBoard').innerHTML=match.scores.map(p=>{const name=currentSnapshot.players.find(x=>x.id===p.id)?.name||'Spieler';return `<div class="live-score-person ${match.currentId===p.id?'active':''}"><b>${esc(name)}</b><strong>${esc(E().isX01(match.mode)?p.remaining:p.score)}</strong><small>Ø ${Number(p.average3).toFixed(2)} · Legs ${p.legs} · Sets ${p.sets}</small></div>`}).join('');
  const myTurn=!!g.approved&&g.dc?.readyState==='open'&&!match.finished&&match.currentId===g.playerId;
@@ -138,7 +141,6 @@ function renderGuest(){if(!currentSnapshot)return;const g=guestPeer;if(!g)return
  $('liveGuestPad').hidden=!myTurn;
  $('liveGuestDarts').textContent=staged.length?staged.map(E().dartLabel).join(' · '):'Noch kein Dart';
  $('liveGuestSend').disabled=!myTurn||!staged.length||!!pendingThrow;
- const retry=$('liveGuestRetry');if(retry){retry.hidden=!pendingPayload;retry.disabled=!g.dc||g.dc.readyState!=='open'||!g.approved;}
  $('liveGuestTargets').innerHTML=Array.from({length:20},(_,i)=>20-i).map(n=>`<button type="button" class="dart-target" data-lnum="${n}">${n}</button>`).join('')+'<button type="button" class="dart-target bull25" data-lnum="25" data-lmult="1">25</button><button type="button" class="dart-target bull50" data-lnum="25" data-lmult="2">Bull</button><button type="button" class="dart-target miss" data-lnum="0" data-lmult="0">Miss</button><button type="button" class="dart-target miss" data-lnum="0" data-lmult="0" data-laim="double">D-Miss</button>';
  $('liveGuestRings').querySelectorAll('[data-lring]').forEach(b=>b.classList.toggle('active',Number(b.dataset.lring)===ring));
 }

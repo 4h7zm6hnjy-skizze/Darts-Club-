@@ -392,11 +392,17 @@ function recordTurn(){
 }
 function undoTurn(){
  const game=currentGame();if(!game?.turns.length)return;
- const groupId=game.turns.at(-1).juergenGroupId;
+ const lastTurn=game.turns.at(-1);
+ const groupId=lastTurn.juergenGroupId;
  if(!confirm(groupId?'Letzte Aufnahme und dazugehörigen Jürgen inklusive Gebühren zurücknehmen?':'Letzte Aufnahme wirklich zurücknehmen?'))return;
  const updated=E.undoTurn(game);
  const index=getState().dartMatches.findIndex(g=>g.id===game.id);
  getState().dartMatches[index]=updated;
+ if(lastTurn.lanRequestId){
+  const rejected=getState().lanVoidedRequests||(getState().lanVoidedRequests=[]);
+  if(!rejected.includes(lastTurn.lanRequestId))rejected.push(lastTurn.lanRequestId);
+  if(rejected.length>3000)rejected.splice(0,rejected.length-3000);
+ }
  if(groupId)api.voidDartJuergenGroup?.(groupId);
  staged=[];specialBooking='none';api.persist();render();toast(groupId?'Aufnahme und Jürgen storniert.':'Letzte Aufnahme entfernt.');
 }

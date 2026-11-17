@@ -1,6 +1,6 @@
 /* JÜRGEN DARTKASSE — offline-first app, v3.1.0: Profi-Center Komplettupdate */
 'use strict';
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.1.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -63,6 +63,7 @@ function makeInitial(){
     activeDartMatchId:null,
     proTournaments:[],
     proTraining:[],
+    lanVoidedRequests:[],
     settings:{baseCents:0,champions:championDefaults()}
   };
 }
@@ -287,13 +288,16 @@ function validateImported(obj){
     const rid=new Set();
     proTraining=obj.proTraining.map(r=>{const parsed=window.DartsProEngine.validatePractice(r,pids);if(rid.has(parsed.id))throw Error('Doppelter Trainingseintrag.');rid.add(parsed.id);return parsed;});
   }
+  // Undo-Tombstones prevent already reversed LAN uploads from being accepted again.
+  if(obj.lanVoidedRequests!==undefined && (!Array.isArray(obj.lanVoidedRequests)||obj.lanVoidedRequests.length>3000||!obj.lanVoidedRequests.every(isId)))throw Error('Ungültige rückgängig gemachte Netzwerk-Würfe.');
+  const lanVoidedRequests=[...new Set(obj.lanVoidedRequests||[])];
   const cfg=obj.settings||{};
   const championsDefault=championDefaults();
   const champions={
     undisputed:{name:validText(cfg?.champions?.undisputed?.name,60)?cfg.champions.undisputed.name:championsDefault.undisputed.name,image:validText(cfg?.champions?.undisputed?.image,2000000)?cfg.champions.undisputed.image:''},
     summerslam:{name:validText(cfg?.champions?.summerslam?.name,60)?cfg.champions.summerslam.name:championsDefault.summerslam.name,image:validText(cfg?.champions?.summerslam?.image,2000000)?cfg.champions.summerslam.image:''}
   };
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
 }
 
 let idbUnavailable=false;
@@ -340,6 +344,7 @@ async function loadData(){
   if(!Array.isArray(state.dartMatches))state.dartMatches=[];
   if(!Array.isArray(state.proTournaments))state.proTournaments=[];
   if(!Array.isArray(state.proTraining))state.proTraining=[];
+  if(!Array.isArray(state.lanVoidedRequests))state.lanVoidedRequests=[];
   if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
   selectedPlayerId=throwerPlayers()[0]?.id||null;
   // Save only after an explicit user action. This prevents a blank state replacing stored data.

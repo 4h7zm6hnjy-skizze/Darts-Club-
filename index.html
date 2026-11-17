@@ -11,16 +11,16 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=3.1.0">
+  <link rel="stylesheet" href="./styles.css?v=3.1.1">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=3.1.0" defer></script>
-  <script src="./pro-engine.js?v=3.1.0" defer></script>
-  <script src="./games-ui.js?v=3.1.0" defer></script>
-  <script src="./pro-ui.js?v=3.1.0" defer></script>
-  <script src="./camera-assist.js?v=3.1.0" defer></script>
-  <script src="./qr-offline.js?v=3.1.0" defer></script>
-  <script src="./live-lan.js?v=3.1.0" defer></script>
-  <script src="./app.js?v=3.1.0" defer></script>
+  <script src="./games-engine.js?v=3.1.1" defer></script>
+  <script src="./pro-engine.js?v=3.1.1" defer></script>
+  <script src="./games-ui.js?v=3.1.1" defer></script>
+  <script src="./pro-ui.js?v=3.1.1" defer></script>
+  <script src="./camera-assist.js?v=3.1.1" defer></script>
+  <script src="./qr-offline.js?v=3.1.1" defer></script>
+  <script src="./live-lan.js?v=3.1.1" defer></script>
+  <script src="./app.js?v=3.1.1" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -36,7 +36,7 @@
         <button class="nav-btn" data-view="cash"><span class="nav-icon">€</span> Kassenbuch</button>
         <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span> Einstellungen</button>
       </nav>
-      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.1.0</span><br>© Marcel Hentschel 2026</small></div>
+      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.1.1</span><br>© Marcel Hentschel 2026</small></div>
     </aside>
     <div class="main-wrap">
       <header class="topbar" hidden></header>
@@ -52,7 +52,7 @@
             <small id="storageStatus" class="brand-status">Daten werden lokal gesichert</small>
           </div>
           <div class="dart-brand-showcase-actions">
-            <span class="version-pill">v<span class="version-value">3.1.0</span></span>
+            <span class="version-pill">v<span class="version-value">3.1.1</span></span>
             <button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button>
           </div>
         </div>
@@ -174,7 +174,8 @@
     <div id="liveGuestState" class="live-status">Nicht verbunden.</div>
     <div id="liveGuestClaimBox" hidden><label class="field-label" for="liveGuestPlayer">Dein Spielerprofil</label><select id="liveGuestPlayer"></select><button type="button" id="liveGuestClaim" class="primary-btn">Profil beim Spielleiter anfragen</button><p class="game-muted">Der Spielleiter muss die Zuordnung bestätigen.</p></div>
     <div id="liveGuestGame" hidden><div class="live-spectator-top"><h3>Live-Spielstand</h3><button id="liveSpectatorEnter" type="button" class="outline-btn small">▣ Zuschauer-Vollbild</button><button id="liveSpectatorExit" type="button" class="outline-btn small">✕ Schließen</button></div><div id="liveGuestBoard" class="live-scoreboard"></div><p id="liveGuestTurnInfo" class="live-status"></p>
-      <div id="liveGuestPad" hidden><div class="dart-input-title">Trefferart</div><div class="live-rings" id="liveGuestRings"><button type="button" data-lring="1" class="active">Single</button><button type="button" data-lring="2">Double</button><button type="button" data-lring="3">Triple</button></div><div class="dart-input-title">Feld</div><div class="game-target-buttons" id="liveGuestTargets"></div><div id="liveGuestDarts" class="live-dart-list">Noch kein Dart</div><div class="live-row"><button type="button" id="liveGuestUndo" class="outline-btn">Letzten Dart entfernen</button><button type="button" id="liveGuestSend" class="primary-btn">Wurf senden</button><button type="button" id="liveGuestRetry" class="outline-btn" hidden>Unbestätigten Wurf erneut senden</button></div><label class="live-juergen-label"><input type="checkbox" id="liveGuestJuergen"> Jürgen aus den drei getroffenen Feldern 1, 5, 20 mitbuchen</label></div>
+      <div id="liveGuestPad" hidden><div class="dart-input-title">Trefferart</div><div class="live-rings" id="liveGuestRings"><button type="button" data-lring="1" class="active">Single</button><button type="button" data-lring="2">Double</button><button type="button" data-lring="3">Triple</button></div><div class="dart-input-title">Feld</div><div class="game-target-buttons" id="liveGuestTargets"></div><div id="liveGuestDarts" class="live-dart-list">Noch kein Dart</div><div class="live-row"><button type="button" id="liveGuestUndo" class="outline-btn">Letzten Dart entfernen</button><button type="button" id="liveGuestSend" class="primary-btn">Wurf senden</button></div><label class="live-juergen-label"><input type="checkbox" id="liveGuestJuergen"> Jürgen aus den drei getroffenen Feldern 1, 5, 20 mitbuchen</label></div>
+      <button type="button" id="liveGuestRetry" class="outline-btn live-retry-button" hidden>Unbestätigten Wurf erneut senden</button>
     </div>
   </div>
   <div id="liveHandoffPanel" class="live-panel" hidden><h2>Verbindungs-Code aus der Kamera</h2><p class="game-muted">Der Code wurde aus dem QR-Link erkannt. Kopiere ihn bei Bedarf und wechsle zurück in die installierte App auf deinem iPhone.</p><textarea id="liveHandoffCode" rows="3" readonly></textarea><button id="liveHandoffCopy" class="primary-btn" type="button">Code kopieren</button></div>
@@ -205,7 +206,7 @@
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELTAGE</span><h2>Spieltag wählen</h2></div></div><p class="panel-intro">Wähle ein Datum. Für bereits erfasste Spieltage werden die vorhandenen Punkte angezeigt. Neue Daten erhalten einen eigenen Spieltag; Zahlungen und der Kassenstand bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">Datum auswählen</button></div>
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">03 / SICHERUNG</span><h2>Backup & Export</h2></div></div><p class="panel-intro">Alle Daten bleiben auf diesem Gerät. Sichere sie regelmäßig als Datei, insbesondere vor Updates oder einem Gerätewechsel.</p><div class="button-stack"><button id="exportBackup" class="primary-btn full">↓ Vollständiges JSON-Backup</button><button id="importBackup" class="outline-btn full">↑ Backup wiederherstellen</button><button id="importPaper" class="outline-btn full">↑ Papierliste 2026 importieren</button><button id="restorePrevious" class="outline-btn full" hidden>↶ Stand vor letztem Import zurückholen</button><button id="exportCsvSettings" class="outline-btn full">↓ Buchungen als CSV</button></div><div class="storage-recovery"><h3>Lokale Sicherheit & Wiederherstellung</h3><p class="game-muted">Zusätzliche Sicherungspunkte werden maximal alle 30 Minuten lokal erzeugt und auf fünf Stände begrenzt. Sie ersetzen kein JSON-Backup außerhalb des Geräts.</p><div class="storage-actions"><button id="storageSnapshotCreate" type="button" class="outline-btn">Sicherungspunkt jetzt erstellen</button><button id="storageSnapshotList" type="button" class="outline-btn">Sicherungspunkte anzeigen</button><button id="storageDiagButton" type="button" class="outline-btn">Offline- und Speicherdaten anzeigen</button></div><div id="storageRecoveryList" aria-live="polite"></div><pre id="storageDiagOutput" class="storage-diagnostics"></pre></div><input type="file" id="backupFile" accept="application/json,.json" hidden><input type="file" id="paperFile" accept="application/json,.json" hidden></div>
-              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.1.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
+              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.1.1</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
             </div>
           </div>
           <div class="footer-warning">Hinweis: Offline-Speicher auf Mobilgeräten kann vom Betriebssystem gelöscht werden. Das JSON-Backup ist deine zusätzliche Sicherung.<br>© Marcel Hentschel 2026</div>

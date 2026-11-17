@@ -1153,3 +1153,7 @@ body.dart-spectator-on #liveGuestTurnInfo{font-size:18px;text-align:center}
 /* Kleine Bildschirmtaste im Vollbild, verständlicher Titel bleibt für Bedienungshilfen */
 .game-current.focus-active #dartsWakeLock{font-size:0!important;min-width:29px;width:29px;max-width:29px;padding:3px 4px!important}
 .game-current.focus-active #dartsWakeLock:before{content:"☀";font-size:14px}
+
+/* v3.1.1 - retriable LAN message is always accessible when unconfirmed */
+.live-retry-button{display:block;width:100%;margin-top:12px;min-height:48px}
+.live-retry-button[hidden]{display:none}
