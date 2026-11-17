@@ -1830,7 +1830,7 @@ body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .
  body.dart-all-focus-on .all-focus-active{padding-bottom:6px!important}
 }
 
-/* 3.7.0 Dartabend-Zentrale – mobile-first cards, no changes to gameplay focus. */
+/* 3.8.0 Dartabend-Zentrale – mobile-first cards, no changes to gameplay focus. */
 .evening-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:10px 0 18px}
 .evening-person{display:flex;align-items:center;gap:9px;padding:12px;background:rgba(255,255,255,.045);border:1px solid rgba(173,195,224,.2);border-radius:12px;color:#f2f6ff;font-weight:650;min-width:0;overflow-wrap:anywhere}
 .evening-person input{width:19px;height:19px;flex:none;accent-color:#6edbb4}
@@ -1851,3 +1851,5 @@ body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .
 .evening-day-ledger{background:rgba(85,153,192,.08);border:1px solid rgba(122,179,219,.32);padding:14px;border-radius:12px;margin:15px 0}
 .evening-day-ledger b{color:#f4faff}.evening-day-ledger p{color:#fff;margin:8px 0}.evening-day-ledger small{color:#c8d6e7;line-height:1.5;display:block}
 @media(max-width:420px){.evening-controls{flex-direction:column}.evening-controls button{width:100%}.evening-fixture{flex-wrap:wrap}.evening-fixture button{width:100%}.evening-head .evening-controls{width:100%}.evening-metrics strong{font-size:1.15rem}}
+/* Dated champion stars */
+.champion-star{display:inline-block;font-size:1.3em;font-weight:900;white-space:nowrap;vertical-align:middle}.champion-star.undisputed{color:#ffda63;text-shadow:0 0 10px #dbac2855}.champion-star.summerslam{color:#ff9149;text-shadow:0 0 10px #ff710055}#starAwardForm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}#starAwardForm label{display:grid;gap:6px;min-width:0}#starAwardForm input,#starAwardForm select{width:100%;min-width:0}#starAwardForm button{grid-column:1/-1}.star-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #ffffff22}.star-history-row small{display:block;color:#a8bbce}.star-profile{padding:12px;margin:10px 0;border:1px solid #d4ad4b66;border-radius:12px}.star-profile summary{cursor:pointer}.star-profile p{font-size:.9rem}#championAwardsPanel{margin-top:18px}@media(max-width:600px){#starAwardForm{grid-template-columns:1fr}.star-history-row{align-items:flex-start;flex-direction:column}}

@@ -30,6 +30,11 @@ function validateTournament(value,playerIds){
   const teamDuelId=value.type==='teams'&&idOK(res.teamDuelId)?res.teamDuelId:null;
   if(matchId||manualWinnerId)results[k]={...(matchId?{matchId}:{}),...(manualWinnerId?{manualWinnerId}:{}),...(teamDuelId&&manualWinnerId?{teamDuelId}:{})};
  }
+ if(value.championKind!==undefined){
+  if(!['undisputed','summerslam'].includes(value.championKind)||!['knockout','groups'].includes(value.type))throw Error('Ungültiges Champion-Turnier.');
+  base.championKind=value.championKind;
+ }
+ if(value.awardDate!==undefined){if(!/^\d{4}-\d{2}-\d{2}$/.test(value.awardDate)||!Number.isFinite(Date.parse(value.awardDate)))throw Error('Ungültiges Siegerdatum.');base.awardDate=value.awardDate;}
  base.results=results;
  return base;
 }

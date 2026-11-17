@@ -1,4 +1,4 @@
-/* Darts-Club 3.7.0 — local event organizer, read-only match/ledger overview. */
+/* Darts-Club 3.8.0 — local event organizer, read-only match/ledger overview. */
 (function(){'use strict';
 const $=id=>document.getElementById(id),E=window.DartsEveningEngine,G=window.DartsGameEngine;
 if(!E||!G)return;

@@ -25,7 +25,7 @@ function renderTabs(){document.querySelectorAll('[data-pro-tab]').forEach(el=>{e
 function updatePlayerCheckboxes(){const el=$('proTournamentPlayers');if(!el)return;const saved=new Set([...el.querySelectorAll('input:checked')].map(c=>c.value));el.innerHTML=own().players.filter(p=>!p.archived).map(p=>`<label class="pro-player-pick"><input type="checkbox" value="${esc(p.id)}" ${saved.has(p.id)?'checked':''}><span>${esc(p.name)}</span></label>`).join('')||'<p class="game-muted">Lege unter „Spieler“ zuerst mindestens zwei Profile an.</p>';}
 function createTournament(){
  const type=$('proTournamentType').value,ids=[...$('proTournamentPlayers').querySelectorAll('input:checked')].map(x=>x.value),label=$('proTournamentName').value;
- try{const t=P.makeTournament({name:label,type,playerIds:ids,options:{start:Number($('proTournamentStart').value),bestOfLegs:Number($('proTournamentLegs').value),outRule:$('proTournamentOutRule').value}});own().proTournaments.push(t);selectedTournament=t.id;api.persist();render();toast('Turnier erstellt.');}catch(err){toast(err.message);}
+ try{const kind=$('championPreset').value;if(kind&&!['knockout','groups'].includes(type))throw Error('Für Siegersterne bitte K.-o. oder Gruppen + K.-o. wählen.');const t=P.makeTournament({name:label,type,playerIds:ids,options:{start:Number($('proTournamentStart').value),bestOfLegs:Number($('proTournamentLegs').value),outRule:$('proTournamentOutRule').value}});if(kind)t.championKind=kind;own().proTournaments.push(t);selectedTournament=t.id;api.persist();render();toast('Turnier erstellt.');}catch(err){toast(err.message);}
 }
 function tournamentItemHtml(t){const x=P.resolveFixtures(t,matches());return `<button type="button" class="pro-tournament-item ${selectedTournament===t.id?'active':''}" data-pro-select="${esc(t.id)}"><strong>${esc(t.name)}</strong><small>${esc({league:'Liga / Jeder gegen jeden',knockout:'K.-o.-Turnier',groups:'Gruppen + K.-o.',teams:'Teamduell'}[t.type])} · ${t.playerIds.length} Spieler · ${x.fixtures.filter(f=>f.winnerId).length}/${x.fixtures.length} entschieden</small></button>`;}
 function tournamentStandings(t,res){if(t.type==='teams'||t.type==='knockout')return '';
@@ -58,7 +58,7 @@ function manualResult(id,side){const {t,fixture:f}=selectedFixture(id);if(!t||!f
  if(!confirm(`${label} als Sieger erfassen? Das Ergebnis wird als manuell eingetragen und nicht als Dart-Partie gewertet.`))return;
  t.results[f.id]={manualWinnerId:winnerId};api.persist();render();}
 function clearFixture(id){const {t,fixture:f}=selectedFixture(id);if(!t||f?.source!=='manual')return;if(!confirm('Manuelles Ergebnis entfernen? Spätere Runden können dadurch vorübergehend unvollständig werden.'))return;delete t.results[id];api.persist();render();}
-function removeTournament(){const t=tourneys().find(x=>x.id===selectedTournament);if(!t||!confirm(`Turnier „${t.name}“ aus der Übersicht entfernen? Bereits gespeicherte Dart-Partien bleiben bestehen.`))return;own().proTournaments=own().proTournaments.filter(x=>x.id!==t.id);selectedTournament='';api.persist();render();}
+function removeTournament(){const t=tourneys().find(x=>x.id===selectedTournament);if(!t||!confirm(`Turnier „${t.name}“ aus der Übersicht entfernen? Der zugehörige automatische Siegerstern wird ebenfalls entfernt. Bereits gespeicherte Dart-Partien bleiben bestehen.`))return;own().proTournaments=own().proTournaments.filter(x=>x.id!==t.id);selectedTournament='';api.persist();render();}
 function renderTraining(){const select=$('proTrainPlayer');if(!select)return;const current=select.value;
  select.innerHTML=own().players.filter(x=>!x.archived).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');if([...select.options].some(o=>o.value===current))select.value=current;
  const root=$('proTrainingActive');if(!root)return;
@@ -155,10 +155,10 @@ function init(o){api=o;const root=$('view-pro');if(!root)return;
  if(b.id==='proReportCSV'){csvPlayer();return;}
  if(b.id==='proReportPrint'){printPlayer();return;}
  });
- root.addEventListener('change',e=>{if(e.target.id==='proTrainPlayer')renderTraining();if(e.target.id==='proReportPlayer')renderReports();if(e.target.id==='proCameraInput')updateCamera(e.target.files?.[0]);});
+ root.addEventListener('change',e=>{if(e.target.id==='championPreset'){const k=e.target.value;if(k){$('proTournamentName').value=k==='undisputed'?'Undisputed Darts Champion':'Summerslam Champion';$('proTournamentType').value='knockout';$('proTournamentStart').value='501';$('proTournamentLegs').value='3';$('proTournamentOutRule').value='double';}}if(e.target.id==='proTrainPlayer')renderTraining();if(e.target.id==='proReportPlayer')renderReports();if(e.target.id==='proCameraInput')updateCamera(e.target.files?.[0]);});
  window.addEventListener('pagehide',()=>{if(cameraUrl)URL.revokeObjectURL(cameraUrl);});
  render();}
 function openTraining(playerId,mode){tab='training';renderTabs();renderTraining();const select=$('proTrainPlayer');if(select&&[...select.options].some(x=>x.value===playerId))select.value=playerId;const m=$('proTrainMode');if(m&&[...m.options].some(x=>x.value===mode))m.value=mode;renderTraining();}
 function openReports(){tab='reports';renderTabs();renderReports();}
-window.DartsPro={init,render,renderProfileExtras:playerAnalyticsMarkup,openTraining,openReports};
+window.DartsPro={openTournaments(){tab="tournaments";render();},init,render,renderProfileExtras:playerAnalyticsMarkup,openTraining,openReports};
 })();

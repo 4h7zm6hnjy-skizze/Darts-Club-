@@ -1,5 +1,5 @@
 {
-  "version": "3.7.0",
+  "version": "3.8.0",
   "released": "2026-11-17",
-  "notes": "Dartabend-Zentrale: Rundenplan für 2–12 Teilnehmer, verknüpfte echte X01-Partien, Ergebnis-Fortschritt, Tagesübersicht bestehender Jürgen-Buchungen, CSV-Export und lokale Datenprüfung. Alle alten Spiel-, Kassen- und Vollbildfunktionen bleiben erhalten."
+  "notes": "Champion-Turniervorlagen, unterschiedliche Siegersterne, automatische Vergabe und manuelle Vergabe mit Datum."
 }

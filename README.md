@@ -1,31 +1,31 @@
-# Darts-Club 3.7.0 – Dartabend-Zentrale
+# Darts-Club 3.8.0 – Champion-Turniere & Siegersterne
 
-Kostenlose offline-first PWA auf Basis der veröffentlichten Version **3.6.1**. Vollständiges Paket mit 28 Dateien, keine persönlichen Spieler- oder Kassenbestände im Paket.
+Vollständiges Update auf Basis von 3.7.0. Enthält den gesamten App-Code, keine persönlichen Spieler- oder Kassenbestände.
 
 ## Neu
 
-- **Dartabend-Planer:** Titel, Datum, 2–12 echte Spieler und optionale Notiz. Eindeutiger Jeder-gegen-jeden-Spielplan mit Runden und fairen Freilosen bei ungerader Spielerzahl.
-- **Partien direkt starten und fortsetzen:** X01 (501, Double-Out, Best of 3 Legs) im bereits vorhandenen, getesteten Vollbild-Scorer. Eine geplante Begegnung ist mit genau einer echten Partie über deren unveränderliche ID verknüpft. Beendete Partie zeigt den tatsächlich berechneten Gewinner, niemals ein geratenes Ergebnis. Beim Löschen einer Partie bleibt die Paarung erhalten und darf neu gestartet werden.
-- **Spielabend-Fortschritt und CSV-Bericht:** Runden, Spieler, Spielstatus und echte Gewinner; Archivieren und später wieder öffnen. Entfernen des Plans löscht keine Dartpartie und keine Kassenbuchungen.
-- **Jürgen-Tagesübersicht:** Nur vorhandene, nicht stornierte Jürgen-Buchungen der für diesen Kalendertag angelegten Spieltage. Nicht automatisch dem Plan zugeordnet; Zahlungen/Papierlisten sind bewusst ausgeschlossen. Keine Abbuchung durch einen geplanten Dartwurf.
-- **Lokale Datenprüfung:** Serialisiert den aktuellen App-Datensatz im Arbeitsspeicher, lässt ihn durch die bestehende strenge Backup-Validierung laufen und vergleicht Anzahl und Originalbeträge der Kassenbuchungen. **Kein Backup-Ersatz.** Vollständiger JSON-Export weiterhin unverändert.
-- Alle bestehenden Vollbildansichten aus 3.6.1, Vereinsverwaltung, Training, offline LAN-Beta, Dart-Caller, Kassenbuch und Sicherungspunkte bleiben vorhanden.
+- Vorlagen für Undisputed Darts Champion und Summerslam Champion. Voreinstellung für beide: 501, Double-Out, Best of 3, K.-o. Diese Regeln sind ein Vorschlag, keine vom Nutzer bestätigten Turnierregeln.
+- Regeln und Teilnehmer vor Erstellung anpassbar. Champion-Turniere unterstützen K.-o. und Gruppen + K.-o.; freie Turniere behalten alle bisherigen Turnierarten.
+- Goldener Kronenstern ★♛ für Undisputed, orangefarbener Sonnenstern ★☀ für Summerslam. Farbe, Symbol und Beschriftung unterscheiden die Titel.
+- Nach einem abgeschlossenen Champion-Turnier erhält der Sieger genau einen Stern. Automatische Sterne verwenden das lokale Datum der erstmaligen abgeschlossenen Ergebniserfassung.
+- Auf der Startseite: „Siegersterne vergeben“, mit Spieler, Titel und frei wählbarem Datum für historische Siege. Mehrfache gleiche Vergaben am selben Datum erfordern Bestätigung.
+- Sterne stehen im Spielerprofil mit Anzahl und datiertem Verlauf. Manuelle Sterne können nach Bestätigung entfernt werden.
+- Ergebnisänderungen passen automatische Sterne an. Wird das Turnier gelöscht oder wieder unvollständig, entfällt sein automatischer Stern. Manuelle Sterne bleiben erhalten.
+- Vorhandene Champion-Namen und Bilder bleiben frei bearbeitbar. Aus einem vorhandenen Namen wird kein historischer Sieg oder Datum abgeleitet.
+- Neue Felder sind Bestandteil des vollständigen JSON-Backups. Alte Backups ohne Sterne bleiben kompatibel. Bestehende Speicherschlüssel bleiben erhalten.
 
-## Datenschema, Kompatibilität
+## Update installieren
 
-- Bestehender Speicherschlüssel `juergen-dartkasse-state-v1`, Schema `juergen-dartkasse`, Schema-Version 1.
-- Neues **optionales** Feld `clubEvenings` mit max. 120 Veranstaltungen und validierten Paarungs- und Match-Verweisen. Frühere 3.6.1-Backups ohne dieses Feld werden akzeptiert, ohne die Daten neu anzulegen.
-- Ein Dartabend-Plan ist ein Organizer, **kein neuer Live-Mehrspieler-Server**, kein Ersatz für die echte Jürgen-Erfassung. Er plant nur 1-gegen-1-Partien, nicht 2-gegen-2-Turniere. Spiele können an einem anderen Tag fortgesetzt werden; die Zuordnung erfolgt über die Match-ID statt über geschätzte Datumsvergleiche.
-- Kasse, Preise, Buchungen, Papierliste und alte Spielstände werden beim Anlegen eines Plans nicht verändert.
+1. In der bisherigen App ein vollständiges JSON-Backup sichern.
+2. Dieses ZIP entpacken. Alle App-Dateien im bestehenden Repository `4h7zm6hnjy-skizze/Darts-Club-`, Branch `main`, ersetzen bzw. ergänzen; insbesondere die neue Datei `champion-stars.js` mit hochladen.
+3. Die bestehende Adresse öffnen: https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=3.8.0
+4. Update laden und Versionsanzeige 3.8.0 prüfen. Auf der Startseite unter den Champion-Karten befinden sich die Vorlagen und die manuelle Vergabe.
+5. Ein Testturnier mit zwei Spielern abschließen und den Siegerstern im Profil prüfen. Danach Backup exportieren.
 
-## Update
+Dieses Paket wurde erstellt, aber nicht auf der Website veröffentlicht.
 
-1. Vorher vollständiges JSON-Backup aus der bisherigen App **außerhalb des iPhones** sichern.
-2. ZIP entpacken und alle Dateien direkt in `4h7zm6hnjy-skizze/Darts-Club-` Branch `main` hochladen, Änderungen committen. Bestehende URL bleibt gleich.
-3. `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=3.7.0` öffnen. **Dart spielen → Verein & Teams → Dartabende**.
-4. Ein Testevent mit vier Spielern erstellen, Begegnung starten und den Score im Vollbild spielen. Danach zurück zur Dartabend-Zentrale, Sieger und Backup kontrollieren.
+## Prüfung dieser Version
 
-## Grenzen
+Bestanden: JavaScript-Syntax aller Module; Referenzen auf lokale Dateien und Offline-Cache; Siegervergabe, Vermeidung doppelter Sterne, Siegerkorrektur, Wiederöffnung, Erhalt manueller Sterne, Ablehnung ungültiger Datumswerte; vollständige Backup-Validierung mit neuen Feldern und alten Daten.
 
-- Browser-Tests und statische Prüfungen ersetzen keinen echten iPhone-PWA-Test. Offline-Wiederstart, Speicherbereinigung durch iOS und die Verbindung zweier physischer Handys müssen auf echten Geräten geprüft werden.
-- Die WebRTC-LAN-Funktion bleibt Beta. Keine automatische Kamera-Erkennung und keine Cloud-Synchronisierung.
+Der visuelle Browser-Test konnte wegen einer technischen Beschränkung der Ausführungsumgebung nicht gestartet werden. Layout, Bedienung und Offline-Neustart dieser Version müssen daher noch im Browser und auf dem iPhone geprüft werden. Bestehende WebRTC-LAN-Funktionen bleiben Beta.
