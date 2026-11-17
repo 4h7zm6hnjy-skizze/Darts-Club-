@@ -1,6 +1,6 @@
 /* JÜRGEN DARTKASSE — offline-first app, v3.5.0: Dart Elite Analytics */
 'use strict';
-const APP_VERSION = '3.6.1';
+const APP_VERSION = '3.7.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -66,6 +66,7 @@ function makeInitial(){
     clubDuels:[],
     clubSeasons:[],
     clubPlans:[],
+    clubEvenings:[],
     lanVoidedRequests:[],
     settings:{baseCents:0,champions:championDefaults(),quickPresets:[]}
   };
@@ -307,6 +308,15 @@ function validateImported(obj){
   const clubDuels=validateCollection('clubDuels',1000,d=>clubEngine.validateDuel(d,pids,tournamentIds));
   const clubSeasons=validateCollection('clubSeasons',60,d=>clubEngine.validateSeason(d,tournamentIds));
   const clubPlans=validateCollection('clubPlans',300,p=>clubEngine.validatePlan(p,pids));
+  // v3.7: Optional dartabend plans contain only references to real Dart matches.
+  if(!window.DartsEveningEngine)throw Error('Dartabend-Modul fehlt. Gespeicherte Daten wurden nicht verändert.');
+  const clubEvenings=validateCollection('clubEvenings',120,e=>window.DartsEveningEngine.validate(e,pids));
+  const allLinkedMatchIds=new Set();
+  for(const evening of clubEvenings){for(const f of evening.fixtures){if(!f.matchId)continue;
+    if(allLinkedMatchIds.has(f.matchId))throw Error('Eine Dart-Partie ist mehrfach im Dartabend-Spielplan verknüpft.');
+    allLinkedMatchIds.add(f.matchId);const m=dartMatches.find(x=>x.id===f.matchId);
+    if(m&&(m.mode!=='x01'||m.playerIds.length!==2||m.playerIds[0]!==f.a||m.playerIds[1]!==f.b))throw Error('Dartabend-Paarung verweist auf eine unpassende Partie.');
+  }}
   for(const duel of clubDuels){
     if(!duel.tournamentId)continue;
     const tour=proTournaments.find(t=>t.id===duel.tournamentId);
@@ -345,8 +355,19 @@ function validateImported(obj){
       rounds:[7,10,15,20].includes(o.rounds)?o.rounds:10,aroundBull:o.aroundBull===true
     }};
   }):[];
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,clubDuels,clubSeasons,clubPlans,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions,quickPresets}};
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,clubDuels,clubSeasons,clubPlans,clubEvenings,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions,quickPresets}};
 }
+
+// Read-only in-memory integrity test. It does not modify state or replace exported backups.
+window.DartAppIntegrity={verify(){
+ try{
+  const serialized=JSON.stringify(state);if(typeof serialized!=='string')throw Error('Daten konnten nicht serialisiert werden.');
+  const parsed=validateImported(JSON.parse(serialized));
+  if(parsed.events.length!==state.events.length||parsed.players.length!==state.players.length||parsed.dartMatches.length!==state.dartMatches.length||parsed.clubEvenings.length!==(state.clubEvenings||[]).length)throw Error('Datenanzahl ist beim Validieren nicht erhalten geblieben.');
+  if(parsed.events.some((e,i)=>e.id!==state.events[i].id||e.amount!==state.events[i].amount||e.voided!==!!state.events[i].voided))throw Error('Kassenbuchungen weichen nach Prüfung ab.');
+  return {ok:true,players:parsed.players.length,events:parsed.events.length,matches:parsed.dartMatches.length,evenings:parsed.clubEvenings.length};
+ }catch(error){return {ok:false,error:String(error?.message||error)};}
+}};
 
 let idbUnavailable=false;
 function openIDB(){return new Promise(resolve=>{
@@ -396,6 +417,7 @@ async function loadData(){
   if(!Array.isArray(state.clubDuels))state.clubDuels=[];
   if(!Array.isArray(state.clubSeasons))state.clubSeasons=[];
   if(!Array.isArray(state.clubPlans))state.clubPlans=[];
+  if(!Array.isArray(state.clubEvenings))state.clubEvenings=[];
   if(!Array.isArray(state.lanVoidedRequests))state.lanVoidedRequests=[];
   if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
   selectedPlayerId=throwerPlayers()[0]?.id||null;
@@ -655,6 +677,7 @@ function render(){
  try{window.DartsPro?.render();}catch(err){console.error('Profi-Center konnte nicht angezeigt werden:',err);}
  try{window.DartsElite?.render();}catch(err){console.error('Dart Elite konnte nicht angezeigt werden:',err);}
  try{window.DartsClub?.render();}catch(err){console.error('Vereinsmodus konnte nicht angezeigt werden:',err);}
+ try{window.DartsEvenings?.render();}catch(err){console.error('Dartabend-Zentrale konnte nicht angezeigt werden:',err);}
 }
 function renderPlay(){
   ensureChampionState(); renderChampions();
@@ -795,6 +818,7 @@ function setupEvents(){
   try{window.DartsPro?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Profi-Center konnte nicht gestartet werden:',err);}
   try{window.DartsElite?.init({getState:()=>state,goView,toast});}catch(err){console.error('Dart Elite konnte nicht gestartet werden:',err);}
   try{window.DartsClub?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Vereinsmodus konnte nicht gestartet werden:',err);}
+  try{window.DartsEvenings?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Dartabend-Zentrale konnte nicht gestartet werden:',err);}
   try{window.DartLocalLive?.init({getState:()=>state,persist,render,toast,addJuergenForThrower,canBookDartJuergen});}catch(err){console.warn('Live-Modul konnte nicht starten:',err);}
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.

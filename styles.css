@@ -1829,3 +1829,25 @@ body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .
  body.dart-all-focus-on #clubTeamFocusPanel .club-numbers,body.dart-all-focus-on #proTrainingFocusPanel .pro-train-targets,body.dart-all-focus-on #liveGuestGame #liveGuestTargets{min-height:190px!important;flex:none!important}
  body.dart-all-focus-on .all-focus-active{padding-bottom:6px!important}
 }
+
+/* 3.7.0 Dartabend-Zentrale – mobile-first cards, no changes to gameplay focus. */
+.evening-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:10px 0 18px}
+.evening-person{display:flex;align-items:center;gap:9px;padding:12px;background:rgba(255,255,255,.045);border:1px solid rgba(173,195,224,.2);border-radius:12px;color:#f2f6ff;font-weight:650;min-width:0;overflow-wrap:anywhere}
+.evening-person input{width:19px;height:19px;flex:none;accent-color:#6edbb4}
+.evening-controls{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.evening-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.evening-head h3{color:#fff;margin:0 0 4px;font-size:1.2rem;overflow-wrap:anywhere}
+.evening-head p{color:#ccd5e5;margin:0}
+.evening-head .evening-controls{margin:0}
+.evening-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 10px}
+.evening-metrics>div{border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(179,197,229,.15);padding:12px 8px;text-align:center}
+.evening-metrics small{display:block;font-size:.73rem;color:#c4d0e2;line-height:1.35}
+.evening-metrics strong{display:block;color:#fff;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.evening-round{padding:5px 0 13px}.evening-round h4{color:#eff6ff;font-size:1rem;margin:12px 0}
+.evening-fixture{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(175,198,222,.15);border-radius:11px;padding:11px;margin:7px 0}
+.evening-fixture>div{min-width:0}.evening-fixture b{display:block;color:#fff;overflow-wrap:anywhere;font-size:.95rem}
+.evening-vs{color:#b5c7dd;font-weight:500}.evening-fixture small{color:#bbcadb;display:block;margin-top:5px;font-size:.8rem}
+.evening-fixture button{flex:0 0 auto;min-height:38px}
+.evening-day-ledger{background:rgba(85,153,192,.08);border:1px solid rgba(122,179,219,.32);padding:14px;border-radius:12px;margin:15px 0}
+.evening-day-ledger b{color:#f4faff}.evening-day-ledger p{color:#fff;margin:8px 0}.evening-day-ledger small{color:#c8d6e7;line-height:1.5;display:block}
+@media(max-width:420px){.evening-controls{flex-direction:column}.evening-controls button{width:100%}.evening-fixture{flex-wrap:wrap}.evening-fixture button{width:100%}.evening-head .evening-controls{width:100%}.evening-metrics strong{font-size:1.15rem}}

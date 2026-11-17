@@ -1,5 +1,5 @@
 {
-  "version": "3.6.1",
+  "version": "3.7.0",
   "released": "2026-11-17",
-  "notes": "Vollbild-Spieloberflächen für alle 11 regulären Dartmodi, 2-gegen-2, 4 Trainingsarten, Jürgen-Zähler und LAN-Mitspielansicht. Reine UI-Änderung ohne Änderungen an Spiel- oder Kassenlogik."
+  "notes": "Dartabend-Zentrale: Rundenplan für 2–12 Teilnehmer, verknüpfte echte X01-Partien, Ergebnis-Fortschritt, Tagesübersicht bestehender Jürgen-Buchungen, CSV-Export und lokale Datenprüfung. Alle alten Spiel-, Kassen- und Vollbildfunktionen bleiben erhalten."
 }
