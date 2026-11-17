@@ -14,7 +14,7 @@ function makeTournament({name,type,playerIds,options={}}){
  if(!Array.isArray(playerIds)||!playerIds.every(idOK)||!unique(playerIds))throw Error('Ungültige Spielerauswahl.');
  const min=type==='teams'||type==='groups'?4:2;
  if(playerIds.length<min||playerIds.length>16|| (type==='teams'&&playerIds.length!==4))throw Error(type==='teams'?'Teamduell benötigt genau vier Spieler.':`Bitte ${min} bis 16 Spieler wählen.`);
- return {id:'t-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),name:safeLabel(name).trim()||'Dart-Turnier',type,playerIds:[...playerIds],createdAt:new Date().toISOString(),options:{start:[301,501,701].includes(options.start)?options.start:501,bestOfLegs:[1,3,5,7].includes(options.bestOfLegs)?options.bestOfLegs:3},results:{}};
+ return {id:'t-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),name:safeLabel(name).trim()||'Dart-Turnier',type,playerIds:[...playerIds],createdAt:new Date().toISOString(),options:{start:[301,501,701].includes(options.start)?options.start:501,bestOfLegs:[1,3,5,7].includes(options.bestOfLegs)?options.bestOfLegs:3,outRule:['double','master','straight'].includes(options.outRule)?options.outRule:'double'},results:{}};
 }
 function validateTournament(value,playerIds){
  if(!value||!idOK(value.id)||!TYPES.includes(value.type)||!Array.isArray(value.playerIds)||!unique(value.playerIds)||value.playerIds.some(id=>!playerIds.has(id))||value.playerIds.length<2||value.playerIds.length>16)throw Error('Ungültiges Turnier.');
@@ -96,6 +96,15 @@ function resolveFixtures(t,matches=[]){
  return {fixtures:resolved,groupStandings:groupDone?{A:standingA,B:standingB}:null,finished:resolved.length>0 && !!resolved.at(-1)?.winnerId && (t.type!=='league'||resolved.every(f=>f.winnerId)),championId:t.type==='league'?null:resolved.at(-1)?.winnerId||null};
 }
 function leagueStandings(t,matches){return groupStandings(t.playerIds,resolveFixtures(t,matches).fixtures,'');}
+function tournamentProgress(t,matches=[]){
+ const resolved=resolveFixtures(t,matches),fixtures=resolved.fixtures;
+ const done=fixtures.filter(f=>!!f.winnerId).length;
+ const playing=fixtures.filter(f=>!!f.matchId&&!f.winnerId).length;
+ const next=fixtures.find(f=>f.ready&&!f.winnerId&&!f.matchId)||null;
+ const active=fixtures.find(f=>f.matchId&&!f.winnerId)||null;
+ const upcoming=fixtures.filter(f=>f.ready&&!f.winnerId&&!f.matchId).slice(0,4);
+ return {done,total:fixtures.length,playing,percent:fixtures.length?Math.round(done/fixtures.length*100):0,next,active,upcoming,finished:resolved.finished,championId:resolved.championId};
+}
 function botDarts(engine,remaining,{level='medium',doubleOut=true,masterOut=false,doubleIn=false,opened=true}={}){
  if(!num(remaining,0,1501))throw Error('Ungültiger Bot-Reststand.');
  const accuracy=level==='easy'?0.23:level==='hard'?0.76:0.47;
@@ -141,5 +150,5 @@ function playerAnalytics(games,id){
  return {bestLeg:legs.length?Math.min(...legs):null,worstLeg:legs.length?Math.max(...legs):null,legDarts:legs.length?Number((legs.reduce((a,b)=>a+b,0)/legs.length).toFixed(1)):null,
   segments:[...segmentCounts].sort((a,b)=>b[1]-a[1]).slice(0,12),headToHead:[...opponents.values()].sort((a,b)=>b.played-a.played)};
 }
-return {BOT_ID,TYPES,DRILLS,makeTournament,validateTournament,generateBaseFixtures,groupIds,groupStandings,resolveFixtures,leagueStandings,botDarts,setGameEngine,validatePractice,trainingSummary,playerAnalytics};
+return {BOT_ID,TYPES,DRILLS,makeTournament,validateTournament,generateBaseFixtures,groupIds,groupStandings,resolveFixtures,leagueStandings,tournamentProgress,botDarts,setGameEngine,validatePractice,trainingSummary,playerAnalytics};
 });

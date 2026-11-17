@@ -1,22 +1,15 @@
-# Darts-Club 3.4.3 – Siegerkarte & Spielbericht
+# Darts-Club 3.5.0 – Ultimate Dartabend
 
-Vollständiges Update auf Basis von **Version 3.4.2**. Es werden keine privaten Spieler-, Kassen- oder Spielstanddaten mitgeliefert.
+Komplettes, kostenloses, offline-first GitHub-Pages-Paket (23 Dateien). Die persönlichen Spieler-/Kassendaten sind **nicht** Bestandteil der ZIP.
 
-## Verbesserungen
+## Änderungen
 
-- Die Siegerkarte nimmt im Vollbild nur noch die erforderliche Höhe ein. Der leere Raum oberhalb und unterhalb der Inhalte wird nicht künstlich gestreckt.
-- Die Spielkopfzeile und „Rückgängig“ haben eine kräftigere, klarere Schrift und besser sichtbare Konturen.
-- Bei abgeschlossenen Partien erscheint **„Spielbericht ansehen / PDF“** mit Vergleich aller Teilnehmer und vollständigem Aufnahmenverlauf.
-- Im Bericht lassen sich die Resultate zunächst ansehen und dann über den iPhone-/Browser-Druckdialog als PDF sichern (abhängig von Gerät und Browser).
-- Report und Druck sind lokal, ohne externe APIs oder Cloud. Bericht und Anzeige verändern die bestehende Partie, Statistiken und Jürgen-Kasse nicht.
-- Die Revanche mit unveränderten Spielregeln und die bisherige Spielerhistorie bleiben erhalten.
+- **Turniere:** Fortschrittsanzeige mit echten Ergebnissen; laufende Turnierpartie direkt fortsetzen; nächste Begegnung aus vorhandenen Paarungen starten; Liga/Gruppe mit Leg-Differenz. Double-Out, Master-Out oder Straight-Out bei neu erstellten Turnieren auswählbar. Altturniere behalten Double-Out.
+- **Spielerstatistiken:** In Dart Elite durchschnittlicher 3-Dart-Average als Verlauf der bis zu 12 letzten tatsächlich gespeicherten X01-Partien. Persönliche Übersicht mit bestem Spiel-Average (nur ab 9 erfassten Darts), Checkout-Quote und bestem Finish. Rein lesend, keine Buchungen.
+- **Dart-Caller:** Freiwillige Ansagen für Punkte, 180er und Sieger. Nur wenn eine **nachweislich lokale deutsche** Systemstimme erkannt wird. Auf manchen iPhones steht keine entsprechende Stimme zur Verfügung, dann bleibt der Caller aus. Kein Mikrofon, kein Server, keine Sprachübertragung. Nach jedem Neustart standardmäßig stumm.
+- **TV-Scoreboard:** Set/Leg, letzte Aufnahme und Checkout-Vorschlag auf demselben Gerät. Ein weiteres Gerät benötigt weiterhin den separaten LAN-Modus (Beta).
+- **Design:** gut lesbare Bedienelemente, barrierearme Statusmeldungen und kurze Hinweise.
 
-## Installation
+## Sicherheit
 
-1. Auf dem Hauptgerät zuerst vollständiges JSON-Backup erstellen.
-2. ZIP entpacken und die **21 Dateien im ZIP** im Stammverzeichnis des GitHub-Repositories hochladen; gleichnamige Dateien ersetzen.
-3. GitHub **Commit changes** bestätigen.
-4. App neu starten, **Version 3.4.3** prüfen, bisherige Spieler- und Kassendaten kontrollieren.
-5. Eine Testpartie beenden und den Spielbericht öffnen; Druck- und PDF-Ablauf auf dem echten iPhone verifizieren.
-
-**Hinweise:** Der lokale Offline-Web-Speicher kann vom iPhone bereinigt werden – deshalb zusätzlich unabhängige JSON-Backups aufbewahren. LAN-Verbindungen zwischen zwei echten Handys bleiben gesondert zu testen. Der PDF-Export erfolgt über die systemeigene Druckfunktion; es wird keine PDF-Datei automatisch in eine Cloud hochgeladen.
+Vor dem Update JSON-Backup aus der bisherigen App exportieren und **außerhalb der App** sichern. ZIP entpacken, alle Dateien im Repo-Root hochladen und Commit bestätigen. Für iPhone den Browser-Offline-Test wiederholen. Bestehende Spiele und Kasse bleiben unberührt. Das Update ersetzt keine Tests auf echten iPhone-/Android-Geräten.

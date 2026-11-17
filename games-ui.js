@@ -11,6 +11,7 @@ let statsMode='all';
 let statsPeriod='all';
 let gameMenuOpen=true;
 let specialBooking='none';
+// Caller starts muted on each new session; no microphone, no speech upload.
 let callerEnabled=false;
 let statsWindow='10';
 let botTimer=null;
@@ -68,9 +69,17 @@ function draftStatus(match,p){
  }
  return {remaining:bust?p.remaining:left,points:bust?0:score,bust,win};
 }
-function say(text){
- if(!callerEnabled||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined')return;
- try{window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang='de-DE';utterance.rate=1;window.speechSynthesis.speak(utterance);}catch{}
+function say(text,type='score'){
+ if(!callerEnabled)return;
+ try{window.DartsCaller?.speak(text,type);}catch{}
+}
+function renderCaller(){
+ const c=window.DartsCaller,s=c?.status();if(!s)return;
+ callerEnabled=s.enabled;
+ const b=$('dartsCallerToggle');if(b){b.textContent=s.enabled?'Caller an':'Caller aus';b.setAttribute('aria-pressed',String(s.enabled));}
+ const msg=$('ultimateCallerStatus');if(msg)msg.textContent=s.enabled?`Lokale Stimme: ${s.voice||'System'} · Keine Sprachübertragung`:s.error||'Aus. Nur lokal installierte deutsche Stimmen werden genutzt.';
+ const rate=$('ultimateCallerRate');if(rate)rate.value=String(s.rate);
+ for(const [id,key] of [['ultimateCallerScore','announceScore'],['ultimateCaller180','announce180'],['ultimateCallerWinner','announceWinner']]){const x=$(id);if(x)x.checked=!!s[key];}
 }
 function turnAverageLabel(match,r){
  const id=r.currentPlayerId; const p=r.players[id]; const report=E.playerReport(match,id); const preview=E.isX01(match.mode)?draftStatus(match,p):null; const stagedPoints=preview?preview.points:staged.reduce((a,d)=>a+E.dartValue(d),0);
@@ -389,7 +398,7 @@ function renderDartPad(match,r){
  if(E.isCricket(match.mode))notice='Schließe Zahlen mit drei Marks; Double zählt zwei, Triple drei.';
  if(match.mode==='finish170')notice=`Rest: ${ps.remaining} · ${Math.max(0,9-ps.darts)} Darts verbleiben`;
  $('dartsTurnTitle').textContent=`${player} ist am Zug`; $('dartsTurnInfo').textContent=notice;
- const caller=$('dartsCallerToggle');if(caller){caller.textContent=callerEnabled?'🔊 Caller an':'🔈 Caller aus';caller.setAttribute('aria-pressed',callerEnabled?'true':'false');}
+ renderCaller();
  renderLiveMeta(match,r);
  $('dartsTurnPreview').innerHTML=Array.from({length:3},(_,i)=>{
    const d=staged[i];
@@ -592,7 +601,12 @@ function recordTurn(){
   const points=staged.reduce((n,d)=>n+E.dartValue(d),0);
   staged=[];specialBooking='none';api.persist();render();
   const r=E.replay(updated);
-  say(r.finished?`${playerName(r.winnerId)} gewinnt!`:`${playerName(throwerId)}: ${points} Punkte`);
+  const scored=r.history.at(-1)?.score??points; // Bust zählt null – keine irreführende 180er-Ansage
+  const nextPlayer=r.players[r.currentPlayerId];
+  const finishRoute=!r.finished&&E.isX01(updated.mode)&&nextPlayer?.remaining>0&&nextPlayer.remaining<=170
+   ?E.checkoutRoute(nextPlayer.remaining,3,updated.options.doubleOut,updated.options.masterOut):null;
+  const checkoutHint=window.DartsCaller?.status().announceCheckout&&finishRoute?` Checkout für ${playerName(r.currentPlayerId)}: ${finishRoute.map(E.dartLabel).join(', ')}.`:'';
+  say(r.finished?`${playerName(r.winnerId)} gewinnt!`:scored===180?`${playerName(throwerId)}: Hundertachtzig!${checkoutHint}`:`${playerName(throwerId)}: ${scored} Punkte.${checkoutHint}`,r.finished?'winner':scored===180?'180':'score');
   // Die Siegerehrung ist sichtbar – keine überlagernde Toastmeldung über den Revanche-Tasten.
  }catch(err){toast(err.message);}
 }
@@ -638,7 +652,7 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.dataset.mode){selectMode(b.dataset.mode);return;}
   if(b.dataset.gamePlayer){togglePlayer(b.dataset.gamePlayer);return;}
   if(b.dataset.ring){ring=Number(b.dataset.ring);renderDartPadIf();return;}
-  if(b.id==='dartsCallerToggle'){callerEnabled=!callerEnabled;if(!callerEnabled&&'speechSynthesis' in window)window.speechSynthesis.cancel();renderDartPadIf();return;}
+  if(b.id==='dartsCallerToggle'){const c=window.DartsCaller;if(!c){toast('Caller nicht verfügbar.');return;}const s=c.configure({enabled:!c.status().enabled});callerEnabled=s.enabled;if(!s.enabled)toast(s.error||'Keine lokale deutsche Systemstimme verfügbar.');renderDartPadIf();return;}
   if(b.dataset.special){specialBooking=(specialBooking===b.dataset.special?'none':b.dataset.special); renderDartPadIf(); return;}
   if(b.dataset.number!==undefined){
    if(staged.length>=3){toast('Maximal drei Darts pro Aufnahme.');return;}
@@ -663,6 +677,13 @@ function init(obj){ api=obj; const view=$('view-games');
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
  window.addEventListener('resize',()=>{if(focusActive)syncFocusUI();});
  $('dartsMode').addEventListener('change',renderSetup);
+ $('ultimateCallerSettings')?.addEventListener('change',e=>{
+  const cfg={};if(e.target.id==='ultimateCallerRate')cfg.rate=Number(e.target.value);
+  for(const [id,key] of [['ultimateCallerScore','announceScore'],['ultimateCaller180','announce180'],['ultimateCallerWinner','announceWinner']])if(e.target.id===id)cfg[key]=e.target.checked;
+  window.DartsCaller?.configure(cfg);renderCaller();
+ });
+ // Safari may enumerate locally installed voices only after the first page paint.
+ if('speechSynthesis' in window)window.speechSynthesis.addEventListener?.('voiceschanged',()=>renderCaller());
  const playersView=$('view-players');
  playersView?.addEventListener('change',e=>{
   const field=e.target.closest('select[data-profile-stat-mode],select[data-profile-stat-period],select[data-profile-stat-limit]');

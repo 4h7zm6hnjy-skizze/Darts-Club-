@@ -1,6 +1,6 @@
 /* Offline service worker. Bump CACHE_NAME in each release. */
-const CACHE_NAME = 'juergen-dartkasse-static-3.4.3';
-const CORE = ['./','./index.html','./styles.css?v=3.4.3','./app.js?v=3.4.3','./games-engine.js?v=3.4.3','./pro-engine.js?v=3.4.3','./games-ui.js?v=3.4.3','./pro-ui.js?v=3.4.3','./elite-engine.js?v=3.4.3','./elite-ui.js?v=3.4.3','./camera-assist.js?v=3.4.3','./qr-offline.js?v=3.4.3','./live-lan.js?v=3.4.3','./manifest.webmanifest','./favicon-64.png','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./version.json'];
+const CACHE_NAME = 'juergen-dartkasse-static-3.5.0';
+const CORE = ['./','./index.html','./styles.css?v=3.5.0','./app.js?v=3.5.0','./games-engine.js?v=3.5.0','./pro-engine.js?v=3.5.0','./games-ui.js?v=3.5.0','./pro-ui.js?v=3.5.0','./elite-engine.js?v=3.5.0','./elite-ui.js?v=3.5.0','./stats-35.js?v=3.5.0','./dart-caller.js?v=3.5.0','./camera-assist.js?v=3.5.0','./qr-offline.js?v=3.5.0','./live-lan.js?v=3.5.0','./manifest.webmanifest','./favicon-64.png','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./version.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('juergen-dartkasse-static-')&&k!==CACHE_NAME).map(k=>caches.delete(k)))),self.clients.claim()])));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});

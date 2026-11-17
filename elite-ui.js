@@ -1,7 +1,7 @@
 /* DARTS CLUB ELITE · purely read-only local game insights v3.2.1 */
 (function(){
 'use strict';
-const $=id=>document.getElementById(id), A=window.DartsEliteEngine, E=window.DartsGameEngine;
+const $=id=>document.getElementById(id), A=window.DartsEliteEngine, E=window.DartsGameEngine, Trend=window.DartsTrend;
 if(!A||!E)return;
 let api=null,period=0,playerId='',matchId='',tv=false,checkValue=121,checkRule='double',checkDarts=3;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -25,9 +25,22 @@ function renderPlayer(){const sel=$('elitePlayerSelect');if(!sel)return;const be
  const heat=A.heatmap(matches(),E,playerId,Date.now(),period),coach=A.coach(r,heat),total=heat.reduce((s,x)=>s+x.count,0),hot=heat.filter(x=>x.count>0).slice(0,10);
  const max=Math.max(1,...hot.map(x=>x.count));const other=getRows().filter(x=>x.id!==playerId&&x.rated>0).sort((a,b)=>A.headToHead(matches(),E,playerId,b.id).games-A.headToHead(matches(),E,playerId,a.id).games).slice(0,4);
  content.innerHTML=`<div class="elite-summary-grid"><article><small>3-Dart-Average</small><strong>${r.average===null?'–':num(r.average)}</strong></article><article><small>First 9</small><strong>${r.first9===null?'–':num(r.first9)}</strong></article><article><small>100+ Aufnahmen</small><strong>${r.tons}</strong></article><article><small>180er</small><strong>${r.oneEighties}</strong></article><article><small>Siege / Duelle</small><strong>${r.wins} / ${r.rated}</strong></article><article><small>Form (letzte 5)</small><strong>${r.form.length?esc(r.form.join(' · ')):'–'}</strong></article></div>
+ <div class="elite-subsection"><h3>Leistungsentwicklung</h3><div id="ultimateTrend" class="ultimate-trend"></div></div>
  <div class="elite-subsection"><h3>Dein DartCoach</h3><div class="elite-coach"><b>${esc(coach.title)}</b><p>${esc(coach.details)}</p><button type="button" class="primary-btn small" data-elite-training="${esc(coach.mode)}">Passendes Training öffnen</button></div></div>
  <div class="elite-subsection"><h3>Trefferverteilung</h3><p class="game-muted">Aus ${total} erfassten Darts in X01-Partien${period?' im Zeitraum':''}; Treffer werden nach tatsächlich eingegebenem Segment gezählt, nicht durch Bilderkennung geschätzt.</p>${hot.length?`<div class="elite-hit-bars">${hot.map(x=>`<div class="elite-hit-row"><span>${esc(x.key)}</span><div class="elite-hit-track"><div style="width:${Math.max(1,Math.round(x.count/max*100))}%"></div></div><b>${x.count}</b><small>${x.t}T · ${x.d}D · ${x.s}S</small></div>`).join('')}</div>`:'<p class="game-muted">Noch keine Darts erfasst.</p>'}</div>
  <div class="elite-subsection"><h3>Direkte Duelle</h3>${other.length?other.map(x=>{const duel=A.headToHead(matches(),E,playerId,x.id);return `<div class="elite-duel"><span>${esc(x.name)}</span><strong>${duel.a} : ${duel.b}</strong><small>Siege · Niederlagen (alle Zeiten)</small></div>`}).join(''):'<p class="game-muted">Noch keine gewerteten Duelle mit anderen Spielern.</p>'}</div>`;
+ renderTrend();
+}
+function renderTrend(){
+ const target=$('ultimateTrend');if(!target||!Trend||!playerId)return;
+ const records=Trend.trend(matches(),E,playerId,{limit:12,days:period}),overview=Trend.summary(records);
+ if(!records.length){target.innerHTML='<p class="game-muted">Noch keine erfassten X01-Würfe im gewählten Zeitraum.</p>';return;}
+ const fmt=x=>Number(x).toLocaleString('de-DE',{maximumFractionDigits:2});
+ const count=records.length,max=Math.max(40,...records.map(x=>x.average))*1.12;
+ const points=records.map((p,i)=>({x:count===1?300:22+(i/(count-1))*556,y:166-(p.average/max)*144,value:p.average,day:p.at?.slice(0,10)||''}));
+ const line=points.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+ const svg=`<svg viewBox="0 0 600 205" class="ultimate-trend-svg" role="img" aria-label="3-Dart-Average pro Partie, ${count} gespeicherte Partien"><title>Average-Verlauf</title><desc>Werte der gespeicherten Partien in zeitlicher Reihenfolge.</desc><path d="M22 166H578" stroke="#8ba5b5" stroke-width="2" fill="none"/><path d="M22 84H578" stroke="#49677e" stroke-width="1" stroke-dasharray="6 6" fill="none"/><path d="${line}" stroke="#81e6d0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="#ffdf92" stroke="#11283b" stroke-width="2"><title>${esc(p.day)}: ${fmt(p.value)} Average</title></circle>`).join('')}<text x="22" y="193" fill="#eaf6ff" font-size="15">Ältere Partien</text><text x="578" y="193" fill="#eaf6ff" font-size="15" text-anchor="end">Neuere Partien</text></svg>`;
+ target.innerHTML=`<div class="ultimate-trend-metrics"><div><small>Durchschnitt im Verlauf</small><strong>${overview.average===null?'–':fmt(overview.average)}</strong></div><div><small>Bester Spiel-Average (ab 9 Darts)</small><strong>${overview.bestGameAverage===null?'–':fmt(overview.bestGameAverage)}</strong></div><div><small>Checkout-Quote</small><strong>${overview.checkoutPct===null?'–':fmt(overview.checkoutPct)+' %'}</strong></div><div><small>Höchstes Finish</small><strong>${overview.highFinish||'–'}</strong></div></div>${svg}<p class="game-muted">${overview.games} gespeicherte Partien · ${overview.darts} tatsächlich erfasste Darts · Werte mit weniger als neun Darts sind vorläufig. Keine Schätzwerte.</p>`;
 }
 function accessibleMatches(){return matches().slice().sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0));}
 function renderMatches(){const list=$('eliteMatchSelect');if(!list)return;const all=accessibleMatches();if(!all.some(x=>x.id===matchId))matchId=all[0]?.id||'';list.innerHTML=all.slice(0,100).map(m=>`<option value="${esc(m.id)}">${esc(date(m.createdAt))} · ${esc(m.playerIds.map(name).join(' / '))} · ${esc(m.mode)}</option>`).join('');list.value=matchId;
@@ -45,7 +58,10 @@ function renderCheckout(){const v=$('eliteCheckoutNumber'),rule=$('eliteCheckout
 function renderTV(){const root=$('eliteTvOverlay');if(!root)return;root.hidden=!tv;document.body.classList.toggle('elite-tv-open',tv);if(!tv)return;
  const m=matches().find(x=>x.id===state().activeDartMatchId);if(!m){$('eliteTvBoard').innerHTML='<div class="elite-tv-empty"><span aria-hidden="true" class="elite-tv-empty-icon">🎯</span><h3>Keine Partie aktiv</h3><p>Starte im Spielcenter eine Dart-Partie. Danach werden hier die Spielernamen, Punkte und der aktuelle Werfer gut lesbar angezeigt.</p><button type="button" id="eliteTvStart" class="elite-tv-start">Zum Spielcenter</button></div>';$('eliteTvStatus').textContent='Zuschaueransicht';return;}
  try{const r=E.replay(m);$('eliteTvStatus').textContent=r.finished?'Partie beendet':'Aktive Partie · '+m.mode.toUpperCase();
-  $('eliteTvBoard').innerHTML=m.playerIds.map(id=>{const s=r.players[id];if(!s)return '';const active=r.currentPlayerId===id&&!r.finished;return `<div class="elite-tv-card ${active?'elite-tv-active':''}"><small>${active?'AM ZUG':r.winnerId===id?'SIEGER':'SPIELER'}</small><strong>${esc(name(id))}</strong><b>${E.isX01(m.mode)?s.remaining:s.score}</b><span>Ø ${s.darts?num(s.pointsThrown/s.darts*3):'–'} · Legs ${s.legs} · Sets ${s.sets}</span></div>`;}).join('');}
+  const last=r.history?.at(-1), current=r.players[r.currentPlayerId];
+  const route=!r.finished&&E.isX01(m.mode)&&current?.remaining>0?E.checkoutRoute(current.remaining,3,m.options.doubleOut,m.options.masterOut):null;
+  const summary=`<div class="ultimate-tv-summary"><span>Leg ${r.leg||1} · Set ${r.set||1}</span><span>${r.finished?'Gewinner: '+esc(name(r.winnerId)):last?'Letzte Aufnahme: '+esc(name(last.playerId))+' · '+last.score+' Punkte':'Partie gestartet'}</span><span>${route?'Checkout: '+esc(route.map(E.dartLabel).join(' · ')):' '}</span></div>`;
+  $('eliteTvBoard').innerHTML=summary+m.playerIds.map(id=>{const s=r.players[id];if(!s)return '';const active=r.currentPlayerId===id&&!r.finished;return `<div class="elite-tv-card ${active?'elite-tv-active':''}"><small>${active?'AM ZUG':r.winnerId===id?'SIEGER':'SPIELER'}</small><strong>${esc(name(id))}</strong><b>${E.isX01(m.mode)?s.remaining:s.score}</b><span>Ø ${s.darts?num(s.pointsThrown/s.darts*3):'–'} · Legs ${s.legs} · Sets ${s.sets}</span></div>`;}).join('');}
  catch{$('eliteTvBoard').textContent='Spielstand konnte nicht geladen werden.';}
 }
 function render(){if(!api||!$('view-elite'))return;if(!$('view-elite').classList.contains('active')){if(tv)renderTV();return;}const sel=$('elitePeriod');if(sel)sel.value=String(period);renderScore();renderPlayer();renderMatches();renderCheckout();renderTV();}

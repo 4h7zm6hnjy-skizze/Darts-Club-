@@ -1,5 +1,5 @@
 {
-  "version": "3.4.3",
+  "version": "3.5.0",
   "released": "2026-11-17",
-  "notes": "Kompakte Siegerkarte ohne vertikale Leerflächen, kontrastreiche Spielkopfzeile und lokaler Spielbericht mit Spielervergleich, Aufnahmenverlauf und Drucken/als PDF sichern. Keine Änderungen an Kasse und Spielregeln."
+  "notes": "Ultimate: Turnierfortschritt und laufende Begegnungen, wählbare Finish-Regeln, lokaler Dart-Caller (nur nachweislich lokale deutsche Systemstimmen), Average-Verlauf und detaillierteres TV-Scoreboard; Kasse und vorhandene Datenstruktur unverändert."
 }
