@@ -27,7 +27,8 @@ function validateTournament(value,playerIds){
   if(!possibleIds.has(k)||!res||typeof res!=='object')throw Error('Ungültiger Turniereintrag.');
   const matchId=idOK(res.matchId)?res.matchId:null;
   const manualWinnerId=value.playerIds.includes(res.manualWinnerId)|| (value.type==='teams'&&['teamA','teamB'].includes(res.manualWinnerId))?res.manualWinnerId:null;
-  if(matchId||manualWinnerId)results[k]={...(matchId?{matchId}:{}),...(manualWinnerId?{manualWinnerId}:{})};
+  const teamDuelId=value.type==='teams'&&idOK(res.teamDuelId)?res.teamDuelId:null;
+  if(matchId||manualWinnerId)results[k]={...(matchId?{matchId}:{}),...(manualWinnerId?{manualWinnerId}:{}),...(teamDuelId&&manualWinnerId?{teamDuelId}:{})};
  }
  base.results=results;
  return base;
@@ -57,7 +58,7 @@ function resultFor(f,t,matchMap){
    try{const replay=globalDarts()?.replay(m);if(replay?.finished && [f.a,f.b].includes(replay.winnerId))return {winnerId:replay.winnerId,source:'game',matchId:m.id,match:m};
    }catch{}
  }}
- if(r.manualWinnerId && (r.manualWinnerId===f.a||r.manualWinnerId===f.b|| (t.type==='teams'&&['teamA','teamB'].includes(r.manualWinnerId))))return {winnerId:r.manualWinnerId,source:'manual',matchId:null};
+ if(r.manualWinnerId && (r.manualWinnerId===f.a||r.manualWinnerId===f.b|| (t.type==='teams'&&['teamA','teamB'].includes(r.manualWinnerId))))return {winnerId:r.manualWinnerId,source:r.teamDuelId?'team':'manual',matchId:null};
  return null;
 }
 // Optional use of game engine from browsers or tests.

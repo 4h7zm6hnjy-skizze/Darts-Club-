@@ -1,5 +1,5 @@
 {
-  "version": "3.5.0",
+  "version": "3.6.0",
   "released": "2026-11-17",
-  "notes": "Ultimate: Turnierfortschritt und laufende Begegnungen, wählbare Finish-Regeln, lokaler Dart-Caller (nur nachweislich lokale deutsche Systemstimmen), Average-Verlauf und detaillierteres TV-Scoreboard; Kasse und vorhandene Datenstruktur unverändert."
+  "notes": "Vereinsmodus mit echtem 2-gegen-2-X01, Teamturnier-Verknüpfung, Saisons mit Terminplanung und persönlichen Wochen-Trainingszielen; bestehende Kassenbuchungen bleiben unverändert."
 }

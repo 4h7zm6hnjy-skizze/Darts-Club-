@@ -11,20 +11,22 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=3.5.0">
+  <link rel="stylesheet" href="./styles.css?v=3.6.0">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=3.5.0" defer></script>
-  <script src="./pro-engine.js?v=3.5.0" defer></script>
-  <script src="./dart-caller.js?v=3.5.0" defer></script>
-  <script src="./games-ui.js?v=3.5.0" defer></script>
-  <script src="./pro-ui.js?v=3.5.0" defer></script>
-  <script src="./camera-assist.js?v=3.5.0" defer></script>
-  <script src="./qr-offline.js?v=3.5.0" defer></script>
-  <script src="./live-lan.js?v=3.5.0" defer></script>
-  <script src="./elite-engine.js?v=3.5.0" defer></script>
-  <script src="./stats-35.js?v=3.5.0" defer></script>
-  <script src="./elite-ui.js?v=3.5.0" defer></script>
-  <script src="./app.js?v=3.5.0" defer></script>
+  <script src="./games-engine.js?v=3.6.0" defer></script>
+  <script src="./pro-engine.js?v=3.6.0" defer></script>
+  <script src="./dart-caller.js?v=3.6.0" defer></script>
+  <script src="./games-ui.js?v=3.6.0" defer></script>
+  <script src="./pro-ui.js?v=3.6.0" defer></script>
+  <script src="./camera-assist.js?v=3.6.0" defer></script>
+  <script src="./qr-offline.js?v=3.6.0" defer></script>
+  <script src="./live-lan.js?v=3.6.0" defer></script>
+  <script src="./elite-engine.js?v=3.6.0" defer></script>
+  <script src="./stats-35.js?v=3.6.0" defer></script>
+  <script src="./elite-ui.js?v=3.6.0" defer></script>
+  <script src="./club-next-engine.js?v=3.6.0" defer></script>
+  <script src="./club-next-ui.js?v=3.6.0" defer></script>
+  <script src="./app.js?v=3.6.0" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -36,12 +38,13 @@
         <button class="nav-btn" data-view="games"><span class="nav-icon">🎯</span> Dart spielen</button>
         <button class="nav-btn" data-view="pro"><span class="nav-icon">★</span> Profi-Center</button>
         <button class="nav-btn" data-view="elite"><span class="nav-icon">◈</span> Dart Elite</button>
+        <button class="nav-btn" data-view="club"><span class="nav-icon">♧</span> Verein & Teams</button>
         <button class="nav-btn" data-view="live"><span class="nav-icon">◉</span> Dartabend LIVE</button>
         <button class="nav-btn" data-view="players"><span class="nav-icon">➶</span> Spieler & Statistik</button>
         <button class="nav-btn" data-view="cash"><span class="nav-icon">€</span> Kassenbuch</button>
         <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span> Einstellungen</button>
       </nav>
-      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.5.0</span><br>© Marcel Hentschel 2026</small></div>
+      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.6.0</span><br>© Marcel Hentschel 2026</small></div>
     </aside>
     <div class="main-wrap">
       <header class="topbar" hidden></header>
@@ -57,7 +60,7 @@
             <small id="storageStatus" class="brand-status">Daten werden lokal gesichert</small>
           </div>
           <div class="dart-brand-showcase-actions">
-            <span class="version-pill">v<span class="version-value">3.5.0</span></span>
+            <span class="version-pill">v<span class="version-value">3.6.0</span></span>
             <button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button>
           </div>
         </div>
@@ -86,7 +89,7 @@
           </div>
         </section>
         <section class="view" id="view-games" aria-label="Dart spielen und Statistik">
-          <div class="page-heading"><div><span class="eyebrow">DART CLUB / SPIELMODUS</span><h1>Dart spielen<span class="accent-dot">.</span></h1><p>Eigene Dart-Partien mit 1–6 Spielern, Trainingsmodi und detaillierter Statistik – getrennt von der Jürgen-Kasse.</p></div><div class="elite-game-shortcuts"><button type="button" class="primary-btn small" data-view="pro">★ Profi-Center</button><button type="button" class="outline-btn small" data-view="elite">◈ Dart Elite – Analyse</button></div></div>
+          <div class="page-heading"><div><span class="eyebrow">DART CLUB / SPIELMODUS</span><h1>Dart spielen<span class="accent-dot">.</span></h1><p>Eigene Dart-Partien mit 1–6 Spielern, Trainingsmodi und detaillierter Statistik – getrennt von der Jürgen-Kasse.</p></div><div class="elite-game-shortcuts"><button type="button" class="primary-btn small" data-view="pro">★ Profi-Center</button><button type="button" class="outline-btn small" data-view="elite">◈ Dart Elite – Analyse</button><button type="button" class="outline-btn small" data-view="club">♧ Verein & Teams</button></div></div>
           <section id="dartsQuickPanel" class="game-panel darts-quick-panel" aria-label="Partie schnell starten oder fortsetzen">
             <div class="game-section-head"><div><span class="eyebrow">SCHNELLSTART / SPIELABEND</span><h2>Schneller ans Board</h2><p class="game-muted">Deine Lieblingspartien samt Spielern und Regeln speichern – inklusive JSON-Backup.</p></div></div>
             <div class="darts-quick-actions"><button id="dartsQuickResume" type="button" class="primary-btn" hidden>▶ Laufende Partie fortsetzen</button><button id="dartsQuickSave" type="button" class="outline-btn">☆ Aktuelle Spieleinstellungen merken</button></div>
@@ -159,11 +162,12 @@
           <section class="game-panel elite-section"><div class="game-section-head"><div><span class="eyebrow">PARTIEN / NACHWEIS</span><h2>Partie-Analyse &amp; Bericht</h2></div></div><div class="elite-report-controls"><label>Partie auswählen<select id="eliteMatchSelect"></select></label><button id="eliteMatchCSV" type="button" class="outline-btn small">CSV exportieren</button><button id="eliteMatchPrint" type="button" class="outline-btn small">Drucken / PDF</button></div><div id="eliteMatchSummary"></div></section>
         </section>
         <section class="view" id="view-pro" aria-label="Profi-Center, Turniere, Trainings und Berichte">
+          <div class="club-pro-link"><button type="button" data-view="club" class="primary-btn">♧ Vereinssaison, 2 gegen 2 und Wochenziele</button></div>
           <div class="page-heading"><div><span class="eyebrow">DART CLUB / OFFLINE PROFI-CENTER</span><h1>Profi-Center<span class="accent-dot">.</span></h1><p>Turniere, Liga, DartBot, Training und persönliche Berichte. Kostenlos und offline nutzbar.</p></div></div>
           <div class="pro-tabs" role="group" aria-label="Profi-Center Bereiche"><button type="button" class="active" data-pro-tab="tournaments">Turniere & Liga</button><button type="button" data-pro-tab="training">Trainingszentrum</button><button type="button" data-pro-tab="reports">Berichte & Kamera</button><button type="button" data-pro-tab="club">Club-Rangliste</button></div>
           <div data-pro-section="tournaments">
             <div class="pro-tourney-grid">
-              <section class="game-panel pro-setup"><h2>Neues Turnier</h2><label>Name<input id="proTournamentName" maxlength="65" type="text" placeholder="Dartabend-Meisterschaft"></label><label>Turnierart<select id="proTournamentType"><option value="league">Liga – jeder gegen jeden</option><option value="knockout">K.-o.-Turnier</option><option value="groups">Gruppenphase + K.-o.</option><option value="teams">Teamduell (2 gegen 2, Ergebnis manuell)</option></select></label><div class="game-config-grid"><label>X01 Start<select id="proTournamentStart"><option value="301">301</option><option value="501" selected>501</option><option value="701">701</option></select></label><label>Legs<select id="proTournamentLegs"><option value="1">1 Leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option><option value="7">Best of 7</option></select></label><label>Finish-Regel<select id="proTournamentOutRule"><option value="double">Double-Out</option><option value="master">Master-Out</option><option value="straight">Straight-Out</option></select></label></div><h3>Teilnehmer auswählen</h3><div id="proTournamentPlayers" class="pro-player-picks"></div><p class="game-muted">Bei Teamduellen bilden die ersten zwei ausgewählten Spieler Team A, die nächsten zwei Team B. Teamresultate werden manuell eingetragen.</p><button type="button" id="proTournamentCreate" class="primary-btn full">Turnier erstellen</button></section>
+              <section class="game-panel pro-setup"><h2>Neues Turnier</h2><label>Name<input id="proTournamentName" maxlength="65" type="text" placeholder="Dartabend-Meisterschaft"></label><label>Turnierart<select id="proTournamentType"><option value="league">Liga – jeder gegen jeden</option><option value="knockout">K.-o.-Turnier</option><option value="groups">Gruppenphase + K.-o.</option><option value="teams">Teamduell (2 gegen 2, mit echtem Scorer)</option></select></label><div class="game-config-grid"><label>X01 Start<select id="proTournamentStart"><option value="301">301</option><option value="501" selected>501</option><option value="701">701</option></select></label><label>Legs<select id="proTournamentLegs"><option value="1">1 Leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option><option value="7">Best of 7</option></select></label><label>Finish-Regel<select id="proTournamentOutRule"><option value="double">Double-Out</option><option value="master">Master-Out</option><option value="straight">Straight-Out</option></select></label></div><h3>Teilnehmer auswählen</h3><div id="proTournamentPlayers" class="pro-player-picks"></div><p class="game-muted">Bei Teamduellen bilden die ersten zwei ausgewählten Spieler Team A, die nächsten zwei Team B. Teamresultate können jetzt im Verein & Teams 2-gegen-2-Scorer gespielt werden. Eine manuelle Eingabe bleibt möglich.</p><button type="button" id="proTournamentCreate" class="primary-btn full">Turnier erstellen</button></section>
               <section class="game-panel"><h2>Gespeicherte Turniere</h2><div id="proTournamentList" class="pro-tournament-list"></div></section>
             </div>
             <section class="game-panel pro-tourney-details" id="proTournamentDetails"><p class="game-muted">Hier erscheinen Turnierplan und Ergebnisse.</p></section>
@@ -179,6 +183,41 @@
           <div data-pro-section="club" hidden><section class="game-panel"><div class="game-section-head"><div><h2>Club-Rangliste und Formkurven</h2><p class="game-muted">Nur tatsächlich gespeicherte X01-Partien – keine Jürgen-Gebühren oder erfundenen Ergebnisse. Unter neun geworfenen Darts ist der Average vorläufig.</p></div></div><div id="proClubLeaderboard" class="pro-club-leaderboard"></div></section></div>
           <div id="proPrintSheet" class="pro-print-sheet" aria-hidden="true"></div>
           <div class="footer-warning">Turniere, Training und DartBot bleiben ohne Cloud auf dem Gerät gespeichert. Der WLAN-Mehrspielermodus ist weiterhin eine Beta und erfordert nach Verbindungsabbruch unter Umständen eine erneute QR-Kopplung.</div>
+        </section>
+        <section class="view" id="view-club" aria-label="Vereinsmodus, 2 gegen 2 und Trainingsziele">
+          <div class="page-heading"><div><span class="eyebrow">DART CLUB / VEREIN 3.6</span><h1>Verein & Teams<span class="accent-dot">.</span></h1><p>Mannschaftsspiele, Saisonkalender und persönliche Wochenziele. Alles lokal gespeichert und im JSON-Backup enthalten.</p></div></div>
+          <div class="club-notice">Der 2-gegen-2-Scorer führt <strong>gemeinsame Team-Punktstände</strong>. Er erzeugt keine Jürgen-Gebühren und verändert keine regulären Einzelpartien.</div>
+          <div class="club-tabs" role="group" aria-label="Vereinsbereiche">
+            <button type="button" data-club-tab="teams" class="active">2 gegen 2</button>
+            <button type="button" data-club-tab="seasons">Saison & Termine</button>
+            <button type="button" data-club-tab="training">Wochenziele</button>
+            <button type="button" data-club-tab="tools">Geräte & Sicherung</button>
+          </div>
+          <div data-club-panel="teams">
+            <section class="game-panel club-panel"><h2>Neues 2-gegen-2-Match</h2><p class="game-muted">Zuerst Team A (Spieler 1 + 2), dann Team B (Spieler 3 + 4). Die Werfer wechseln sich innerhalb der Teams ab.</p>
+              <label>Spielname<input id="clubTeamName" type="text" maxlength="65" placeholder="Teamduell"></label>
+              <div class="club-form-grid">
+                <label>Team A · Spieler 1<select id="clubTeamPlayer0"></select></label><label>Team A · Spieler 2<select id="clubTeamPlayer1"></select></label>
+                <label>Team B · Spieler 1<select id="clubTeamPlayer2"></select></label><label>Team B · Spieler 2<select id="clubTeamPlayer3"></select></label>
+                <label>Startpunkte<select id="clubTeamStart"><option value="301">301</option><option value="501" selected>501</option><option value="701">701</option></select></label>
+                <label>Finish-Regel<select id="clubTeamOut"><option value="double">Double-Out</option><option value="master">Master-Out</option><option value="straight">Straight-Out</option></select></label>
+                <label>Legs<select id="clubTeamLegs"><option value="1">1 Leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option><option value="7">Best of 7</option></select></label>
+              </div><button id="clubTeamCreate" type="button" class="primary-btn">Teamduell starten</button>
+            </section>
+            <div class="club-duel-layout"><section class="game-panel club-panel"><h2>Gespeicherte Teamduelle</h2><div id="clubDuels" class="club-choices"></div></section><section class="game-panel club-panel"><h2>Team-Scoreboard</h2><div id="clubBoard"></div></section></div>
+          </div>
+          <div data-club-panel="seasons" hidden>
+            <section class="game-panel club-panel"><h2>Neue Vereinssaison</h2><p class="game-muted">Turniere über mehrere Dartabende organisieren, ohne bestehende Turniere zu verschieben oder ihre Ergebnisse zu ändern.</p>
+              <div class="club-form-grid"><label>Saisonname<input id="clubSeasonName" maxlength="65" placeholder="Meisterschaft 2027"></label></div><button type="button" id="clubSeasonCreate" class="primary-btn">Saison anlegen</button>
+              <h3>Turnier zu einer Saison hinzufügen</h3><div class="club-form-grid"><label>Vorhandenes Turnier<select id="clubSeasonTournament"></select></label><label>Geplanter Termin (optional)<input id="clubSeasonDate" type="date" min="2000-01-01" max="2100-12-31"></label></div><button type="button" id="clubSeasonAdd" class="outline-btn">Turnier zuordnen</button>
+            </section><div class="club-duel-layout"><section class="game-panel club-panel"><h2>Saisons</h2><div id="clubSeasons" class="club-choices"></div></section><section class="game-panel club-panel"><h2>Saisonkalender</h2><div id="clubSeasonDetails"></div></section></div>
+          </div>
+          <div data-club-panel="training" hidden>
+            <section class="game-panel club-panel"><h2>Persönliche Trainingsziele</h2><p class="game-muted">Die Fortschritte stammen ausschließlich aus tatsächlich gespeicherten Trainings des Profi-Centers. Keine erfundenen Trainingseinheiten.</p>
+              <div class="club-form-grid"><label>Spieler<select id="clubPlanPlayer"></select></label><label>Übung<select id="clubPlanMode"><option value="checkout121">121 Checkout</option><option value="checkoutRandom">Zufalls-Checkout</option><option value="double">Doppeltraining</option><option value="scoring">T20-Präzision</option></select></label><label>Einheiten je Woche<select id="clubPlanGoal"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="7">7</option><option value="10">10</option></select></label></div>
+              <button id="clubPlanCreate" type="button" class="primary-btn">Wochenziel speichern</button></section><section class="game-panel club-panel"><h2>Trainingsfortschritt</h2><div id="clubPlans" class="club-plans"></div></section>
+          </div>
+          <div data-club-panel="tools" hidden><section class="game-panel club-panel"><h2>Geräte und Datensicherheit</h2><p class="game-muted">Die lokale LAN-Kopplung bleibt eine Beta. Ohne ein zweites Gerät ist kein vollständiger Verbindungstest möglich.</p><div class="club-actions"><button id="clubCheckDevice" class="primary-btn" type="button">Dieses Gerät prüfen</button><button id="clubOpenLive" class="outline-btn" type="button">Dartabend LIVE öffnen</button><button id="clubBackupNow" class="outline-btn" type="button">JSON-Backup herunterladen</button><button id="clubOpenBackup" class="outline-btn" type="button">Speicherdiagnose öffnen</button><button id="clubOpenCamera" class="outline-btn" type="button">Foto-Kalibrierung öffnen</button></div><div id="clubDeviceResult" role="status" aria-live="polite" class="club-device-result" hidden></div><p class="game-muted">Die Kamera-Hilfe erkennt noch keine Treffer automatisch. Jeder Treffer muss manuell markiert und bestätigt werden.</p></section></div>
         </section>
         <section class="view" id="view-live" aria-label="Dartabend LIVE mit iPhone und Android">
   <div class="page-heading"><div><span class="eyebrow">DARTABEND / LOKALES NETZWERK</span><h1>Dartabend LIVE<span class="accent-dot">.</span></h1><p>iPhone und Android direkt über dasselbe WLAN koppeln. Kein Cloud-Konto und keine Kosten.</p></div></div>
@@ -239,7 +278,7 @@
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELTAGE</span><h2>Spieltag wählen</h2></div></div><p class="panel-intro">Wähle ein Datum. Für bereits erfasste Spieltage werden die vorhandenen Punkte angezeigt. Neue Daten erhalten einen eigenen Spieltag; Zahlungen und der Kassenstand bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">Datum auswählen</button></div>
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">03 / SICHERUNG</span><h2>Backup & Export</h2></div></div><p class="panel-intro">Alle Daten bleiben auf diesem Gerät. Sichere sie regelmäßig als Datei, insbesondere vor Updates oder einem Gerätewechsel.</p><div class="button-stack"><button id="exportBackup" class="primary-btn full">↓ Vollständiges JSON-Backup</button><button id="importBackup" class="outline-btn full">↑ Backup wiederherstellen</button><button id="importPaper" class="outline-btn full">↑ Papierliste 2026 importieren</button><button id="restorePrevious" class="outline-btn full" hidden>↶ Stand vor letztem Import zurückholen</button><button id="exportCsvSettings" class="outline-btn full">↓ Buchungen als CSV</button></div><div class="storage-recovery"><h3>Lokale Sicherheit & Wiederherstellung</h3><p class="game-muted">Zusätzliche Sicherungspunkte werden maximal alle 30 Minuten lokal erzeugt und auf fünf Stände begrenzt. Sie ersetzen kein JSON-Backup außerhalb des Geräts.</p><div class="storage-actions"><button id="storageSnapshotCreate" type="button" class="outline-btn">Sicherungspunkt jetzt erstellen</button><button id="storageSnapshotList" type="button" class="outline-btn">Sicherungspunkte anzeigen</button><button id="storageDiagButton" type="button" class="outline-btn">Offline- und Speicherdaten anzeigen</button></div><div id="storageRecoveryList" aria-live="polite"></div><pre id="storageDiagOutput" class="storage-diagnostics"></pre></div><input type="file" id="backupFile" accept="application/json,.json" hidden><input type="file" id="paperFile" accept="application/json,.json" hidden></div>
-              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.5.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
+              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.6.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
             </div>
           </div>
           <div class="footer-warning">Hinweis: Offline-Speicher auf Mobilgeräten kann vom Betriebssystem gelöscht werden. Das JSON-Backup ist deine zusätzliche Sicherung.<br>© Marcel Hentschel 2026</div>

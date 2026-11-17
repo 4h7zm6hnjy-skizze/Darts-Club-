@@ -1,6 +1,6 @@
 /* JÜRGEN DARTKASSE — offline-first app, v3.5.0: Dart Elite Analytics */
 'use strict';
-const APP_VERSION = '3.5.0';
+const APP_VERSION = '3.6.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -63,6 +63,9 @@ function makeInitial(){
     activeDartMatchId:null,
     proTournaments:[],
     proTraining:[],
+    clubDuels:[],
+    clubSeasons:[],
+    clubPlans:[],
     lanVoidedRequests:[],
     settings:{baseCents:0,champions:championDefaults(),quickPresets:[]}
   };
@@ -92,9 +95,10 @@ function toast(msg){const el=$('toast'); if(!el) return; el.textContent=msg; el.
 function localGet(key){try{return localStorage.getItem(key);}catch{return null;}}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
 function goView(view){
-  if(!['play','games','live','players','pro','elite','cash','settings'].includes(view))return;
+  if(!['play','games','live','players','pro','elite','club','cash','settings'].includes(view))return;
   currentView=view;
   document.body.classList.toggle('elite-view-on',view==='elite');
+  document.body.classList.toggle('club-view-on',view==='club');
   document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===`view-${view}`));
   document.querySelectorAll('[data-view]').forEach(el=>{const active=el.dataset.view===view;el.classList.toggle('active',active);active?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current');});
   window.scrollTo({top:0,behavior:'auto'});
@@ -289,6 +293,32 @@ function validateImported(obj){
     const rid=new Set();
     proTraining=obj.proTraining.map(r=>{const parsed=window.DartsProEngine.validatePractice(r,pids);if(rid.has(parsed.id))throw Error('Doppelter Trainingseintrag.');rid.add(parsed.id);return parsed;});
   }
+  // 3.6: Separate club and training modules. Older backups without these fields remain valid.
+  const clubEngine=window.DartsClubEngine;
+  if(!clubEngine)throw Error('Vereinsmodus nicht geladen. Bestehende Daten werden nicht überschrieben.');
+  const tournamentIds=new Set(proTournaments.map(t=>t.id));
+  function validateCollection(key,max,validator){
+    const list=obj[key]===undefined?[]:obj[key];
+    if(!Array.isArray(list)||list.length>max)throw Error('Ungültige Vereinsdaten: '+key);
+    const seen=new Set();return list.map(item=>{const clean=validator(item);if(seen.has(clean.id))throw Error('Doppelte Vereinsdaten: '+key);seen.add(clean.id);return clean;});
+  }
+  const clubDuels=validateCollection('clubDuels',1000,d=>clubEngine.validateDuel(d,pids,tournamentIds));
+  const clubSeasons=validateCollection('clubSeasons',60,d=>clubEngine.validateSeason(d,tournamentIds));
+  const clubPlans=validateCollection('clubPlans',300,p=>clubEngine.validatePlan(p,pids));
+  for(const duel of clubDuels){
+    if(!duel.tournamentId)continue;
+    const tour=proTournaments.find(t=>t.id===duel.tournamentId);
+    if(!tour||tour.type!=='teams'||tour.playerIds.some((id,i)=>id!==duel.playerIds[i]))throw Error('Teamduell ist einem unpassenden Turnier zugeordnet.');
+    const result=tour.results?.['team-0'];
+    if(result?.teamDuelId&&result.teamDuelId!==duel.id)throw Error('Teamduell-Zuordnung stimmt nicht.');
+    if(result?.teamDuelId===duel.id){const r=clubEngine.replayDuel(duel);if(!r.finished||r.winnerTeam!==result.manualWinnerId)throw Error('Gespeichertes Teamergebnis ist widersprüchlich.');}
+  }
+  for(const tour of proTournaments){
+    const id=tour.type==='teams'?tour.results?.['team-0']?.teamDuelId:null;
+    if(!id)continue;
+    const duel=clubDuels.find(d=>d.id===id&&d.tournamentId===tour.id);
+    if(!duel||clubEngine.replayDuel(duel).winnerTeam!==tour.results['team-0'].manualWinnerId)throw Error('Teamturnier verweist auf ein fehlendes oder unplausibles Mannschaftsspiel.');
+  }
   // Undo-Tombstones prevent already reversed LAN uploads from being accepted again.
   if(obj.lanVoidedRequests!==undefined && (!Array.isArray(obj.lanVoidedRequests)||obj.lanVoidedRequests.length>3000||!obj.lanVoidedRequests.every(isId)))throw Error('Ungültige rückgängig gemachte Netzwerk-Würfe.');
   const lanVoidedRequests=[...new Set(obj.lanVoidedRequests||[])];
@@ -313,7 +343,7 @@ function validateImported(obj){
       rounds:[7,10,15,20].includes(o.rounds)?o.rounds:10,aroundBull:o.aroundBull===true
     }};
   }):[];
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions,quickPresets}};
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,clubDuels,clubSeasons,clubPlans,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions,quickPresets}};
 }
 
 let idbUnavailable=false;
@@ -361,6 +391,9 @@ async function loadData(){
   if(!Array.isArray(state.dartMatches))state.dartMatches=[];
   if(!Array.isArray(state.proTournaments))state.proTournaments=[];
   if(!Array.isArray(state.proTraining))state.proTraining=[];
+  if(!Array.isArray(state.clubDuels))state.clubDuels=[];
+  if(!Array.isArray(state.clubSeasons))state.clubSeasons=[];
+  if(!Array.isArray(state.clubPlans))state.clubPlans=[];
   if(!Array.isArray(state.lanVoidedRequests))state.lanVoidedRequests=[];
   if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
   selectedPlayerId=throwerPlayers()[0]?.id||null;
@@ -619,6 +652,7 @@ function render(){
  try{window.DartsGameUI?.render();}catch(err){console.error('Dart-Spielmodus konnte nicht angezeigt werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Der Spielmodus hat einen Ladefehler. Die Jürgen-Kasse bleibt weiterhin bedienbar. Bitte JSON-Backup sichern.';}}
  try{window.DartsPro?.render();}catch(err){console.error('Profi-Center konnte nicht angezeigt werden:',err);}
  try{window.DartsElite?.render();}catch(err){console.error('Dart Elite konnte nicht angezeigt werden:',err);}
+ try{window.DartsClub?.render();}catch(err){console.error('Vereinsmodus konnte nicht angezeigt werden:',err);}
 }
 function renderPlay(){
   ensureChampionState(); renderChampions();
@@ -758,6 +792,7 @@ function setupEvents(){
   catch(err){console.error('Dart-Spielmodus konnte nicht gestartet werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Fehler im Spielmodus. Die Jürgen-Kasse wurde getrennt gestartet. Bitte zuerst ein JSON-Backup erstellen.';}}
   try{window.DartsPro?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Profi-Center konnte nicht gestartet werden:',err);}
   try{window.DartsElite?.init({getState:()=>state,goView,toast});}catch(err){console.error('Dart Elite konnte nicht gestartet werden:',err);}
+  try{window.DartsClub?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Vereinsmodus konnte nicht gestartet werden:',err);}
   try{window.DartLocalLive?.init({getState:()=>state,persist,render,toast,addJuergenForThrower,canBookDartJuergen});}catch(err){console.warn('Live-Modul konnte nicht starten:',err);}
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.

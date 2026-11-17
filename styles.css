@@ -1633,3 +1633,76 @@ body.dart-focus-on .game-current.focus-active #dartsCurrent.is-finished #dartsWi
 /* During no-scroll game focus, prioritize the full-size target grid. Caller settings
    remain accessible after leaving full-screen; no score controls are squeezed. */
 body.dart-focus-on .game-current.focus-active .ultimate-caller-settings{display:none!important}
+
+/* Darts-Club 3.6.0 — Verein & Teams. Keine Änderungen am Vollbild-Spiel. */
+#view-club{color:#eef7ff;min-width:0}
+#view-club .club-notice{background:#143a40;border:1px solid #52b9ab;border-radius:14px;padding:15px 18px;color:#e3fff7;line-height:1.6;margin:0 0 19px;font-size:14px}
+#view-club .club-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+#view-club .club-tabs button{border:1px solid #48637c;border-radius:12px;padding:12px 15px;min-height:44px;background:#172b42;color:#eaf4ff;font-weight:800;font-size:14px;flex:1 1 130px;cursor:pointer}
+#view-club .club-tabs button.active{background:#13544d;border-color:#6ef3d9;color:#fff;box-shadow:inset 0 0 0 1px #6ef3d9}
+#view-club [data-club-panel][hidden]{display:none!important}
+#view-club .club-panel{margin-bottom:18px;min-width:0}
+#view-club .club-panel h2{margin:0 0 12px;font-size:clamp(18px,2vw,23px);line-height:1.3;color:#fff}
+#view-club .club-panel h3{margin:23px 0 12px;font-size:16px;color:#ecf8ff}
+#view-club label{display:flex;flex-direction:column;gap:7px;color:#e0effa;font-size:14px;font-weight:700;min-width:0;margin-bottom:10px}
+#view-club input,#view-club select{width:100%;min-width:0;max-width:100%;min-height:46px;padding:10px 12px;font-size:16px;border-radius:10px;color:#fff;background:#122438;border:1px solid #4b6984}
+#view-club input:focus-visible,#view-club select:focus-visible,#view-club button:focus-visible{outline:3px solid #a4fff0;outline-offset:2px}
+#view-club button{white-space:normal;overflow-wrap:anywhere;line-height:1.3}
+#view-club .club-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 15px;max-width:900px}
+#view-club .club-duel-layout{display:grid;grid-template-columns:minmax(240px,.75fr) minmax(0,1.45fr);gap:18px;align-items:start}
+#view-club .club-choices{display:grid;gap:9px}
+#view-club .club-duel-choice{min-height:62px;width:100%;display:grid;gap:5px;text-align:left;border:1px solid #3e5b70;background:#13293d;color:#effaff;border-radius:12px;padding:11px 14px;cursor:pointer}
+#view-club .club-duel-choice.active{background:#17423f;border-color:#71edce}
+#view-club .club-duel-choice b{font-size:15px;overflow-wrap:anywhere}
+#view-club .club-duel-choice small{font-size:12px;color:#c6dded;line-height:1.5}
+#view-club .club-duel-title{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;margin-bottom:12px}
+#view-club .club-duel-title b{font-size:17px;color:#fff;overflow-wrap:anywhere}
+#view-club .club-duel-title small,#view-club .club-duel-title span{color:#bdd6e3;font-size:12px}
+#view-club .club-scores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#view-club .club-score{display:flex;flex-direction:column;min-width:0;gap:7px;background:#091f32;border:1px solid #36536e;border-radius:13px;padding:14px 10px;text-align:center;align-items:center}
+#view-club .club-score.club-on-turn{border:2px solid #5cf0d1;background:#14383c}
+#view-club .club-score small{font-size:11px;font-weight:900;letter-spacing:.7px;color:#b5e8df}
+#view-club .club-score b{font-size:14px;min-height:38px;overflow-wrap:anywhere;line-height:1.4;color:#fff}
+#view-club .club-score strong{font-size:clamp(38px,6vw,66px);line-height:1.1;color:#fff;font-variant-numeric:tabular-nums}
+#view-club .club-score span{font-size:12px;color:#c5ddeb}
+#view-club .club-current{margin:15px 0 8px;text-align:center;font-size:16px;color:#e9f9ff}
+#view-club .club-current strong{color:#8ffbe7}
+#view-club .club-staged{border-radius:9px;background:#21384e;border:1px solid #516e89;padding:10px;min-height:45px;text-align:center;font-size:15px;color:#fff;line-height:1.5;margin:9px 0 13px;overflow-wrap:anywhere}
+#view-club .club-rings{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+#view-club .club-rings span{margin-right:auto;font-size:14px;color:#e6f6fa}
+#view-club .club-rings button.active{background:#286558;color:#fff;border-color:#7cf9de}
+#view-club .club-numbers{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-bottom:12px}
+#view-club .club-numbers button{min-height:52px;border:1px solid #53718f;border-radius:10px;background:#19344c;color:#fff;font-size:19px;font-weight:900;cursor:pointer;padding:7px 3px}
+#view-club .club-numbers button:disabled{color:#b9c8d5;background:#15283a;opacity:.6}
+#view-club .club-numbers button:active{background:#266859}
+#view-club .club-actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+#view-club .club-actions button{flex:1 1 160px;min-height:46px}
+#view-club .club-team-winner{background:#163f39;border:1px solid #65dcc1;border-radius:12px;padding:16px;text-align:center;margin:14px 0;color:#fff}
+#view-club .club-team-winner strong{font-size:21px}
+#view-club .club-history{margin-top:16px;border-top:1px solid #3b5369;padding-top:10px}
+#view-club .club-history div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #2f475d;font-size:12px}
+#view-club .club-history span{color:#cbdcec}
+#view-club .club-history b{overflow-wrap:anywhere;color:#fff}
+#view-club .club-history strong{color:#98f4d9;white-space:nowrap}
+#view-club .club-calendar{display:grid;gap:9px;margin-top:16px}
+#view-club .club-calendar article{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #36526d}
+#view-club .club-calendar b,#view-club .club-calendar small{display:block;line-height:1.5;overflow-wrap:anywhere}
+#view-club .club-calendar small{color:#bbcfde;font-size:12px}
+#view-club .club-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+#view-club .club-plan{border:1px solid #43637c;background:#12283c;border-radius:12px;padding:15px;min-width:0}
+#view-club .club-plan b,#view-club .club-plan small{display:block;overflow-wrap:anywhere}
+#view-club .club-plan b{font-size:15px;line-height:1.45}
+#view-club .club-plan small{color:#c5d8e6;font-size:12px;margin-top:7px}
+#view-club .club-progress{background:#30485d;border-radius:20px;height:11px;overflow:hidden;margin:13px 0}
+#view-club .club-progress span{display:block;background:#56e7c6;height:100%;border-radius:20px}
+#view-club .club-plan-actions{display:flex;flex-wrap:wrap;gap:8px}
+#view-club .club-plan-actions button{min-height:42px;flex:1 1 110px}
+.club-pro-link{margin-bottom:14px}
+@media(max-width:900px){#view-club .club-duel-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:550px){#view-club .club-form-grid{grid-template-columns:minmax(0,1fr)}#view-club .club-numbers{gap:5px}#view-club .club-numbers button{min-height:50px;font-size:17px}#view-club .club-score strong{font-size:clamp(35px,11vw,55px)}#view-club .club-history div{grid-template-columns:1fr auto}#view-club .club-history b{grid-column:1/-1;grid-row:2}#view-club .club-history strong{grid-column:2;grid-row:1}}
+
+/* Ensure club heading never slides under the sticky mobile brand. */
+body.club-view-on .dart-brand-showcase{position:relative!important;top:auto!important;z-index:1!important}
+#view-club .page-heading h1{color:#fff!important;font-size:clamp(28px,5vw,40px);line-height:1.2;overflow-wrap:anywhere}
+
+#view-club .club-device-result{white-space:pre-wrap;line-height:1.7;background:#102b3b;color:#e7faff;border:1px solid #6ac8c3;border-radius:12px;padding:16px;font-size:14px;margin:14px 0 18px}
