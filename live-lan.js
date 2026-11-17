@@ -1,4 +1,4 @@
-/* Jürgen Dartkasse – local, serverless iPhone/Android LAN session (beta) v2.1.0 */
+/* Jürgen Dartkasse – local, serverless iPhone/Android LAN session (beta) v3.0.0 */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
@@ -8,6 +8,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const rnd=()=>{if(crypto?.randomUUID)return crypto.randomUUID();const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a).map(v=>v.toString(16).padStart(2,'0')).join('');};
 let api=null,role='host',sessionId='',hostPeers=new Map(),guestPeer=null,lastOffer='',lastAnswer='',staged=[],ring=1,pendingThrow='',currentSnapshot=null;
 let importedCode='',recentMailbox='';
+// One authoritative deduplication store per local session, independent of peer reconnects.
+const processedTurns=new Map();
 const enc=new TextEncoder(),dec=new TextDecoder();
 function uiStatus(id,msg){const el=$(id);if(el)el.textContent=msg;}
 function ready(){return !!(window.RTCPeerConnection&&crypto?.getRandomValues&&window.DartQRCode);}
@@ -46,7 +48,7 @@ function displayIncoming(token,raw){
  queueMicrotask(()=>document.querySelector('.mobile-nav-btn[data-view="live"]')?.click());
 }
 function stopPeer(p){try{p.dc?.close();p.pc?.close();}catch{}}
-function stopHost(){for(const p of hostPeers.values())stopPeer(p);hostPeers.clear();sessionId='';lastOffer='';$('liveHostOfferBox').hidden=true;$('liveHostStart').disabled=false;$('liveHostStop').disabled=true;$('liveHostInvite').disabled=true;uiStatus('liveHostState','Live-Abend beendet. Gespeicherte Partien bleiben erhalten.');renderHostPeers();}
+function stopHost(){for(const p of hostPeers.values())stopPeer(p);hostPeers.clear();processedTurns.clear();sessionId='';lastOffer='';$('liveHostOfferBox').hidden=true;$('liveHostStart').disabled=false;$('liveHostStop').disabled=true;$('liveHostInvite').disabled=true;uiStatus('liveHostState','Live-Abend beendet. Gespeicherte Partien bleiben erhalten.');renderHostPeers();}
 function waitIce(pc){return new Promise(resolve=>{if(pc.iceGatheringState==='complete')return resolve();let done=false;const finish=()=>{if(done)return;done=true;pc.removeEventListener('icegatheringstatechange',check);clearTimeout(timeout);resolve();};const check=()=>{if(pc.iceGatheringState==='complete')finish()};pc.addEventListener('icegatheringstatechange',check);const timeout=setTimeout(finish,11000);});}
 function send(p,data){if(p?.dc?.readyState==='open'){p.dc.send(JSON.stringify(data));return true;}return false;}
 function miniSnapshot(){if(!api)return null;const s=api.getState();const match=(s.dartMatches||[]).find(g=>g.id===s.activeDartMatchId);
@@ -68,12 +70,14 @@ function hostOnMessage(p,msg){if(!msg||typeof msg!=='object')return;
  if(msg.type==='claim'){
   const id=msg.playerId;
   const exists=api.getState().players.find(x=>x.id===id&&!x.archived);
-  const taken=[...hostPeers.values()].some(x=>x!==p&&x.playerId===id);
+  const taken=[...hostPeers.values()].some(x=>x!==p&&x.playerId===id&&x.dc?.readyState==='open');
   if(!exists||taken){send(p,{type:'error',message:'Profil nicht verfügbar oder bereits belegt.'});return;}
   p.requestId=id;renderHostPeers();send(p,{type:'status',message:'Warte auf Freigabe des Spielleiters.'});return;
  }
  if(msg.type==='turn'){
-  const rid=String(msg.rid||'');if(!/^[-a-zA-Z0-9]{8,100}$/.test(rid)||p.seen.has(rid))return;
+  const rid=String(msg.rid||'');if(!/^[-a-zA-Z0-9]{8,100}$/.test(rid))return;
+  if(processedTurns.has(rid)){send(p,processedTurns.get(rid));return;}
+  if(p.seen.has(rid))return;
   p.seen.add(rid);if(p.seen.size>1000)p.seen.clear();
   const match=api.getState().dartMatches?.find(g=>g.id===api.getState().activeDartMatchId);
   if(!match||!p.playerId||msg.matchId!==match.id){send(p,{type:'error',message:'Spiel ist nicht aktiv oder Profil nicht zugewiesen.',rid});return;}
@@ -87,7 +91,7 @@ function hostOnMessage(p,msg){if(!msg||typeof msg!=='object')return;
   try{
    const updated=E().nextTurn(match,darts);const s=api.getState();const idx=s.dartMatches.findIndex(g=>g.id===match.id);s.dartMatches[idx]=updated;
    if(isJ){const groupId=api.addJuergenForThrower(p.playerId,juergenKind==='perfect',match.createdAt);if(!groupId){s.dartMatches[idx]=match;send(p,{type:'error',message:'Jürgen-Buchung fehlgeschlagen.',rid});return;}updated.turns.at(-1).juergenGroupId=groupId;}
-   api.persist();api.render();send(p,{type:'ack',rid});broadcast();
+   api.persist();api.render();const acknowledgement={type:'ack',rid};processedTurns.set(rid,acknowledgement);if(processedTurns.size>3000)processedTurns.delete(processedTurns.keys().next().value);send(p,acknowledgement);broadcast();
   }catch(err){send(p,{type:'error',message:err.message||'Wurf abgelehnt.',rid});}
  }
 }
@@ -95,12 +99,13 @@ function attachHostDataChannel(p){const dc=p.dc;dc.onopen=()=>{send(p,{type:'wel
 async function startHost(){if(!ready()){uiStatus('liveHostState','WebRTC/QR-Code wird von diesem Browser nicht unterstützt.');return;}stopHost();sessionId=rnd();$('liveHostStart').disabled=true;$('liveHostStop').disabled=false;$('liveHostInvite').disabled=false;uiStatus('liveHostState','Sitzung gestartet. Jetzt „Weiteres Handy verbinden“ wählen.');}
 async function invite(){if(!sessionId)return;try{
  const pc=new RTCPeerConnection({iceServers:[]});const id=rnd();const dc=pc.createDataChannel('juergen-live',{ordered:true});const p={id,pc,dc,seen:new Set(),playerId:null,requestId:null};hostPeers.set(id,p);attachHostDataChannel(p);
- pc.onconnectionstatechange=()=>{renderHostPeers();if(pc.connectionState==='failed')uiStatus('liveHostState','Direkte Verbindung gescheitert. Beide Handys im selben WLAN? Router-Isolation deaktiviert? Neue Einladung erzeugen.');};const offer=await pc.createOffer();await pc.setLocalDescription(offer);await waitIce(pc);
+ pc.onconnectionstatechange=()=>{renderHostPeers();if(['failed','disconnected'].includes(pc.connectionState))uiStatus('liveHostState','Direkte Verbindung unterbrochen. Auf beiden Handys WLAN prüfen. Falls nötig neues Handy einladen und dasselbe Profil erneut freigeben. Keine Dart-Ergebnisse werden gelöscht.');};const offer=await pc.createOffer();await pc.setLocalDescription(offer);await waitIce(pc);
  lastOffer=await packSignal({v:1,kind:'offer',sid:sessionId,peer:id,sdp:pc.localDescription.sdp});
  $('liveHostOfferBox').hidden=false;qr('liveHostQR',lastOffer);renderHostPeers();
  }catch(err){uiStatus('liveHostState','Einladung fehlgeschlagen: '+err.message);}}
 async function applyAnswer(token){try{const signal=await unpackSignal(token);if(signal.kind!=='answer')throw Error('Bitte einen Antwort-Code verwenden.');const p=hostPeers.get(signal.peer);if(!p||!sessionId||signal.sid!==sessionId)throw Error('Code gehört nicht zu dieser laufenden Einladung.');await p.pc.setRemoteDescription({type:'answer',sdp:signal.sdp});uiStatus('liveHostState','Antwort übernommen. Warte auf direkte Verbindung …');$('liveHostAnswer').value='';lastOffer='';$('liveHostOfferBox').hidden=true;renderHostPeers();}catch(err){uiStatus('liveHostState','Antwort nicht übernommen: '+err.message);}}
 async function guestPrepare(token){try{
+ if(pendingThrow){const proceed=confirm('Ein vorheriger Wurf wurde noch nicht bestätigt. Bitte vor dem erneuten Senden den Spielstand auf dem Haupthandy prüfen. Jetzt neu koppeln?');if(!proceed)return;pendingThrow='';staged=[];}
  if(!ready())throw Error('WebRTC oder QR-Erzeugung fehlen in diesem Browser.');
  const signal=await unpackSignal(token);if(signal.kind!=='offer')throw Error('Bitte einen Einladungs-Code verwenden.');
  if(guestPeer)stopPeer(guestPeer);
@@ -145,7 +150,7 @@ function startUI(){if(!$('view-live'))return;
  $('liveHostApplyAnswer').onclick=()=>applyAnswer($('liveHostAnswer').value.trim()||lastMailbox());
  $('liveGuestConnect').onclick=()=>guestPrepare($('liveGuestOffer').value.trim());$('liveGuestClaim').onclick=askClaim;$('liveGuestSend').onclick=sendGuestTurn;
  $('liveGuestUndo').onclick=()=>{staged.pop();renderGuest()};$('liveCopyOffer').onclick=()=>copyCode(lastOffer);$('liveCopyAnswer').onclick=()=>copyCode(lastAnswer);$('liveHandoffCopy').onclick=()=>copyCode(importedCode);
- $('liveHostPeers').addEventListener('click',ev=>{const b=ev.target.closest('[data-live-approve]');if(!b)return;const p=hostPeers.get(b.dataset.liveApprove);if(!p||!p.requestId)return;const existing=[...hostPeers.values()].some(x=>x!==p&&x.playerId===p.requestId);if(existing){api.toast('Profil schon vergeben.');return;}p.playerId=p.requestId;p.requestId=null;send(p,{type:'approved',playerId:p.playerId});renderHostPeers();broadcast();});
+ $('liveHostPeers').addEventListener('click',ev=>{const b=ev.target.closest('[data-live-approve]');if(!b)return;const p=hostPeers.get(b.dataset.liveApprove);if(!p||!p.requestId)return;const existing=[...hostPeers.values()].find(x=>x!==p&&x.playerId===p.requestId);if(existing&&existing.dc?.readyState==='open'){api.toast('Profil ist bereits auf einem anderen verbundenen Handy aktiv.');return;}if(existing){stopPeer(existing);hostPeers.delete(existing.id);}p.playerId=p.requestId;p.requestId=null;send(p,{type:'approved',playerId:p.playerId});renderHostPeers();broadcast();});
  $('liveGuestTargets').addEventListener('click',ev=>{const b=ev.target.closest('[data-lnum]');if(!b||staged.length>=3||pendingThrow)return;const n=Number(b.dataset.lnum),m=b.dataset.lmult!==undefined?Number(b.dataset.lmult):ring;if(n===25&&m===3)return;staged.push({n,m});renderGuest()});
  $('liveGuestRings').addEventListener('click',ev=>{const b=ev.target.closest('[data-lring]');if(!b)return;ring=Number(b.dataset.lring);renderGuest()});
  window.addEventListener('hashchange',importHash);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tryMailbox()});

@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v2.2.0: lokaler Dartabend mit Turnieransicht */
+/* JÜRGEN DARTKASSE — offline-first app, v3.0.0: Profi-Center Komplettupdate */
 'use strict';
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '3.0.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -61,6 +61,8 @@ function makeInitial(){
     paperEntries:[],
     dartMatches:[],
     activeDartMatchId:null,
+    proTournaments:[],
+    proTraining:[],
     settings:{baseCents:0,champions:championDefaults()}
   };
 }
@@ -89,7 +91,7 @@ function toast(msg){const el=$('toast'); if(!el) return; el.textContent=msg; el.
 function localGet(key){try{return localStorage.getItem(key);}catch{return null;}}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
 function goView(view){
-  if(!['play','games','live','players','cash','settings'].includes(view))return;
+  if(!['play','games','live','players','pro','cash','settings'].includes(view))return;
   currentView=view;
   document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===`view-${view}`));
   document.querySelectorAll('[data-view]').forEach(el=>{const active=el.dataset.view===view;el.classList.toggle('active',active);active?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current');});
@@ -269,13 +271,29 @@ function validateImported(obj){
     });
   }
   const activeDartMatchId=dartMatches.some(m=>m.id===obj.activeDartMatchId)?obj.activeDartMatchId:(dartMatches.at(-1)?.id||null);
+  let proTournaments=[];
+  if(obj.proTournaments!==undefined){
+    if(!Array.isArray(obj.proTournaments)||obj.proTournaments.length>200||!window.DartsProEngine)throw Error('Ungültige Turnierdaten im Backup.');
+    const tids=new Set();
+    proTournaments=obj.proTournaments.map(t=>{
+      const parsed=window.DartsProEngine.validateTournament(t,pids);
+      if(tids.has(parsed.id))throw Error('Doppeltes Turnier.');
+      tids.add(parsed.id);return parsed;
+    });
+  }
+  let proTraining=[];
+  if(obj.proTraining!==undefined){
+    if(!Array.isArray(obj.proTraining)||obj.proTraining.length>20000||!window.DartsProEngine)throw Error('Ungültige Trainingsdaten im Backup.');
+    const rid=new Set();
+    proTraining=obj.proTraining.map(r=>{const parsed=window.DartsProEngine.validatePractice(r,pids);if(rid.has(parsed.id))throw Error('Doppelter Trainingseintrag.');rid.add(parsed.id);return parsed;});
+  }
   const cfg=obj.settings||{};
   const championsDefault=championDefaults();
   const champions={
     undisputed:{name:validText(cfg?.champions?.undisputed?.name,60)?cfg.champions.undisputed.name:championsDefault.undisputed.name,image:validText(cfg?.champions?.undisputed?.image,2000000)?cfg.champions.undisputed.image:''},
     summerslam:{name:validText(cfg?.champions?.summerslam?.name,60)?cfg.champions.summerslam.name:championsDefault.summerslam.name,image:validText(cfg?.champions?.summerslam?.image,2000000)?cfg.champions.summerslam.image:''}
   };
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
 }
 
 let idbUnavailable=false;
@@ -320,6 +338,8 @@ async function loadData(){
   if(!state.settings.champions)state.settings.champions=championDefaults();
   if(!Array.isArray(state.paperEntries))state.paperEntries=[];
   if(!Array.isArray(state.dartMatches))state.dartMatches=[];
+  if(!Array.isArray(state.proTournaments))state.proTournaments=[];
+  if(!Array.isArray(state.proTraining))state.proTraining=[];
   if(!state.dartMatches.some(m=>m.id===state.activeDartMatchId))state.activeDartMatchId=state.dartMatches.at(-1)?.id||null;
   selectedPlayerId=throwerPlayers()[0]?.id||null;
   // Save only after an explicit user action. This prevents a blank state replacing stored data.
@@ -410,7 +430,7 @@ function savePlayer(e){
 }
 function toggleArchive(id){ const p=person(id); if(!p) return; const action=p.archived?'reaktivieren':'archivieren'; if(!confirm(`${p.name} ${action}? Bisherige Treffer und Buchungen bleiben erhalten.`))return; p.archived=!p.archived; if(p.archived) p.absent=false; if(selectedPlayerId===id && (p.archived||p.absent)) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.archived?'Spieler archiviert.':'Spieler reaktiviert.'); }
 function toggleAbsent(id){ const p=person(id); if(!p||p.archived) return; p.absent=!p.absent; if(selectedPlayerId===id && p.absent) selectedPlayerId=throwerPlayers()[0]?.id||null; if(!selectedPlayerId) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast(p.absent?`${p.name} als abwesend markiert.`:`${p.name} ist wieder anwesend.`); }
-function deletePlayer(id){ const p=person(id); if(!p) return; if((state.events.some(e=>e.playerId===id||e.thrownBy===id)||(state.paperEntries||[]).some(e=>e.playerId===id)||(state.dartMatches||[]).some(g=>g.playerIds.includes(id)))|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
+function deletePlayer(id){ const p=person(id); if(!p) return; if((state.events.some(e=>e.playerId===id||e.thrownBy===id)||(state.paperEntries||[]).some(e=>e.playerId===id)||(state.dartMatches||[]).some(g=>g.playerIds.includes(id))||(state.proTournaments||[]).some(t=>t.playerIds.includes(id))||(state.proTraining||[]).some(t=>t.playerId===id))|| (state.paperEntries||[]).some(e=>e.playerId===id)){toast('Spieler hat Einträge und kann nur archiviert werden.'); return;} if(!confirm(`Spieler „${p.name}“ löschen?`))return; state.players=state.players.filter(x=>x.id!==id); if(selectedPlayerId===id) selectedPlayerId=throwerPlayers()[0]?.id||null; persist(); render(); toast('Spieler gelöscht.'); }
 function addJuergen(perfect){
   const thrower=person(selectedPlayerId);
   if(!thrower || thrower.archived || isAbsentForSelectedDate(thrower)){toast('Bitte zuerst einen anwesenden Spieler auswählen.'); return null;}
@@ -513,6 +533,7 @@ function render(){
  document.querySelectorAll('.version-value').forEach(el=>el.textContent=APP_VERSION);
  renderPlay();renderPlayers();renderCash();renderSettings();renderPaperTable();
  try{window.DartsGameUI?.render();}catch(err){console.error('Dart-Spielmodus konnte nicht angezeigt werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Der Spielmodus hat einen Ladefehler. Die Jürgen-Kasse bleibt weiterhin bedienbar. Bitte JSON-Backup sichern.';}}
+ try{window.DartsPro?.render();}catch(err){console.error('Profi-Center konnte nicht angezeigt werden:',err);}
 }
 function renderPlay(){
   ensureChampionState(); renderChampions();
@@ -534,6 +555,8 @@ function renderPlay(){
   $('sessionOverview').innerHTML=overview.length?overview.map(({player:p,stats})=>`<div class="session-person ${isAbsentForSelectedDate(p)?'is-absent':''}">${avatarMarkup(p)}<div class="meta"><b>${esc(p.name)}</b><small>${stats.points} bekannte Punkt${stats.points===1?'':'e'}${stats.paperUnknown?' (+ Papierfeld leer)':''} · ${stats.juergenThrown} Jürgen geworfen${isAbsentForSelectedDate(p)?' · abwesend':''}${stats.paperPoints?' · davon '+stats.paperPoints+' aus Papierliste':''}</small></div><span class="crown-stack">${crowns(stats.perfectThrown)}</span></div>`).join(''):'<div class="empty-state">Noch keine Jürgen an diesem Spieltag.</div>';
 }
 function renderPlayers(){
+  // Keep player-specific Dart statistics expanded across normal app re-renders.
+  const expandedDartProfiles=new Set([...$('playersList').querySelectorAll('details[data-dart-profile][open]')].map(el=>el.dataset.dartProfile));
   const players=state.players;
   const options=`<option value="active">Aktueller Spieltag: ${esc(getSession()?.name||'')}</option><option value="all">Alle Spieltage</option>`+state.sessions.filter(s=>s.id!==state.activeSessionId).slice().reverse().map(s=>`<option value="${esc(s.id)}">${esc(s.name)} · ${prettyDate(sessionDate(s))}</option>`).join('');
   $('statsSession').innerHTML=options; if(!['active','all',...state.sessions.map(s=>s.id)].includes(statsSession)) statsSession='active'; $('statsSession').value=statsSession;
@@ -542,7 +565,7 @@ function renderPlayers(){
   $('statsYear').innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join(''); if(!years.includes(statsYearValue)) statsYearValue=years[0]||currentYearDefault(); $('statsYear').value=statsYearValue; $('statsMonth').value=statsMonthValue;
   const sessionId=statsSession==='all'?null:statsSession==='active'?state.activeSessionId:statsSession;
   if(!players.length){$('playersList').innerHTML='<div class="panel empty-state">Noch keine Spieler angelegt. Tippe auf „Spieler hinzufügen“.</div>'; return;}
-  $('playersList').innerHTML=players.map(p=>{ const total=personStats(p.id), session=personStats(p.id,sessionId), month=monthStats(p.id,statsMonthValue), year=yearStats(p.id,statsYearValue); const deleteBtn=!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)&&!(state.paperEntries||[]).some(e=>e.playerId===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''; return `<div class="player-stat ${p.archived?'inactive':''} ${p.absent?'absent-card':''}"><div class="stat-header">${avatarMarkup(p)}<div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':p.absent?'Abwesend · ':''}${session.points} bekannte Punkte in der Auswahl${session.paperUnknown?' · Papierfeld leer':''}${session.paperPoints?' · '+session.paperPoints+' aus Papierliste':''}</small></div><div class="inline-actions"><button class="square-button player-photo-action" data-photo-player="${esc(p.id)}" title="Profilfoto ändern" aria-label="Foto für ${esc(p.name)} ändern">📷</button><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button>${!p.archived?`<button class="square-button" data-absent-player="${esc(p.id)}" title="${p.absent?'Als anwesend markieren':'Als abwesend markieren'}">${p.absent?'☀':'☾'}</button>`:''}<button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${deleteBtn}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${session.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte: ${session.perfectThrown}</span>${p.absent?'<span class="flag-pill absent-pill">Abwesend</span>':''}</div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>${total.paperBilled?'Gebühren inkl. Papierliste (rechnerisch)':'Gebühren gesamt'}</small></div><div><b>${euro(total.paid)}</b><small>In App bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':total.paperBilled?'Rechnerisch offen':'Offen'}</small></div></div><div class="paper-fee-detail"><span>Papierliste: <strong>${euro(total.paperBilled)}</strong> aus ${total.paperPoints} Strichen</span><span>App-Jürgen: <strong>${euro(total.liveBilled)}</strong></span></div><div class="period-grid"><div class="period-box"><span>Monat ${esc(statsMonthValue)}</span><b>${month.points}${month.paperUnknown?'+':''}</b><small>${month.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${month.paperPoints} Papierliste (${euro(month.paperBilled)} rechnerisch) · ${month.juergenThrown} Jürgen · ${month.perfectThrown} Kronen</small></div><div class="period-box"><span>Jahr ${esc(statsYearValue)}</span><b>${year.points}${year.paperUnknown?'+':''}</b><small>${year.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${year.paperPoints} Papierliste (${euro(year.paperBilled)} rechnerisch) · ${year.juergenThrown} Jürgen · ${year.perfectThrown} Kronen</small></div></div><div class="player-point-summary"><div><b>${session.points}${session.paperUnknown?'+':''}</b><small>${session.paperUnknown?'Bekannte Punkte · Papierfeld leer':'Punkte in der Auswahl'}</small></div><div><b>${total.points}${total.paperUnknown?'+':''}</b><small>${total.paperUnknown?'Bekannte Punkte gesamt (Papierfeld leer)':'Punkte gesamt'}</small></div></div></div>`; }).join('');
+  $('playersList').innerHTML=players.map(p=>{ const total=personStats(p.id), session=personStats(p.id,sessionId), month=monthStats(p.id,statsMonthValue), year=yearStats(p.id,statsYearValue); const deleteBtn=!state.events.some(e=>e.playerId===p.id||e.thrownBy===p.id)&&!(state.paperEntries||[]).some(e=>e.playerId===p.id)&&!(state.dartMatches||[]).some(g=>g.playerIds.includes(p.id))&&!(state.proTournaments||[]).some(t=>t.playerIds.includes(p.id))&&!(state.proTraining||[]).some(t=>t.playerId===p.id)?`<button class="square-button" data-delete-player="${esc(p.id)}" title="Löschen">×</button>`:''; return `<div class="player-stat ${p.archived?'inactive':''} ${p.absent?'absent-card':''}"><div class="stat-header">${avatarMarkup(p)}<div class="name"><strong>${esc(p.name)}</strong><small>${p.archived?'Archiviert · ':p.absent?'Abwesend · ':''}${session.points} bekannte Punkte in der Auswahl${session.paperUnknown?' · Papierfeld leer':''}${session.paperPoints?' · '+session.paperPoints+' aus Papierliste':''}</small></div><div class="inline-actions"><button class="square-button player-photo-action" data-photo-player="${esc(p.id)}" title="Profilfoto ändern" aria-label="Foto für ${esc(p.name)} ändern">📷</button><button class="square-button" data-edit-player="${esc(p.id)}" title="Bearbeiten">✎</button>${!p.archived?`<button class="square-button" data-absent-player="${esc(p.id)}" title="${p.absent?'Als anwesend markieren':'Als abwesend markieren'}">${p.absent?'☀':'☾'}</button>`:''}<button class="square-button" data-archive-player="${esc(p.id)}" title="${p.archived?'Reaktivieren':'Archivieren'}">${p.archived?'↻':'▣'}</button>${deleteBtn}</div></div><div class="flag-row"><span class="flag-pill">Jürgen: ${session.juergenThrown}</span><span class="flag-pill crown">👑 Perfekte: ${session.perfectThrown}</span>${p.absent?'<span class="flag-pill absent-pill">Abwesend</span>':''}</div><div class="stat-money"><div><b>${euro(total.billed)}</b><small>${total.paperBilled?'Gebühren inkl. Papierliste (rechnerisch)':'Gebühren gesamt'}</small></div><div><b>${euro(total.paid)}</b><small>In App bezahlt</small></div><div class="owed"><b>${euro(total.owed)}</b><small>${total.owed<0?'Guthaben':total.paperBilled?'Rechnerisch offen':'Offen'}</small></div></div><div class="paper-fee-detail"><span>Papierliste: <strong>${euro(total.paperBilled)}</strong> aus ${total.paperPoints} Strichen</span><span>App-Jürgen: <strong>${euro(total.liveBilled)}</strong></span></div><div class="period-grid"><div class="period-box"><span>Monat ${esc(statsMonthValue)}</span><b>${month.points}${month.paperUnknown?'+':''}</b><small>${month.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${month.paperPoints} Papierliste (${euro(month.paperBilled)} rechnerisch) · ${month.juergenThrown} Jürgen · ${month.perfectThrown} Kronen</small></div><div class="period-box"><span>Jahr ${esc(statsYearValue)}</span><b>${year.points}${year.paperUnknown?'+':''}</b><small>${year.paperUnknown?'Bekannte Punkte, Papierfeld leer · ':'Punkte · '}davon ${year.paperPoints} Papierliste (${euro(year.paperBilled)} rechnerisch) · ${year.juergenThrown} Jürgen · ${year.perfectThrown} Kronen</small></div></div><div class="player-point-summary"><div><b>${session.points}${session.paperUnknown?'+':''}</b><small>${session.paperUnknown?'Bekannte Punkte · Papierfeld leer':'Punkte in der Auswahl'}</small></div><div><b>${total.points}${total.paperUnknown?'+':''}</b><small>${total.paperUnknown?'Bekannte Punkte gesamt (Papierfeld leer)':'Punkte gesamt'}</small></div></div><details class="dart-profile-details" data-dart-profile="${esc(p.id)}" ${expandedDartProfiles.has(p.id)?'open':''}><summary><span>🎯 Dart-Spielstatistik</span><small>Average, Checkouts, Treffer &amp; Verlauf</small></summary><div class="dart-profile-content" data-dart-profile-content="${esc(p.id)}"><p class="game-muted">Spielstatistik wird geladen …</p></div></details></div>`; }).join('');
 }
 function renderPaperTable(){
   const root=$('paperTable'); if(!root)return;
@@ -647,6 +670,7 @@ function initServiceWorker(){ if(!('serviceWorker' in navigator)||!['https:','ht
 function setupEvents(){
   try{window.DartsGameUI?.init({getState:()=>state,persist,toast,addJuergenForThrower,canBookDartJuergen,voidDartJuergenGroup});}
   catch(err){console.error('Dart-Spielmodus konnte nicht gestartet werden:',err);const box=$('gameModuleWarning');if(box){box.hidden=false;box.textContent='Fehler im Spielmodus. Die Jürgen-Kasse wurde getrennt gestartet. Bitte zuerst ein JSON-Backup erstellen.';}}
+  try{window.DartsPro?.init({getState:()=>state,persist,render,toast,goView});}catch(err){console.error('Profi-Center konnte nicht gestartet werden:',err);}
   try{window.DartLocalLive?.init({getState:()=>state,persist,render,toast,addJuergenForThrower,canBookDartJuergen});}catch(err){console.warn('Live-Modul konnte nicht starten:',err);}
   // Touch- und Pinch-Zoom in der PWA nach Möglichkeit unterbinden.
   // Systemseitige Bedienungshilfen bleiben außerhalb der Kontrolle der App.
@@ -671,7 +695,7 @@ function setupEvents(){
   $('championSummerslamUpload').addEventListener('change',e=>uploadChampionFile('summerslam',e.target.files[0]));
   [$('recentHits'),$('cashJournal')].forEach(el=>el.addEventListener('click',e=>{const b=e.target.closest('[data-void]'); if(b) voidEvent(b.dataset.void);}));
   $('playersList').addEventListener('click',e=>{const b=e.target.closest('[data-edit-player],[data-photo-player],[data-archive-player],[data-delete-player],[data-absent-player]'); if(!b)return; if(b.dataset.editPlayer)openPlayerDialog(b.dataset.editPlayer); if(b.dataset.photoPlayer)openPlayerDialog(b.dataset.photoPlayer); if(b.dataset.archivePlayer)toggleArchive(b.dataset.archivePlayer); if(b.dataset.deletePlayer)deletePlayer(b.dataset.deletePlayer); if(b.dataset.absentPlayer)toggleAbsent(b.dataset.absentPlayer);});
-  $('statsSession').addEventListener('change',e=>{statsSession=e.target.value; renderPlayers();}); $('statsMonth').addEventListener('change',e=>{statsMonthValue=e.target.value||currentMonthDefault(); renderPlayers();}); $('statsYear').addEventListener('change',e=>{statsYearValue=e.target.value||currentYearDefault(); renderPlayers();});
+  $('statsSession').addEventListener('change',e=>{statsSession=e.target.value; renderPlayers(); window.DartsGameUI?.renderPlayerProfiles();}); $('statsMonth').addEventListener('change',e=>{statsMonthValue=e.target.value||currentMonthDefault(); renderPlayers(); window.DartsGameUI?.renderPlayerProfiles();}); $('statsYear').addEventListener('change',e=>{statsYearValue=e.target.value||currentYearDefault(); renderPlayers(); window.DartsGameUI?.renderPlayerProfiles();});
   $('addPayment').addEventListener('click',()=>openCashDialog('payment')); $('addIncome').addEventListener('click',()=>openCashDialog('income')); $('addExpense').addEventListener('click',()=>openCashDialog('expense')); $('cashCorrection').addEventListener('click',()=>openCashDialog('correction')); $('cashPlayer').addEventListener('change',prefillPayment); $('cashForm').addEventListener('submit',saveCash);
   $('cashExport').addEventListener('click',exportCSV); $('exportCsvSettings').addEventListener('click',exportCSV);
   $('basePrice').addEventListener('input',renderPricePreview); $('savePrices').addEventListener('click',savePrices);

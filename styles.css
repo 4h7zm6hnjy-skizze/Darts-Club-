@@ -1005,3 +1005,109 @@ body.dart-focus-on .game-current.focus-active #dartsFocusExit{background:#593039
  body.dart-focus-on .game-current.focus-active .game-section-head{min-height:28px!important;padding:0!important}
  body.dart-focus-on .game-current.focus-active .game-section-head h2{font-size:14px!important}
 }
+
+
+/* v2.3.0 · Dart-Leistungsstatistiken direkt in Spielerprofilen */
+.dart-profile-details{margin-top:18px;padding:0;border:1px solid rgba(115,221,206,.30);border-radius:16px;overflow:hidden;background:rgba(7,24,39,.48)}
+.dart-profile-details>summary{list-style:none;display:flex;flex-direction:column;gap:3px;cursor:pointer;position:relative;padding:15px 38px 15px 15px;color:#f4e2af;font-size:14px;font-weight:850;touch-action:manipulation}
+.dart-profile-details>summary::-webkit-details-marker{display:none}
+.dart-profile-details>summary::after{content:'⌄';position:absolute;right:16px;top:15px;font-size:20px;color:#70e9d4;transition:transform .18s}
+.dart-profile-details[open]>summary::after{transform:rotate(180deg)}
+.dart-profile-details>summary small{font-size:11px;font-weight:500;color:#b2ccda;line-height:1.35}
+.dart-profile-details>summary:focus-visible{outline:2px solid #ffe29d;outline-offset:-3px}
+.dart-profile-content{border-top:1px solid rgba(115,221,206,.18);padding:15px;min-width:0}
+.dart-profile-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:15px}
+.dart-profile-filters label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#b5d6db;font-weight:700;min-width:0}
+.dart-profile-filters select{min-width:0;width:100%;max-width:100%;font-size:12px;padding:10px 7px;border-radius:10px;background:#142f45;color:#fff;border:1px solid rgba(113,187,195,.32)}
+.dart-profile-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.dart-profile-quick>div{border-radius:11px;padding:11px 7px;text-align:center;background:linear-gradient(160deg,#1b4c56,#112d40)}
+.dart-profile-quick small{display:block;color:#b8d9e0;font-size:10px;line-height:1.2}
+.dart-profile-quick strong{display:block;font-size:19px;color:#fff0c8;margin-top:7px}
+.dart-profile-chart{padding:11px;background:rgba(19,45,65,.65);border-radius:12px;margin:0 0 12px}
+.dart-profile-chart .game-trend-svg{height:130px}
+.dart-profile-stat-table{margin-bottom:14px}
+.dart-profile-stat-table .player-pro-row{padding:9px 7px;border-radius:8px;grid-template-columns:1.5fr 1fr 1fr;gap:6px}
+.dart-profile-stat-table .player-pro-row span{font-size:12px}
+.dart-profile-stat-table .player-pro-row strong{font-size:12px;overflow-wrap:anywhere}
+.dart-profile-recent{margin-top:14px;font-size:12px}
+.dart-profile-recent>strong{display:block;color:#f3dea4;margin-bottom:6px}
+.dart-profile-match{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #2c4658;padding:9px 0;color:#a8cbd6}
+.dart-profile-match b{color:#dfeecb;white-space:nowrap}
+.dart-profile-note{font-size:10px;margin-top:12px}
+@media(max-width:700px){.dart-profile-filters{grid-template-columns:1fr 1fr}.dart-profile-filters label:last-child{grid-column:span 2}.dart-profile-quick{grid-template-columns:1fr 1fr}.dart-profile-content{padding:10px}.dart-profile-chart .game-trend-svg{height:110px}.dart-profile-stat-table .player-pro-row{grid-template-columns:1.3fr .8fr .8fr}}
+
+/* v3.0.0 – offline Profi-Center, tournament brackets and practice */
+.pro-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:5px 0 20px}
+.pro-tabs button{min-height:49px;border-radius:14px;padding:10px 12px;font-weight:850;background:#17344c;color:#cde5ed;border:1px solid #38596b;font-size:13px}
+.pro-tabs button.active{color:#082c32;border-color:#74efd4;background:linear-gradient(125deg,#6ee6d3,#e6c16a)}
+.pro-tourney-grid{display:grid;grid-template-columns:minmax(300px,0.8fr) minmax(0,1fr);gap:16px;align-items:start}
+.pro-setup>h2,.pro-tourney-grid h2,.pro-tourney-details h3,.pro-training-history-panel h3{margin:0 0 15px;color:#fff0c9}
+.pro-setup>label,.pro-training-options>label,.pro-camera-panel>label{display:flex;flex-direction:column;gap:7px;margin:13px 0;color:#bbdae2;font-size:12px;font-weight:800}
+.pro-setup input[type=text],.pro-setup select,.pro-training-options select,.pro-reports select{width:100%;border:1px solid #476579;background:#102d45;border-radius:12px;color:#f7efe4;min-height:45px;padding:10px 12px;font-size:14px}
+.pro-setup input[type=checkbox]{width:18px;height:18px;accent-color:#63e7cf}
+.pro-player-picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.pro-player-pick{display:flex;align-items:center;gap:8px;border:1px solid #365a71;background:#102c45;color:#d9ecec;border-radius:12px;padding:10px;font-size:13px;min-width:0}
+.pro-player-pick>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pro-tournament-list{display:grid;gap:9px}
+.pro-tournament-item{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:14px;border:1px solid #35566a;background:#102b41;color:#e4f1f4;text-align:left}
+.pro-tournament-item strong{font-size:15px}.pro-tournament-item small{font-size:11px;color:#a6bdca;line-height:1.5}
+.pro-tournament-item.active{background:linear-gradient(130deg,#245e62,#203e57);border-color:#65d9cd}
+.pro-tourney-details{margin-top:18px}
+.pro-details-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.pro-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.pro-stage-head{font-size:14px;color:#f5d590;margin:20px 0 10px;letter-spacing:.045em}
+.pro-fixtures{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.pro-fixture{display:flex;flex-direction:column;justify-content:space-between;gap:10px;border:1px solid #35566a;background:#102b40;border-radius:15px;padding:14px;min-width:0}
+.pro-fixture-info>small{font-size:11px;color:#9bc7d1}.pro-versus{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900;font-size:14px;margin:9px 0;overflow-wrap:anywhere}.pro-versus>span{flex:1;min-width:0}.pro-versus>span:last-child{text-align:right}.pro-versus>b{font-size:11px;color:#e7c56c;padding:0 5px}
+.pro-win{display:block;color:#76ebc8;font-size:12px;margin-top:5px}
+.pro-fixture-actions{display:flex;flex-wrap:wrap;gap:6px}.pro-fixture-actions button{min-width:0;font-size:11px;padding:9px 11px}
+.pro-tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+.pro-table-card{overflow-x:auto;border-radius:14px;background:#0d283e;border:1px solid #385872;padding:12px}
+.pro-table-card h4{color:#f3d38f;margin:0 0 8px}
+.pro-table-card table,.pro-print-sheet table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}
+.pro-table-card th,.pro-table-card td{padding:8px 5px;border-bottom:1px solid #365066}
+.pro-table-card th{color:#a4c0ce;font-size:11px}
+.pro-training-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:12px;align-items:end;margin:16px 0 18px}
+.pro-training-options label{margin:0}.pro-training-options button{min-height:46px}
+.pro-training-active{padding:10px 0}
+.pro-training-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pro-training-top h3{font-size:24px;margin:3px 0;color:#ffe1a0}.pro-training-top>span{background:#234653;border-radius:11px;padding:9px;font-weight:800;white-space:nowrap;color:#d5f2e9}
+.pro-training-staged{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.pro-training-staged>div{background:#24425b;border:1px solid #557a89;border-radius:14px;padding:14px;text-align:center}.pro-training-staged small{display:block;color:#a8ced4;margin-bottom:6px}.pro-training-staged strong{font-size:27px;color:#fff5d9}
+.pro-train-targets{margin:15px 0}.pro-training-actions{display:flex;gap:10px;flex-wrap:wrap}.pro-training-actions button{flex:1;min-width:140px}
+.pro-training-history-panel,.pro-camera-panel{margin-top:18px}
+.pro-practice-history,.pro-report-list>div{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #355772;padding:9px 0;font-size:12px;color:#cfe0e5}
+.pro-practice-history b,.pro-report-list b{color:#ffda89;white-space:nowrap}
+.pro-practice-notice{background:#2c564f;padding:10px;border-radius:10px;font-size:12px;color:#e2ffeb}
+.pro-report-stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.pro-report-stats span{padding:9px 12px;border-radius:12px;background:#24445b;font-size:12px;font-weight:800}
+.pro-camera-label{display:inline-flex!important;align-items:center;justify-content:center;width:max-content;cursor:pointer;padding:13px 16px;margin:14px 0}
+#proCameraPreview{display:block;max-width:min(100%,550px);width:auto;max-height:500px;object-fit:contain;border:1px solid #496476;border-radius:13px;margin:12px 0}
+#proCameraPreview[hidden]{display:none!important}
+.pro-bot-waiting{padding:25px;text-align:center;background:#234158;border:1px solid #d6b064;border-radius:16px;color:#f6ddb2;font-size:20px;font-weight:800}
+.game-bot-options{display:contents}.game-bot-options[hidden]{display:none}
+.pro-profile-extras{border:1px solid #497084;background:rgba(14,34,52,.8);padding:15px;border-radius:17px;margin-top:15px}
+.pro-profile-extras>h4{font-size:16px;color:#ffe3a5;margin:0 0 13px}.pro-profile-extras h5{margin:18px 0 8px;font-size:12px;color:#bde8e4}
+.pro-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pro-extra-grid>div{background:#1a4055;border-radius:12px;padding:12px}.pro-extra-grid small{display:block;color:#b0cbd4;font-size:11px;margin-bottom:5px}.pro-extra-grid strong{color:#ffe6b0;font-size:18px}
+.pro-segment-hits{display:flex;gap:6px;flex-wrap:wrap}.pro-segment-hits span{border-radius:9px;background:#264f55;padding:7px 10px;color:#dbefea;font-size:12px}.pro-segment-hits b{color:#ffe3a0}
+.pro-h2h>div{display:flex;justify-content:space-between;border-bottom:1px solid #385a70;padding:7px 0;font-size:12px;color:#c7dee7}.pro-h2h strong{color:#ffe3a0}
+.pro-print-sheet{display:none}
+@media(max-width:920px){.pro-tourney-grid{grid-template-columns:1fr}}
+@media(max-width:600px){
+ .pro-tabs{gap:5px}.pro-tabs button{font-size:11px;padding:10px 4px;min-height:48px}
+ .pro-player-picks{grid-template-columns:1fr 1fr}
+ .pro-training-options{grid-template-columns:1fr}.pro-training-options button{width:100%}
+ .pro-training-actions{display:grid;grid-template-columns:1fr;gap:8px}.pro-training-actions button{min-height:50px}
+ .pro-fixtures{grid-template-columns:1fr}.pro-versus{font-size:13px}
+ .pro-setup,.pro-tourney-details{padding:15px}.pro-details-head{display:block}
+ .pro-training-staged strong{font-size:21px}
+}
+@media print{
+ body *{visibility:hidden!important}
+ #proPrintSheet,#proPrintSheet *{visibility:visible!important}
+ #proPrintSheet{display:block!important;position:absolute;inset:0;width:100%;padding:10mm;background:white;color:#000;font-family:Arial,sans-serif;font-size:11pt}
+ #proPrintSheet h1{font-size:20pt;margin:0 0 6mm}
+ #proPrintSheet table{font-size:9pt}
+ #proPrintSheet th,#proPrintSheet td{border:1px solid #999;padding:6px}
+ @page{size:A4;margin:10mm}
+}

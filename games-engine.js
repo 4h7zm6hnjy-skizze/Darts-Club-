@@ -1,4 +1,4 @@
-/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v1.9.1 */
+/* JÜRGEN DARTKASSE · original offline Dart Spiel-Engine v3.0.0 */
 (function(root,factory){
   const value=factory();
   if(typeof module==='object'&&module.exports)module.exports=value;
@@ -22,6 +22,7 @@ const TARGETS_CRICKET=[20,19,18,17,16,15,25];
 const TARGETS_TACTICS=[20,19,18,17,16,15,14,13,12,11,10,25];
 const HALFIT=[20,19,18,17,16,15,25];
 const MAX_MATCH_TURNS=10000;
+const BOT_ID='__dartbot__';
 const isX01=mode=>mode==='x01'||mode==='finish170';
 const isCricket=mode=>['cricket','cricket-no','cricket-cut','cricket-tactics'].includes(mode);
 const isPractice=mode=>['countup','around','shanghai','halfit','bobs27','finish170'].includes(mode);
@@ -38,7 +39,11 @@ const numeric=(v,d=0)=>Number.isFinite(v)?v:d;
 function matchOptions(mode,raw={}){
  const r=raw||{};
  const options={start:mode==='finish170'?170:inRange(r.start,210,1501)?r.start:501,
-  doubleOut:mode==='finish170'?true:r.doubleOut!==false,
+  doubleOut:mode==='finish170'?true:(r.masterOut===true?false:r.doubleOut!==false),
+  masterOut:mode==='x01'&&r.masterOut===true,
+  doubleIn:mode==='x01'&&r.doubleIn===true,
+  starterIndex:mode==='x01'&&inRange(r.starterIndex,0,5)?r.starterIndex:0,
+  botLevel:mode==='x01'&&['easy','medium','hard'].includes(r.botLevel)?r.botLevel:'medium',
   bestOfLegs:mode==='x01'&&[1,3,5,7,9].includes(r.bestOfLegs)?r.bestOfLegs:1,
   bestOfSets:mode==='x01'&&[1,3,5].includes(r.bestOfSets)?r.bestOfSets:1,
   rounds:inRange(r.rounds,1,100)?r.rounds:mode==='shanghai'?7:mode==='countup'?10:20,
@@ -48,14 +53,14 @@ function matchOptions(mode,raw={}){
 }
 function createMatch(input){
  if(!GAME_MODES.some(x=>x.id===input?.mode))throw Error('Unbekannter Spielmodus.');
- if(!Array.isArray(input.playerIds)||input.playerIds.length<1||input.playerIds.length>6||!input.playerIds.every(validId)||!unique(input.playerIds))throw Error('Bitte 1 bis 6 unterschiedliche Spieler auswählen.');
+ if(!Array.isArray(input.playerIds)||input.playerIds.length<1||input.playerIds.length>6||!input.playerIds.every(validId)||!unique(input.playerIds)||input.playerIds.filter(x=>x===BOT_ID).length>1||(input.playerIds.includes(BOT_ID)&&input.mode!=='x01'))throw Error('Bitte 1 bis 6 unterschiedliche Spieler auswählen.');
  return {id:validId(input.id)?input.id:`game-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   mode:input.mode,options:matchOptions(input.mode,input.options),playerIds:[...input.playerIds],
   createdAt:typeof input.createdAt==='string'?input.createdAt:new Date().toISOString(),
   turns:[],finishedAt:null};
 }
 function sanitizeMatch(raw,existingPlayerIds){
- if(!raw||!validId(raw.id)||!GAME_MODES.some(x=>x.id===raw.mode)||!Array.isArray(raw.playerIds)||raw.playerIds.length<1||raw.playerIds.length>6||!unique(raw.playerIds)||!raw.playerIds.every(x=>validId(x)&&existingPlayerIds.has(x)))throw Error('Ungültige gespeicherte Dart-Partie.');
+ if(!raw||!validId(raw.id)||!GAME_MODES.some(x=>x.id===raw.mode)||!Array.isArray(raw.playerIds)||raw.playerIds.length<1||raw.playerIds.length>6||!unique(raw.playerIds)||!raw.playerIds.every(x=>validId(x)&&(existingPlayerIds.has(x)||(x===BOT_ID&&raw.mode==='x01'))))throw Error('Ungültige gespeicherte Dart-Partie.');
  if(!Array.isArray(raw.turns)||raw.turns.length>MAX_MATCH_TURNS)throw Error('Zu viele Dart-Würfe.');
  const turns=raw.turns.map(t=>{
   if(!t||!validId(t.playerId)||!raw.playerIds.includes(t.playerId)||!Array.isArray(t.darts)||t.darts.length<1||t.darts.length>3||!t.darts.every(normalDart))throw Error('Ungültiger Dart-Eintrag.');
@@ -67,17 +72,17 @@ function sanitizeMatch(raw,existingPlayerIds){
  return m;
 }
 function makePlayer(id,m){return {id,remaining:isX01(m.mode)?m.options.start:0,score:m.mode==='halfit'?40:m.mode==='bobs27'?27:0,
- marks:Object.fromEntries(targetList(m.mode).map(t=>[t,0])),progress:1,visits:0,
+ marks:Object.fromEntries(targetList(m.mode).map(t=>[t,0])),progress:1,visits:0,opened:!m.options.doubleIn,
  darts:0,pointsThrown:0,first9Score:0,first9Darts:0,first9LegDarts:0,
  highFinish:0,doublesAttempted:0,doublesHit:0,legs:0,sets:0,totalLegs:0,rounds:0,
  scores100:0,scores140:0,scores180:0,busts:0,eliminated:false,finished:false,
  cricketMarks:0,checkoutAttempts:0,checkoutHits:0,positiveVisits:0};}
 function replay(match,{strict=false}={}){
  const p=Object.fromEntries(match.playerIds.map(id=>[id,makePlayer(id,match)]));
- const history=[],legHistory=[],setHistory=[]; let idx=0,winnerId=null,leg=1,set=1,finished=false,invalid=false;
+ const history=[],legHistory=[],setHistory=[]; let idx=Number.isInteger(match.options.starterIndex)?Math.min(match.playerIds.length-1,match.options.starterIndex):0,winnerId=null,leg=1,set=1,finished=false,invalid=false;
  const mode=match.mode,opt=match.options;
  const targetNums=targetList(mode);
- let current=match.playerIds[0];
+ let current=match.playerIds[idx];
  let aroundWinners=[];
  function nextPlayer(){
   for(let i=0;i<match.playerIds.length;i++){
@@ -90,8 +95,8 @@ function replay(match,{strict=false}={}){
   current=match.playerIds[idx];
  }
  function startNextLeg(){
-  for(const id of match.playerIds){p[id].remaining=opt.start;p[id].first9LegDarts=0;}
-  idx=(match.playerIds.indexOf(current)+1)%match.playerIds.length;
+  for(const id of match.playerIds){p[id].remaining=opt.start;p[id].first9LegDarts=0;p[id].opened=!opt.doubleIn;}
+  idx=((opt.starterIndex||0)+leg)%match.playerIds.length;
   current=match.playerIds[idx]; leg++;
  }
  function concludeTimedMode(){
@@ -114,11 +119,17 @@ function replay(match,{strict=false}={}){
    playedDarts.push(dartLabel(d));
    const val=dartValue(d);
    if(isX01(mode)){
-    const left=s.remaining-val;
-    // One shot under the double-out rule is invalid if it leaves one or zero without double.
-    if(left<0||(opt.doubleOut&&(left===1||(left===0&&!isDouble(d))))){bust=true;}
-    if(s.remaining<=50 && opt.doubleOut && isDouble(d)) {s.doublesAttempted++;s.checkoutAttempts++;}
-    if(!bust){s.remaining=left;sum+=val; if(s.remaining===0){checkout=true;win=true;s.checkoutHits++;s.doublesHit+=(isDouble(d)?1:0);s.highFinish=Math.max(s.highFinish,before.remaining);}}
+    // Double-In: only a double (including inner bull) starts the player's scoring.
+    const canScore=s.opened||!opt.doubleIn||isDouble(d);
+    if(!s.opened&&canScore)s.opened=true;
+    if(canScore){
+     const left=s.remaining-val;
+     const finishValid=(!opt.doubleOut||isDouble(d))&&(!opt.masterOut||isDouble(d)||d.m===3);
+     // Do not finish without the required double/master; 1 is a bust under both rules.
+     if(left<0||((opt.doubleOut||opt.masterOut)&&(left===1||(left===0&&!finishValid))))bust=true;
+     if(s.remaining<=50 && opt.doubleOut && isDouble(d)){s.doublesAttempted++;s.checkoutAttempts++;}
+     if(!bust){s.remaining=left;sum+=val;if(s.remaining===0){checkout=true;win=true;s.checkoutHits++;s.doublesHit+=(isDouble(d)?1:0);s.highFinish=Math.max(s.highFinish,before.remaining);}}
+    }
    }else if(isCricket(mode)){
     if(targetNums.includes(d.n)){
      const openCount=Math.max(0,3-s.marks[d.n]);
@@ -146,7 +157,7 @@ function replay(match,{strict=false}={}){
    }else if(mode==='bobs27'){
     if(d.n===target && d.m===2)hitTarget++;
    }
-   s.darts++; if(s.first9LegDarts<9 && isX01(mode)){s.first9LegDarts++;s.first9Darts++;first9VisitScore+=val;}
+   s.darts++; if(s.first9LegDarts<9 && isX01(mode)){s.first9LegDarts++;s.first9Darts++;if(s.opened)first9VisitScore+=val;}
    if(bust||win)break;
   }
   if(isX01(mode)){
@@ -258,14 +269,14 @@ const PREFERRED_DOUBLE_CHECKOUTS={
   167:[{n:20,m:3},{n:19,m:3},{n:25,m:2}],
   170:[{n:20,m:3},{n:20,m:3},{n:25,m:2}]
 };
-function checkoutRoute(remaining,available=3,doubleOut=true){
+function checkoutRoute(remaining,available=3,doubleOut=true,masterOut=false){
  if(!Number.isInteger(remaining)||remaining<1||available<1)return null;
  const maxDarts=Math.min(3,available);
  if(remaining>(doubleOut?170:180))return null;
  if(doubleOut){const preferred=PREFERRED_DOUBLE_CHECKOUTS[remaining];
   if(preferred && preferred.length<=maxDarts && preferred.reduce((a,d)=>a+dartValue(d),0)===remaining)return preferred.map(d=>({...d}));
  }
- const finish=doubleOut?CHECKOUT_DOUBLES:CHECKOUT_SETUP;
+ const finish=doubleOut?CHECKOUT_DOUBLES:masterOut?CHECKOUT_DOUBLES.concat(Array.from({length:20},(_,i)=>({n:20-i,m:3}))):CHECKOUT_SETUP;
  const routeSearch=(target,count)=>{
   if(count===1){const last=finish.find(d=>dartValue(d)===target);return last?[last]:null;}
   for(const d of CHECKOUT_SETUP){
@@ -283,5 +294,5 @@ function checkoutRoute(remaining,available=3,doubleOut=true){
  return null;
 }
 
-return {checkoutRoute,juergenType,GAME_MODES,TARGETS_CRICKET,TARGETS_TACTICS,HALFIT,createMatch,sanitizeMatch,replay,nextTurn,undoTurn,playerReport,matchOptions,isX01,isCricket,isPractice,dartValue,dartLabel,normalDart,targetList};
+return {BOT_ID,checkoutRoute,juergenType,GAME_MODES,TARGETS_CRICKET,TARGETS_TACTICS,HALFIT,createMatch,sanitizeMatch,replay,nextTurn,undoTurn,playerReport,matchOptions,isX01,isCricket,isPractice,dartValue,dartLabel,normalDart,targetList};
 });

@@ -13,6 +13,8 @@ let gameMenuOpen=true;
 let specialBooking='none';
 let callerEnabled=false;
 let statsWindow='10';
+let botTimer=null;
+const profileStatsFilters=new Map();
 let focusActive=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('de-DE',{maximumFractionDigits:2}).format(n||0);
@@ -20,8 +22,8 @@ const getState=()=>api.getState();
 const allGames=()=>getState().dartMatches||[];
 const gameById=id=>allGames().find(g=>g.id===id);
 const currentGame=()=>gameById(getState().activeDartMatchId);
-const playerName=id=>getState().players.find(p=>p.id===id)?.name||'Spieler';
-const playerRef=id=>getState().players.find(p=>p.id===id)||null;
+const playerName=id=>id===E.BOT_ID?'DartBot':getState().players.find(p=>p.id===id)?.name||'Spieler';
+const playerRef=id=>id===E.BOT_ID?{name:'DartBot',photo:null}:getState().players.find(p=>p.id===id)||null;
 const validGamePlayers=()=>getState().players.filter(p=>!p.archived);
 const modeName=mode=>E.GAME_MODES.find(m=>m.id===mode)?.name||mode;
 const gameDate=m=>new Date(m.createdAt).toLocaleDateString('de-DE');
@@ -42,21 +44,24 @@ function projectedAverage(playerState,extraPoints,extraDarts){
 function refresh(){render();}
 function toast(t){api.toast(t);}
 // The game engine supplies verified double-out checkout routes for 1-3 darts.
-function checkoutText(remaining,dartsLeft,doubleOut){
+function checkoutText(remaining,dartsLeft,doubleOut,masterOut=false){
  if(!Number.isInteger(remaining))return '–';
  if(remaining===0)return 'Finish';
  if(remaining<0)return 'Bust – Aufnahme zählt nicht';
  if(doubleOut&&remaining===1)return 'Bust – 1 Restpunkt ist ungültig';
- const route=E.checkoutRoute(remaining,dartsLeft,doubleOut);
+ const route=E.checkoutRoute(remaining,dartsLeft,doubleOut,masterOut);
  if(route)return route.map(E.dartLabel).join(' · ');
- if(doubleOut&&remaining>170)return 'Kein direktes Finish. Punkte herunterspielen.';
+ if((doubleOut||masterOut)&&remaining>170)return 'Kein direktes Finish. Punkte herunterspielen.';
  return 'Kein direktes Finish mit den übrigen Darts';
 }
 function draftStatus(match,p){
  let left=p.remaining,score=0,bust=false,win=false;
+ let opened=p.opened||!match.options.doubleIn;
  for(const d of staged){
+  if(!opened){if(d.m!==2)continue;opened=true;}
   const next=left-E.dartValue(d);
-  if(next<0||(match.options.doubleOut&&(next===1||(next===0&&d.m!==2)))){bust=true;break;}
+  const legalOut=(!match.options.doubleOut||d.m===2)&&(!match.options.masterOut||d.m===2||d.m===3);
+  if(next<0||((match.options.doubleOut||match.options.masterOut)&&(next===1||(next===0&&!legalOut)))){bust=true;break;}
   score+=E.dartValue(d);left=next;
   if(left===0){win=true;break;}
  }
@@ -116,6 +121,8 @@ function renderSetup(){
  $('dartsRoundsOption').hidden=!(countup||shanghai);
  $('dartsAroundOption').hidden=!(around);
  $('dartsModeInfo').textContent=finish?'170 Checkout: Ein Spieler hat maximal neun Darts zum Checkout.':E.GAME_MODES.find(x=>x.id===selectedMode)?.detail||'';
+ const starter=$('dartsBullWinner');if(starter){const chosen=starter.value;const ids=selectedPlayers.filter(id=>getState().players.some(p=>p.id===id));starter.innerHTML='<option value="">Erster ausgewählter Spieler</option>'+ids.map(id=>`<option value="${esc(id)}">${esc(playerName(id))} (Bull gewonnen)</option>`).join('');if(ids.includes(chosen))starter.value=chosen;}
+ const botRow=$('dartsBotOptions');if(botRow)botRow.hidden=!x01;
  root.hidden=!!game&&!gameMenuOpen;
 }
 
@@ -144,7 +151,7 @@ function renderLiveMeta(match,r){
  const stagedPoints=draft?draft.points:staged.reduce((a,d)=>a+E.dartValue(d),0);
  const remainingAfterStage=draft?draft.remaining:null;
  const dartsLeft=Math.max(1,3-staged.length);
- const checkout=E.isX01(match.mode)?(draft?.bust?'BUST':checkoutText(remainingAfterStage??p.remaining,dartsLeft,match.options.doubleOut)):'–';
+ const checkout=E.isX01(match.mode)?(draft?.bust?'BUST':checkoutText(remainingAfterStage??p.remaining,dartsLeft,match.options.doubleOut,match.options.masterOut)):'–';
  const cards=[];
  if(E.isX01(match.mode)){
   cards.push(['Rest',p.remaining]);
@@ -167,6 +174,8 @@ function renderSpecialButtons(){
 }
 
 function renderDartPad(match,r){
+ const isBot=!r.finished&&r.currentPlayerId===E.BOT_ID;const status=$('dartsBotWaiting');if(status)status.hidden=!isBot;
+ if(isBot){$('dartsLive').hidden=true;$('dartsWinner').hidden=true;scheduleBot(match);return;}
  $('dartsLive').hidden=r.finished; $('dartsWinner').hidden=!r.finished;
  if(r.finished){
   const w=r.winnerId;
@@ -196,6 +205,21 @@ function renderDartPad(match,r){
  `<button class="dart-target bull25" data-number="25" data-force-m="1">25</button><button class="dart-target bull50" data-number="25" data-force-m="2">Bull</button><button class="dart-target miss" data-number="0" data-force-m="0">Miss</button>`;
 }
 
+function scheduleBot(match){
+ if(botTimer)return;
+ botTimer=setTimeout(()=>{
+  botTimer=null;
+  try{
+   const active=currentGame();if(!active||active.id!==match.id||active.mode!=='x01')return;
+   const r=E.replay(active);if(r.finished||r.currentPlayerId!==E.BOT_ID)return;
+   const p=r.players[E.BOT_ID];
+   const darts=window.DartsProEngine.botDarts(E,p.remaining,{level:active.options.botLevel,doubleOut:active.options.doubleOut,masterOut:active.options.masterOut,doubleIn:active.options.doubleIn,opened:p.opened});
+   const updated=E.nextTurn(active,darts);
+   const index=getState().dartMatches.findIndex(g=>g.id===active.id);if(index<0)return;
+   getState().dartMatches[index]=updated;api.persist();render();
+  }catch(err){console.error('DartBot-Wurf fehlgeschlagen:',err);toast('DartBot-Wurf konnte nicht ausgeführt werden.');}
+ },850);
+}
 function renderGameHistory(match,r){
  $('dartsTurnHistory').innerHTML=r.history.length?r.history.slice(-12).reverse().map(h=>`<div class="game-history-row"><strong>${esc(playerName(h.playerId))}</strong><span>${esc(h.darts.join(' · '))}</span><b>${h.bust?'BUST':h.win?'FINISH':E.isX01(match.mode)?`${h.score} Punkte`:E.isCricket(match.mode)?`+${h.score}`:`${h.score} Punkte`}</b></div>`).join(''):'<p class="game-muted">Noch keine Darts erfasst.</p>';
  $('dartsMatchStats').innerHTML=match.playerIds.map(id=>{
@@ -251,7 +275,7 @@ function legAverageSeries(games,id){
   if(g.mode!=='x01'||!g.playerIds.includes(id))continue;
   const r=E.replay(g);
   for(const finishedLeg of r.legHistory){
-   const hist=r.history.filter(h=>h.round===finishedLeg.leg&&h.playerId===id);
+   const hist=r.history.filter(h=>h.round===finishedLeg.leg&&h.set===finishedLeg.set&&h.playerId===id);
    const score=hist.reduce((a,h)=>a+h.score,0);
    const darts=hist.reduce((a,h)=>a+h.darts.length,0);
    if(darts>0)values.push(Number((score/darts*3).toFixed(2)));
@@ -274,53 +298,68 @@ function averageDelta(current,previous){
  return `<span class="game-comparison ${diff>=0?'positive':'negative'}">${diff>=0?'▲':'▼'} ${fmt(Math.abs(diff))} PPR gegenüber vorheriger Auswahl</span>`;
 }
 function renderStats(){
+ // The detailed stats live within each matching player profile, not below the game area.
  const games=allGames();
- $('dartsMatchList').innerHTML=games.length?games.slice().reverse().slice(0,15).map(g=>{const r=E.replay(g); return `<button class="game-history-match ${getState().activeDartMatchId===g.id?'selected':''}" data-open-game="${esc(g.id)}"><span class="game-match-main"><b>${esc(modeName(g.mode))}</b><small>${esc(g.playerIds.map(playerName).join(' · '))}</small></span><span><b>${r.finished?esc(playerName(r.winnerId)):'Läuft'}</b><small>${gameDate(g)}</small></span></button>`;}).join(''):'<p class="game-muted">Hier erscheinen deine gespeicherten Spiele.</p>';
- const periodSelect=$('dartsStatsPeriod');
- const availableMonths=[...new Set(games.map(g=>g.createdAt.slice(0,7)).filter(s=>/^\d{4}-\d{2}$/.test(s)))];
- const currentMonth=new Date().toISOString().slice(0,7); if(!availableMonths.includes(currentMonth))availableMonths.push(currentMonth);
- availableMonths.sort().reverse();
- const availableYears=[...new Set(availableMonths.map(m=>m.slice(0,4)))].sort().reverse();
- const choices=['all',...availableYears,...availableMonths]; if(!choices.includes(statsPeriod))statsPeriod='all';
- periodSelect.innerHTML=`<option value="all">Gesamter Zeitraum</option>`+availableYears.map(y=>`<option value="${y}">Jahr ${y}</option>`).join('')+availableMonths.map(m=>{const d=new Date(m+'-15T12:00:00');const label=d.toLocaleDateString('de-DE',{month:'long',year:'numeric'});return `<option value="${m}">${esc(label)}</option>`;}).join('');
- periodSelect.value=statsPeriod;
- const filtered=games.filter(g=>(statsMode==='all'||g.mode===statsMode)&&(statsPeriod==='all'||g.createdAt.startsWith(statsPeriod)));
- const playerIds=[...new Set(filtered.flatMap(g=>g.playerIds))];
- const totals={games:filtered.length,players:playerIds.length,x01:filtered.filter(g=>E.isX01(g.mode)).length,cricket:filtered.filter(g=>E.isCricket(g.mode)).length};
- $('dartsAllStats').innerHTML=filtered.length?`<article class="game-total-stat big"><h4>Übersicht</h4><div class="game-stat-chips"><span>${totals.games} Spiele</span><span>${totals.players} Spieler</span><span>${totals.x01} X01</span><span>${totals.cricket} Cricket</span><span>${filtered.filter(g=>g.finishedAt).length} beendet</span></div></article>`:'<p class="game-muted">Für diese Auswahl sind noch keine Spiele gespeichert.</p>';
- const playersRoot=$('dartsPlayerStats');
- const limit=statsWindow==='all'?Infinity:Number(statsWindow);
- $('dartsStatsWindowLabel').textContent=statsWindow==='all'?'Alle Spiele':`Letzte ${statsWindow} Spiele je Spieler`;
- document.querySelectorAll('[data-stats-window]').forEach(el=>el.classList.toggle('active',el.dataset.statsWindow===statsWindow));
- playersRoot.innerHTML=playerIds.length?playerIds.map(id=>{
-  const history=filtered.filter(g=>g.playerIds.includes(id)).sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
-  const selected=Number.isFinite(limit)?history.slice(-limit):history;
-  const previous=Number.isFinite(limit)?history.slice(Math.max(0,history.length-2*limit),Math.max(0,history.length-limit)):[];
-  const a=playerAggregate(selected,id);
-  const prior=previous.length?playerAggregate(previous,id):null;
-  const series=legAverageSeries(selected,id);
-  const player=playerRef(id)||{name:playerName(id),photo:null};
-  const rows=[
-   ['PPR / 3-Dart-Ø', a.avg?fmt(a.avg):'–', a.bests.avg?fmt(a.bests.avg):'–'],
-   ['Erste 9 PPR', a.first9?fmt(a.first9):'–', a.bests.first9?fmt(a.bests.first9):'–'],
-   ['Checkout %', a.checkoutAttempts?`${fmt(a.checkout)}%`:'–', a.bests.checkout?`${fmt(a.bests.checkout)}%`:'–'],
-   ['Höchstes Finish', '–', a.bests.finish?fmt(a.bests.finish):'–'],
-   ['Win %', a.finished?`${fmt(a.winPct)}% (${a.wins}/${a.finished})`:'–', '–'],
-   ['Cricket MPR', a.mpr?fmt(a.mpr):'–', a.bests.mpr?fmt(a.bests.mpr):'–'],
-  ];
-  return `<article class="player-pro-card"><div class="player-pro-head">${avatar(player)}<div><h4>${esc(player.name)}</h4><small>${a.games} Spiele · ${a.wins} Siege · ${a.legs} gewonnene Legs</small></div></div><div class="game-trend-panel"><div class="game-trend-heading"><strong>PPR-Verlauf nach abgeschlossenen Legs</strong><span>${series.length} Legs · ${esc(statsWindow==='all'?'alle Spiele':'letzte '+statsWindow+' Spiele')}</span></div>${legTrendSvg(series)}${averageDelta(a,prior)}</div><div class="player-pro-table"><div class="player-pro-row head"><span>Statistik</span><span>Ø</span><span>Best</span></div>${rows.map(([n,v,b])=>`<div class="player-pro-row"><span>${esc(n)}</span><strong>${esc(String(v))}</strong><strong>${esc(String(b))}</strong></div>`).join('')}</div><div class="player-hit-grid"><div><small>60+</small><strong>${a.score60}</strong></div><div><small>100+</small><strong>${a.score100}</strong></div><div><small>140+</small><strong>${a.score140}</strong></div><div><small>180</small><strong>${a.score180}</strong></div></div><div class="game-muted game-stat-footnote">Alle Werte stammen aus gespeicherten Spielen. Keine hochgerechneten Ergebnisse.</div></article>`;
- }).join(''):'<div class="game-muted">Noch keine Spielerstatistiken in der Auswahl.</div>';
+ $('dartsMatchList').innerHTML=games.length?games.slice().reverse().slice(0,15).map(g=>{const r=E.replay(g);return `<button type="button" class="game-history-match ${getState().activeDartMatchId===g.id?'selected':''}" data-open-game="${esc(g.id)}"><span class="game-match-main"><b>${esc(modeName(g.mode))}</b><small>${esc(g.playerIds.map(playerName).join(' · '))}</small></span><span><b>${r.finished?esc(playerName(r.winnerId)):'Läuft'}</b><small>${gameDate(g)}</small></span></button>`;}).join(''):'<p class="game-muted">Hier erscheinen deine gespeicherten Spiele.</p>';
+ const uniquePlayers=new Set(games.flatMap(g=>g.playerIds));
+ $('dartsAllStats').innerHTML=games.length?`<article class="game-total-stat big"><h4>Spielübersicht</h4><div class="game-stat-chips"><span>${games.length} Partien</span><span>${uniquePlayers.size} Spieler</span><span>${games.filter(g=>E.replay(g).finished).length} beendet</span></div><p class="game-muted">Alle persönlichen Leistungswerte findest du jetzt bei den jeweiligen Spielern unter „Spieler → Dart-Spielstatistik“.</p></article>`:'<p class="game-muted">Hier erscheinen deine gespeicherten Partien. Die persönliche Statistik findest du unter „Spieler“.</p>';
 }
-function render(){if(!api||!$('view-games'))return;renderSetup();renderCurrent();renderStats();syncFocusUI();}
+function playerProfileOptions(id){
+ if(!profileStatsFilters.has(id))profileStatsFilters.set(id,{mode:'all',period:'all',limit:'10'});
+ return profileStatsFilters.get(id);
+}
+function renderPlayerProfiles(){
+ // Markup belongs to the existing player card; matches are bound by permanent playerId.
+ const profiles=document.querySelectorAll('[data-dart-profile-content]');
+ if(!profiles.length)return;
+ const games=allGames();
+ for(const root of profiles){
+  const id=root.dataset.dartProfileContent;
+  try{
+   const options=playerProfileOptions(id);
+   const ownGames=games.filter(g=>Array.isArray(g.playerIds)&&g.playerIds.includes(id));
+   const dates=[...new Set(ownGames.map(g=>String(g.createdAt||'').slice(0,7)).filter(v=>/^\d{4}-\d{2}$/.test(v)))];
+   const years=[...new Set(dates.map(x=>x.slice(0,4)))].sort().reverse();
+   const months=dates.sort().reverse();
+   const periods=['all',...years,...months];
+   if(!periods.includes(options.period))options.period='all';
+   const ownFiltered=ownGames.filter(g=>(options.mode==='all'||g.mode===options.mode)&&(options.period==='all'||String(g.createdAt||'').startsWith(options.period))).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+   const limit=options.limit==='all'?Infinity:Number(options.limit);
+   const chosen=Number.isFinite(limit)?ownFiltered.slice(-limit):ownFiltered;
+   const previous=Number.isFinite(limit)?ownFiltered.slice(Math.max(0,ownFiltered.length-limit*2),Math.max(0,ownFiltered.length-limit)):[];
+   const a=playerAggregate(chosen,id),prior=previous.length?playerAggregate(previous,id):null;
+   const modeOptions=[['all','Alle Spielarten'],...E.GAME_MODES.map(m=>[m.id,m.name])];
+   const filteredModes=modeOptions.filter(([mode])=>mode==='all'||ownGames.some(g=>g.mode===mode));
+   const periodLabel=m=>m==='all'?'Gesamter Zeitraum':/^\d{4}$/.test(m)?`Jahr ${m}`:new Date(m+'-15T12:00:00').toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+   const series=legAverageSeries(chosen,id);
+   const stats=[
+    ['3-Dart-Ø (X01)',a.x01Darts?fmt(a.avg):'–',a.bests.avg?fmt(a.bests.avg):'–'],
+    ['First-9-Ø (X01)',a.first9Darts?fmt(a.first9):'–',a.bests.first9?fmt(a.bests.first9):'–'],
+    ['Checkout-Quote',a.checkoutAttempts?`${fmt(a.checkout)} %`:'–',a.checkoutAttempts&&a.bests.checkout?`${fmt(a.bests.checkout)} %`:'–'],
+    ['Höchstes Finish','–',a.bests.finish?fmt(a.bests.finish):'–'],
+    ['Siegesquote',a.finished?`${fmt(a.winPct)} %`:'–',`${a.wins} / ${a.finished}`],
+    ['Cricket MPR',a.cricketDarts?fmt(a.mpr):'–',a.bests.mpr?fmt(a.bests.mpr):'–']
+   ];
+   root.innerHTML=`<div class="dart-profile-filters"><label>Spielmodus<select data-profile-stat-mode="${esc(id)}">${filteredModes.map(([mode,name])=>`<option value="${esc(mode)}" ${options.mode===mode?'selected':''}>${esc(name)}</option>`).join('')}</select></label><label>Zeitraum<select data-profile-stat-period="${esc(id)}">${periods.map(x=>`<option value="${esc(x)}" ${options.period===x?'selected':''}>${esc(periodLabel(x))}</option>`).join('')}</select></label><label>Partien<select data-profile-stat-limit="${esc(id)}">${[['10','Letzte 10'],['100','Letzte 100'],['1000','Letzte 1000'],['all','Alle']].map(([value,name])=>`<option value="${value}" ${options.limit===value?'selected':''}>${name}</option>`).join('')}</select></label></div><div class="dart-profile-quick"><div><small>Partien</small><strong>${a.games}</strong></div><div><small>Siege</small><strong>${a.wins}</strong></div><div><small>3-Dart-Ø X01</small><strong>${a.x01Darts?fmt(a.avg):'–'}</strong></div><div><small>Checkout</small><strong>${a.checkoutAttempts?`${fmt(a.checkout)} %`:'–'}</strong></div></div>${chosen.length?`<div class="dart-profile-chart"><div class="game-trend-heading"><strong>PPR-Verlauf: abgeschlossene Legs</strong><span>${series.length} Legs</span></div>${legTrendSvg(series)}${averageDelta(a,prior)}</div><div class="dart-profile-stat-table"><div class="player-pro-row head"><span>Kennzahl</span><span>Wert</span><span>Bestwert</span></div>${stats.map(([label,value,best])=>`<div class="player-pro-row"><span>${esc(label)}</span><strong>${esc(value)}</strong><strong>${esc(best)}</strong></div>`).join('')}</div><div class="player-hit-grid"><div><small>60+</small><strong>${a.score60}</strong></div><div><small>100+</small><strong>${a.score100}</strong></div><div><small>140+</small><strong>${a.score140}</strong></div><div><small>180er</small><strong>${a.score180}</strong></div></div><div class="dart-profile-recent"><strong>Letzte Partien dieses Profils</strong>${chosen.slice(-3).reverse().map(g=>{const rep=E.replay(g);const isWinner=rep.winnerId===id&&rep.finished;return `<div class="dart-profile-match"><span>${esc(modeName(g.mode))} · ${esc(gameDate(g))}</span><b>${rep.finished?(isWinner?'Gewonnen':'Beendet'):'Läuft'}</b></div>`;}).join('')}</div>`:'<p class="game-muted">Für diesen Spieler sind in der gewählten Auswahl noch keine Dart-Partien gespeichert.</p>'}${window.DartsPro?.renderProfileExtras?.(id,chosen)||''}<p class="game-muted dart-profile-note">Nur Partien mit diesem Spielerprofil. Keine Jürgen-Punkte und keine Papierlisten-Gebühren. Checkout-Quote nur für erfasste Doppelversuche.</p>`;
+  }catch(err){console.error('Spielerstatistik konnte nicht aufgebaut werden:',id,err);root.textContent='Die Dart-Statistik konnte nicht berechnet werden. Die übrigen Profil- und Kassendaten bleiben verfügbar.';}
+ }
+}
+function render(){if(!api||!$('view-games'))return;renderSetup();renderCurrent();renderStats();renderPlayerProfiles();syncFocusUI();}
 function togglePlayer(id){ if(selectedPlayers.includes(id))selectedPlayers=selectedPlayers.filter(x=>x!==id); else if(selectedPlayers.length>=6){toast('Maximal sechs Spieler pro Partie.');return;} else selectedPlayers.push(id); refresh(); }
 function newGame(){
  const mode=$('dartsMode').value;
  if(!selectedPlayers.length){toast('Bitte mindestens einen Spieler auswählen.');return;}
  if(mode==='finish170'&&selectedPlayers.length!==1){toast('170-Checkout-Training ist für einen Spieler ausgelegt.');return;}
  if(mode==='cricket-cut'&&selectedPlayers.length<2){toast('Cut-Throat braucht mindestens zwei Spieler.');return;}
- const opts={start:Number($('dartsStart').value),doubleOut:$('dartsDoubleOut').checked,bestOfLegs:Number($('dartsBestOf').value),bestOfSets:Number($('dartsBestOfSets').value),rounds:Number($('dartsRoundLimit').value),aroundBull:$('dartsAroundBull').checked};
+ const outRule=$('dartsOutRule')?.value||'double';
+ const ids=[...selectedPlayers];
+ const botOn=mode==='x01'&&$('dartsBotEnabled')?.checked;
+ if(botOn)ids.push(E.BOT_ID);
+ if(ids.length>6){toast('Maximal sechs Teilnehmer einschließlich DartBot.');return;}
+ const firstId=$('dartsBullWinner')?.value;
+ const opts={start:Number($('dartsStart').value),doubleOut:outRule==='double',masterOut:outRule==='master',doubleIn:!!$('dartsDoubleIn')?.checked,starterIndex:firstId?Math.max(0,ids.indexOf(firstId)):0,botLevel:$('dartsBotLevel')?.value||'medium',bestOfLegs:Number($('dartsBestOf').value),bestOfSets:Number($('dartsBestOfSets').value),rounds:Number($('dartsRoundLimit').value),aroundBull:$('dartsAroundBull').checked};
  const current=currentGame(); if(current&&!E.replay(current).finished && !confirm('Aktuelle Partie verlassen und eine neue starten? Die alte Partie bleibt gespeichert.'))return;
- try{ const m=E.createMatch({mode,playerIds:selectedPlayers,options:opts}); getState().dartMatches.push(m); getState().activeDartMatchId=m.id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); openFocus(); toast(`${modeName(mode)} gestartet.`);}catch(err){toast(err.message);} }
+ try{ const m=E.createMatch({mode,playerIds:ids,options:opts}); getState().dartMatches.push(m); getState().activeDartMatchId=m.id; staged=[]; specialBooking='none'; gameMenuOpen=false; api.persist(); render(); openFocus(); toast(`${modeName(mode)} gestartet.`);}catch(err){toast(err.message);} }
 function recordTurn(){
  const game=currentGame();if(!game||!staged.length)return;
  const throwerId=E.replay(game).currentPlayerId;
@@ -397,10 +436,23 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.id==='dartsUndoTurn'){undoTurn();return;}
   if(b.id==='dartsDeleteGame'){deleteGame();return;}
   if(b.id==='dartsNewGame'){gameMenuOpen=!gameMenuOpen;renderSetup();return;}
-  if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;closeFocus();selectedPlayers=[...g.playerIds];$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
+  if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;closeFocus();selectedPlayers=g.playerIds.filter(x=>x!==E.BOT_ID);if($('dartsBotEnabled'))$('dartsBotEnabled').checked=g.playerIds.includes(E.BOT_ID);$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
- $('dartsMode').addEventListener('change',renderSetup); $('dartsStatsMode').addEventListener('change',e=>{statsMode=e.target.value;renderStats();}); $('dartsStatsPeriod').addEventListener('change',e=>{statsPeriod=e.target.value;renderStats();}); render(); }
+ $('dartsMode').addEventListener('change',renderSetup);
+ const playersView=$('view-players');
+ playersView?.addEventListener('change',e=>{
+  const field=e.target.closest('select[data-profile-stat-mode],select[data-profile-stat-period],select[data-profile-stat-limit]');
+  if(!field)return;
+  const id=field.dataset.profileStatMode||field.dataset.profileStatPeriod||field.dataset.profileStatLimit;
+  if(!id)return;
+  const opt=playerProfileOptions(id);
+  if(field.dataset.profileStatMode)opt.mode=field.value;
+  if(field.dataset.profileStatPeriod)opt.period=field.value;
+  if(field.dataset.profileStatLimit)opt.limit=field.value;
+  renderPlayerProfiles();
+ });
+ render(); }
 function renderDartPadIf(){ const g=currentGame(); if(g)renderDartPad(g,E.replay(g)); }
-window.DartsGameUI={init,render};
+window.DartsGameUI={init,render,renderPlayerProfiles,activateMatch:loadGame};
 })();
