@@ -1,20 +1,15 @@
-# Jürgen Dartkasse – Dart Elite 3.2.1 (Lesbarkeit)
+# Darts-Club 3.3.0 – Spielabend-Komfort
 
-Vollständiges Update auf Basis von Version 3.2.0. Keine privaten Spieler- oder Kassendaten enthalten.
+Vollständige Web-App auf Basis von 3.2.1. Kostenlos, offlinefähig nach erstmaligem Laden, ohne Account.
 
-## Änderungen
-- Die Zuschaueransicht beginnt auf iPhones deutlich unter der Statusleiste, auch wenn iOS den Safe-Area-Abstand mit 0 meldet.
-- Überschrift, Schließen-Schaltfläche, Spielstände und Hinweise erhalten größere Schriften und hohen Kontrast.
-- Falls keine Partie aktiv ist, erscheint eine klar erkennbare Meldung mit direktem Wechsel zu »Dart spielen«.
-- Zuschaueransicht ist bei Hoch- und Querformat scrollbar, wenn der Platz für alle Spieler nicht ausreicht.
-- Nebeninformationen und Beschriftungen in den Elite-Analysen sind besser lesbar. Die mobile Navigationsleiste verwendet flexiblere Breiten.
-- Der Inhalt bleibt unverändert lokal, Kassen- und Spieldatenformat sind identisch zu 3.2.0.
+## Neue Funktionen
+- **Schnellstart-Favoriten:** Bis zu acht häufige Spielkonfigurationen mit Spielmodus, Spielern, Finish-Regel, Legs/Sets, DartBot und Anwurf lokal im App-Datenbestand speichern. Favoriten lassen sich direkt starten, ersetzen und entfernen. Nicht mehr verfügbare Spieler verhindern den Start des Favoriten.
+- **Partie fortsetzen:** Schnellzugriff auf die zuletzt angefangene, noch nicht beendete Partie; die gespeicherten Würfe bleiben erhalten.
+- **Lesbarkeit:** Große, kontrastreiche Schnellstart-Schaltflächen mit mindestens 44 px Bedienfläche; mobil untereinander.
+- **Backup-Kompatibilität:** Favoriten werden zusammen mit Spielern, Partien und der Kasse im bestehenden JSON-Backup exportiert und bei der Wiederherstellung geprüft. Alte Backups bleiben kompatibel.
 
-## Installation
-1. Vorher ein vollständiges JSON-Backup außerhalb der App erstellen.
-2. ZIP vollständig entpacken und alle Dateien in das bisherige GitHub-Repository hochladen; »Commit changes« bestätigen.
-3. Version 3.2.1 prüfen und Zuschaueransicht ohne und mit aktiver Partie im Hoch- und Querformat testen.
-4. Danach Offline-Neustart sowie Kassen- und Spielerdaten kontrollieren.
-
-## Grenzen
-Die Layouttests sind Browser-Simulationen. Die iOS-Statusleiste und reale PWA-Safe-Area können nur auf dem iPhone abschließend beurteilt werden. Das Update ersetzt keine externe Datensicherung.
+## Wichtige Hinweise
+- Keine privaten Daten im ZIP. Vor Upload vollständiges JSON-Backup außerhalb der App erstellen.
+- Beim Start einer neuen Partie bleibt die vorhandene Bestätigungsfrage erhalten, falls eine Partie noch läuft.
+- WLAN-Multiplayer bleibt Beta; iPhone/Android-Verbindung und Offline-Neustart sind nur auf echten Geräten endgültig prüfbar.
+- Bei GitHub Pages alle Dateien im Wurzelverzeichnis hochladen und Commit changes bestätigen.

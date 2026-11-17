@@ -1291,3 +1291,24 @@ body.elite-tv-open{overflow:hidden!important}
  .elite-tv-card b{font-size:clamp(50px,13.5vw,65px)}
  .elite-tv-card span{font-size:14px}
 }
+
+/* v3.3.0 – accessible quick-start favorites for busy dart evenings */
+.darts-quick-panel{margin:16px 0 18px;padding:clamp(14px,3vw,24px);background:linear-gradient(125deg,#142d41,#0d1c30);border:1px solid #47718a;border-radius:16px;color:#f3fbff}
+.darts-quick-panel h2{color:#fff;font-size:clamp(21px,4vw,28px);margin:3px 0 5px}
+.darts-quick-panel .game-muted{font-size:clamp(14px,3.2vw,16px)!important;color:#d1e7f1!important}
+.darts-quick-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.darts-quick-actions button{min-height:49px;font-size:15px;font-weight:800;line-height:1.3;white-space:normal;text-align:center}
+#dartsQuickResume{background:#67eed2;color:#092e2c;border:2px solid #a2ffed}
+.darts-quick-presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:10px}
+.darts-quick-entry{display:flex;align-items:stretch;gap:6px;min-width:0;border:1px solid #5b8199;background:#173448;border-radius:12px;padding:6px}
+.darts-quick-play{display:flex;align-items:start;text-align:left;flex-direction:column;gap:5px;flex:1;min-width:0;padding:10px 9px;border:0;border-radius:9px;background:transparent;color:#f4fcff;cursor:pointer}
+.darts-quick-play strong{font-size:clamp(16px,4vw,19px);line-height:1.3;overflow-wrap:anywhere}
+.darts-quick-play span{color:#c9e5f1;font-size:clamp(13px,3vw,15px);line-height:1.4;overflow-wrap:anywhere}
+.darts-quick-play em{font-size:13px;color:#ffe6ab;font-style:normal}
+.darts-quick-play:disabled{opacity:.55;cursor:not-allowed}
+.darts-quick-delete{border:1px solid #8da9b7;border-radius:9px;min-width:46px;min-height:48px;background:#264356;color:#fff;font-size:19px;cursor:pointer}
+.darts-quick-panel button:focus-visible{outline:3px solid #ffda6b;outline-offset:2px}
+@media(max-width:480px){.darts-quick-actions{display:grid;grid-template-columns:1fr}.darts-quick-actions button{width:100%}}
+
+/* Give quick actions visual priority on compact screens; hide only the decorative hero. */
+@media(max-width:660px){#view-games>.game-hero{display:none}.darts-quick-panel{margin-top:12px}}

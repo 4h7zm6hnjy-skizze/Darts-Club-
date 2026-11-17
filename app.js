@@ -1,6 +1,6 @@
-/* JÜRGEN DARTKASSE — offline-first app, v3.2.1: Dart Elite Analytics */
+/* JÜRGEN DARTKASSE — offline-first app, v3.3.0: Dart Elite Analytics */
 'use strict';
-const APP_VERSION = '3.2.1';
+const APP_VERSION = '3.3.0';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -64,7 +64,7 @@ function makeInitial(){
     proTournaments:[],
     proTraining:[],
     lanVoidedRequests:[],
-    settings:{baseCents:0,champions:championDefaults()}
+    settings:{baseCents:0,champions:championDefaults(),quickPresets:[]}
   };
 }
 let state = makeInitial();
@@ -298,7 +298,22 @@ function validateImported(obj){
     undisputed:{name:validText(cfg?.champions?.undisputed?.name,60)?cfg.champions.undisputed.name:championsDefault.undisputed.name,image:validText(cfg?.champions?.undisputed?.image,2000000)?cfg.champions.undisputed.image:''},
     summerslam:{name:validText(cfg?.champions?.summerslam?.name,60)?cfg.champions.summerslam.name:championsDefault.summerslam.name,image:validText(cfg?.champions?.summerslam?.image,2000000)?cfg.champions.summerslam.image:''}
   };
-  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions}};
+  // Quick-start favorites are part of the normal app state and JSON backups.
+  // Only explicitly whitelisted simple values are accepted from imported files.
+  const gameModes=new Set(['x01','cricket','cricket-no','cricket-cut','cricket-tactics','countup','around','shanghai','halfit','bobs27','finish170']);
+  const quickPresets=Array.isArray(cfg.quickPresets)?cfg.quickPresets.slice(0,8).filter(p=>p&&typeof p==='object'&&isId(p.id)&&validText(p.name,48)&&gameModes.has(p.mode)&&Array.isArray(p.playerIds)&&p.playerIds.length>=1&&p.playerIds.length<=6&&p.playerIds.every(id=>isId(id))&&new Set(p.playerIds).size===p.playerIds.length).map(p=>{
+    const o=p.options&&typeof p.options==='object'?p.options:{};
+    return {id:p.id,name:p.name.trim(),mode:p.mode,playerIds:[...p.playerIds],options:{
+      start:[170,210,301,401,501,601,701,801,901,1001,1501].includes(o.start)?o.start:501,
+      bestOfLegs:[1,3,5,7,9].includes(o.bestOfLegs)?o.bestOfLegs:1,
+      bestOfSets:[1,3,5].includes(o.bestOfSets)?o.bestOfSets:1,
+      outRule:['double','master','straight'].includes(o.outRule)?o.outRule:'double',
+      doubleIn:o.doubleIn===true,starterId:isId(o.starterId)?o.starterId:'',
+      botEnabled:o.botEnabled===true,botLevel:['easy','medium','hard'].includes(o.botLevel)?o.botLevel:'medium',
+      rounds:[7,10,15,20].includes(o.rounds)?o.rounds:10,aroundBull:o.aroundBull===true
+    }};
+  }):[];
+  return {schema:'juergen-dartkasse',schemaVersion:1,revision:Number.isSafeInteger(obj.revision)?Math.max(0,obj.revision):0,updatedAt:validText(obj.updatedAt,50)?obj.updatedAt:now(),players,sessions,activeSessionId:sids.has(obj.activeSessionId)?obj.activeSessionId:sessions[0].id,events,paperEntries,dartMatches,activeDartMatchId,proTournaments,proTraining,lanVoidedRequests,settings:{baseCents:isAmount(cfg.baseCents)&&cfg.baseCents>=0?cfg.baseCents:0,champions,quickPresets}};
 }
 
 let idbUnavailable=false;
@@ -341,6 +356,7 @@ async function loadData(){
   candidates.sort((a,b)=>b.revision-a.revision);
   if(candidates.length)state=candidates[0];
   if(!state.settings.champions)state.settings.champions=championDefaults();
+  if(!Array.isArray(state.settings.quickPresets))state.settings.quickPresets=[];
   if(!Array.isArray(state.paperEntries))state.paperEntries=[];
   if(!Array.isArray(state.dartMatches))state.dartMatches=[];
   if(!Array.isArray(state.proTournaments))state.proTournaments=[];

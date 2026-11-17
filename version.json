@@ -1,5 +1,5 @@
 {
-  "version": "3.2.1",
+  "version": "3.3.0",
   "released": "2026-11-17",
-  "notes": "Lesbarkeit: besserer Kontrast und Mindestschriftgrößen; iPhone-Statusleisten-Abstand der Zuschaueransicht; gut sichtbarer Schließen-Knopf; klare Anzeige ohne aktive Partie und Direktstart ins Spielcenter."
+  "notes": "Spielabend-Komfort: gespeicherte Schnellstart-Favoriten mit Spielern und Regeln (auch im JSON-Backup), direkte Fortsetzung offener Partien, größere und kontrastreiche Schaltflächen. Vorhandene Daten und Kassenlogik bleiben unverändert."
 }

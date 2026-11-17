@@ -16,6 +16,7 @@ let statsWindow='10';
 let botTimer=null;
 const profileStatsFilters=new Map();
 let focusActive=false;
+let quickUnfinishedCache={revision:-1,id:null};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('de-DE',{maximumFractionDigits:2}).format(n||0);
 const getState=()=>api.getState();
@@ -108,8 +109,77 @@ function playerAggregate(games,id){
  agg.mpr=agg.cricketDarts?Number((agg.cricketMarks/agg.cricketDarts*3).toFixed(2)):0;
  return agg;
 }
+// Favorite game setups are stored in the main state and included in JSON backups.
+function quickPresets(){return getState().settings.quickPresets||(getState().settings.quickPresets=[]);}
+function quickConfig(){
+ return {mode:$('dartsMode').value,playerIds:[...selectedPlayers],options:{
+   start:Number($('dartsStart').value),bestOfLegs:Number($('dartsBestOf').value),
+   bestOfSets:Number($('dartsBestOfSets').value),outRule:$('dartsOutRule').value,
+   doubleIn:$('dartsDoubleIn').checked,starterId:$('dartsBullWinner').value,
+   botEnabled:$('dartsBotEnabled').checked,botLevel:$('dartsBotLevel').value,
+   rounds:Number($('dartsRoundLimit').value),aroundBull:$('dartsAroundBull').checked
+ }};
+}
+function unfinishedGame(){
+ const revision=getState().revision;
+ if(quickUnfinishedCache.revision===revision)return quickUnfinishedCache.id?gameById(quickUnfinishedCache.id):null;
+ let result=null;
+ for(const game of allGames().slice().reverse())try{if(!E.replay(game).finished){result=game;break;}}catch{}
+ quickUnfinishedCache={revision,id:result?.id||null};
+ return result;
+}
+function renderQuickPresets(){
+ const el=$('dartsQuickPresets');if(!el)return;
+ const pending=unfinishedGame(),resume=$('dartsQuickResume');
+ resume.hidden=!pending;
+ if(pending)resume.textContent=`▶ ${pending.mode==='x01'?pending.options.start+' X01':modeName(pending.mode)} mit ${pending.playerIds.map(playerName).join(' / ')} fortsetzen`;
+ const all=quickPresets();
+ if(!all.length){el.innerHTML='<p class="game-muted">Noch keine Favoriten gespeichert. Wähle Spieler und Regeln und tippe dann auf „Einstellungen merken“.</p>';return;}
+ const known=new Set(validGamePlayers().map(p=>p.id));
+ el.innerHTML=all.map((p,i)=>{
+  const available=p.playerIds.length>0&&p.playerIds.every(id=>known.has(id));
+  const bot=p.options.botEnabled&&p.mode==='x01'?' · DartBot':'';
+  const rules=p.mode==='x01'?` · ${p.options.start} · Best of ${p.options.bestOfLegs} · ${p.options.outRule==='master'?'Master-Out':p.options.outRule==='straight'?'Straight-Out':'Double-Out'}`:'';
+  return `<div class="darts-quick-entry"><button type="button" class="darts-quick-play" data-quick-play="${esc(p.id)}" ${available?'':'disabled'}><strong>${esc(p.name)}</strong><span>${esc(p.playerIds.map(playerName).join(' / ')+bot+rules)}</span>${available?'':'<em>Spielerprofil nicht mehr verfügbar</em>'}</button><button type="button" class="darts-quick-delete" data-quick-delete="${esc(p.id)}" aria-label="Favorit ${esc(p.name)} entfernen" title="Favorit entfernen">✕</button></div>`;
+ }).join('');
+}
+function saveQuickPreset(){
+ ensureChosen();if(!selectedPlayers.length){toast('Wähle zuerst mindestens einen Spieler.');return;}
+ const config=quickConfig();
+ if(config.mode==='finish170'&&config.playerIds.length!==1){toast('170 Checkout erfordert genau einen Spieler.');return;}
+ if(config.mode==='cricket-cut'&&config.playerIds.length<2){toast('Cut-Throat benötigt mindestens zwei Spieler.');return;}
+ if(config.playerIds.length+(config.mode==='x01'&&config.options.botEnabled?1:0)>6){toast('Maximal sechs Teilnehmer inklusive DartBot.');return;}
+ const list=quickPresets();
+ const suggested=`${config.mode==='x01'?config.options.start+' X01':modeName(config.mode)} · ${config.playerIds.map(playerName).join(' / ')}`;
+ const raw=prompt('Name für diesen Spiel-Favoriten:',suggested.slice(0,48));
+ if(raw===null)return;
+ const name=raw.trim();if(!name||name.length>48){toast('Bitte einen Namen mit maximal 48 Zeichen wählen.');return;}
+ const existing=list.find(p=>p.name.toLowerCase()===name.toLowerCase());
+ if(existing&&!confirm('Favorit mit diesem Namen ersetzen?'))return;
+ if(!existing&&list.length>=8){toast('Maximal acht Favoriten. Entferne zuerst einen alten Favoriten.');return;}
+ const favorite={id:existing?.id||`favorite-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,name,...config};
+ if(existing)list[list.indexOf(existing)]=favorite;else list.push(favorite);
+ api.persist();renderQuickPresets();toast('Spielfavorit gespeichert und im JSON-Backup enthalten.');
+}
+function applyQuickPreset(id){
+ const favorite=quickPresets().find(x=>x.id===id);if(!favorite)return;
+ const currentPlayers=new Set(validGamePlayers().map(p=>p.id));
+ if(!favorite.playerIds.length||!favorite.playerIds.every(x=>currentPlayers.has(x))){toast('Favorit enthält nicht mehr verfügbare Spieler.');return;}
+ const o=favorite.options||{};
+ selectedPlayers=[...favorite.playerIds];
+ const fields={dartsMode:favorite.mode,dartsStart:String(o.start),dartsBestOf:String(o.bestOfLegs),dartsBestOfSets:String(o.bestOfSets),dartsOutRule:o.outRule,dartsBotLevel:o.botLevel,dartsRoundLimit:String(o.rounds)};
+ for(const [id,value] of Object.entries(fields)){const el=$(id);if(el&&[...el.options].some(option=>option.value===value))el.value=value;}
+ $('dartsDoubleIn').checked=!!o.doubleIn;$('dartsBotEnabled').checked=!!o.botEnabled;$('dartsAroundBull').checked=!!o.aroundBull;
+ renderSetup();const starter=$('dartsBullWinner');if(starter&&o.starterId&&[...starter.options].some(x=>x.value===o.starterId))starter.value=o.starterId;
+ newGame();
+}
+function deleteQuickPreset(id){const list=quickPresets(),p=list.find(x=>x.id===id);if(!p)return;
+ if(!confirm(`Favorit „${p.name}“ entfernen? Gespeicherte Dart-Partien bleiben erhalten.`))return;
+ getState().settings.quickPresets=list.filter(x=>x.id!==id);api.persist();renderQuickPresets();toast('Favorit entfernt.');
+}
 function renderSetup(){
  const game=currentGame(); const root=$('dartsSetup'); if(!root)return;
+ renderQuickPresets();
  const modes=E.GAME_MODES; const selectedMode=$('dartsMode')?.value||'x01'; ensureChosen();
  $('dartsGameModeCards').innerHTML=modes.map(m=>`<button class="mode-card ${selectedMode===m.id?'selected':''}" data-mode="${esc(m.id)}"><span class="mode-type">${esc(m.group)}</span><strong>${esc(m.name)}</strong><small>${esc(m.detail)}</small></button>`).join('');
  $('dartsSelectedPlayers').innerHTML=validGamePlayers().length?validGamePlayers().map(p=>{
@@ -421,6 +491,10 @@ function loadGame(id){ if(!gameById(id))return; getState().activeDartMatchId=id;
 function init(obj){ api=obj; const view=$('view-games');
  view.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
+  if(b.id==='dartsQuickResume'){const pending=unfinishedGame();if(pending)loadGame(pending.id);return;}
+  if(b.id==='dartsQuickSave'){saveQuickPreset();return;}
+  if(b.dataset.quickPlay){applyQuickPreset(b.dataset.quickPlay);return;}
+  if(b.dataset.quickDelete){deleteQuickPreset(b.dataset.quickDelete);return;}
   if(b.id==='dartsFocusEnter'){openFocus();return;}
   if(b.id==='dartsWakeLock'){toggleWakeLock();return;}
   if(b.id==='dartsFocusExit'){closeFocus();return;}
