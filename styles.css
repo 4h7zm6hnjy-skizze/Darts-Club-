@@ -1157,3 +1157,61 @@ body.dart-spectator-on #liveGuestTurnInfo{font-size:18px;text-align:center}
 /* v3.1.1 - retriable LAN message is always accessible when unconfirmed */
 .live-retry-button{display:block;width:100%;margin-top:12px;min-height:48px}
 .live-retry-button[hidden]{display:none}
+
+/* === Dart Elite 3.2.0: responsive, read-only, offline-first premium analytics === */
+.elite-game-shortcuts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#view-elite{--elite-edge:#22d3ee;--elite-ink:#eaf9ff}
+#view-elite .game-panel{margin-bottom:18px}
+.elite-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(125deg,#061529 0%,#102548 56%,#093552 100%);border:1px solid #285d80;border-radius:20px;color:#eff8ff;padding:24px 28px;margin:14px 0 22px;overflow:hidden}
+.elite-hero strong{font-size:11px;letter-spacing:.18em;color:#75ecff}
+.elite-hero h2{font-size:clamp(18px,3vw,27px);line-height:1.18;margin:9px 0}
+.elite-hero p{max-width:600px;color:#b3cade;margin:0;font-size:14px}
+.elite-hero-ring{width:115px;height:115px;flex:none;display:grid;place-items:center;border:8px solid #1c9fc0;outline:8px solid rgba(56,189,248,.2);outline-offset:5px;border-radius:100%;background:radial-gradient(circle at 48% 48%,#c52b39 0 17%,#204a60 17% 36%,#14283e 36% 64%,#0f213a 64% 100%);box-shadow:0 3px 30px rgba(0,255,255,.14)}
+.elite-hero-ring span{font-size:23px;font-weight:900;color:#fff;text-shadow:0 2px 4px #000}
+.elite-section .game-section-head{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.elite-period-control{display:flex;flex-direction:column;font-size:12px;gap:4px;min-width:155px}
+.elite-period-control select{min-height:40px}
+.elite-rankings{display:grid;gap:9px;margin:12px 0}
+.elite-rank-row{display:grid;grid-template-columns:40px minmax(110px,1fr) 105px 96px;align-items:center;gap:12px;background:rgba(76,110,145,.09);border:1px solid rgba(130,163,198,.16);padding:11px 13px;border-radius:13px;cursor:pointer;color:inherit}
+.elite-rank-row:hover,.elite-rank-self{border-color:#36bcda;background:rgba(30,167,205,.10)}
+.elite-rank-number{font-size:23px;font-weight:900;text-align:center;color:#34b7dd}
+.elite-rank-person,.elite-rank-rating,.elite-rank-average{display:flex;flex-direction:column;gap:3px;min-width:0}
+.elite-rank-person b{overflow-wrap:anywhere}.elite-rank-row small{font-size:10px;opacity:.72}
+.elite-rank-rating b{font-size:21px;letter-spacing:.02em}
+.elite-rank-average b{font-size:19px}
+.elite-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 17px}
+.elite-summary-grid article{min-height:86px;padding:13px;display:flex;flex-direction:column;justify-content:center;gap:6px;background:rgba(39,131,173,.10);border:1px solid rgba(77,139,177,.18);border-radius:13px}
+.elite-summary-grid article small{font-size:11px;opacity:.76}.elite-summary-grid article strong{font-size:clamp(17px,3vw,25px);line-height:1.1;overflow-wrap:anywhere}
+.elite-subsection{margin-top:18px;padding-top:14px;border-top:1px solid rgba(90,135,165,.18)}.elite-subsection h3{margin:4px 0 10px}
+.elite-coach{border:1px solid rgba(52,211,153,.25);border-radius:15px;background:rgba(46,181,142,.08);padding:17px}
+.elite-coach b{font-size:17px}.elite-coach p{font-size:14px;line-height:1.6;margin:9px 0 14px}
+.elite-hit-bars{display:grid;gap:9px;margin:16px 0}
+.elite-hit-row{display:grid;grid-template-columns:68px minmax(40px,1fr) 38px 93px;align-items:center;gap:8px;font-size:13px}
+.elite-hit-track{height:16px;background:rgba(80,126,160,.17);border-radius:99px;overflow:hidden}.elite-hit-track div{height:100%;background:linear-gradient(90deg,#16739f,#30d5e7);border-radius:99px}
+.elite-hit-row small{text-align:right;opacity:.7;font-size:10px}
+.elite-duel{display:grid;grid-template-columns:minmax(0,1fr) 70px 175px;gap:9px;align-items:center;border-bottom:1px solid rgba(88,131,159,.15);padding:10px 3px;font-size:13px}.elite-duel b{text-align:center}.elite-duel small{opacity:.75}
+.elite-checkout-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.elite-checkout-fields label,.elite-report-controls label{display:flex;flex-direction:column;gap:7px;font-size:12px}
+.elite-checkout-fields :is(select,input){min-height:43px;width:100%}
+.elite-checkout-box{background:rgba(40,152,177,.09);border-radius:12px;border:1px solid rgba(49,174,199,.22);padding:17px;margin:14px 0}
+.elite-checkout-result{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.elite-checkout-result span:not(.elite-plus){font-size:24px;font-weight:900;color:#1bd0ec;background:rgba(0,157,188,.13);padding:12px 16px;border-radius:12px}
+.elite-checkout-result .elite-plus{opacity:.6;font-weight:900}.elite-checkout-box p{margin:8px 0;font-size:13px}
+.elite-report-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:14px}.elite-report-controls label{flex:1;min-width:170px}.elite-report-controls select{width:100%;min-height:43px}
+.elite-match-result{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0}.elite-match-result h3{margin:5px 0}.elite-match-result p{margin:0;font-size:13px}.elite-match-result span{white-space:nowrap;font-size:12px;opacity:.7}
+.elite-match-table-wrap{max-height:410px;overflow:auto;border-radius:12px;border:1px solid rgba(115,153,177,.23)}
+.elite-match-table{border-collapse:collapse;width:100%;min-width:450px;font-size:12px}.elite-match-table th,.elite-match-table td{text-align:left;padding:10px;border-bottom:1px solid rgba(93,142,170,.15)}.elite-match-table th{position:sticky;top:0;background:#102438;z-index:1;color:#e9f8ff}
+.elite-tv-overlay[hidden]{display:none!important}.elite-tv-overlay{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 30% 0%,#1b4466 0%,#06101f 65%);color:#f4fbff;padding:max(22px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(25px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:20px;overflow:auto}
+.elite-tv-header{display:flex;justify-content:space-between;align-items:center;gap:14px}.elite-tv-header small{font-size:12px;color:#67e9ff;letter-spacing:.1em}.elite-tv-header h2{margin:4px 0;font-size:clamp(20px,3vw,38px)}
+.elite-tv-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:15px;align-content:center;flex:1}
+.elite-tv-card{border:2px solid #356c85;background:rgba(18,61,88,.7);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:8px;padding:17px;text-align:center}
+.elite-tv-card small{letter-spacing:.13em;color:#78c9dd;font-weight:800}.elite-tv-card strong{font-size:clamp(17px,3.5vw,32px);overflow-wrap:anywhere}.elite-tv-card b{font-size:clamp(50px,9vw,125px);line-height:1.1;color:#fff;white-space:nowrap}.elite-tv-card span{font-size:clamp(12px,2vw,21px)}.elite-tv-active{border-color:#1ff7ce;box-shadow:0 0 20px rgba(36,237,188,.24)}.elite-tv-active b{color:#65f9d9}
+.elite-tv-overlay footer{font-size:12px;text-align:center;opacity:.65}
+@media(max-width:660px){.elite-rank-row{grid-template-columns:28px minmax(70px,1fr) 72px 64px;gap:7px;padding:9px 8px}.elite-rank-rating b,.elite-rank-average b{font-size:16px}.elite-rank-number{font-size:19px}.elite-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.elite-hero{padding:20px 14px}.elite-hero-ring{width:65px;height:65px;outline-width:4px;border-width:5px}.elite-hero-ring span{font-size:14px}.elite-checkout-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.elite-hit-row{grid-template-columns:50px minmax(25px,1fr) 30px 68px}.elite-hit-row small{font-size:9px}.elite-duel{grid-template-columns:minmax(0,1fr) 65px}.elite-duel small{grid-column:1/-1}}
+@media(max-width:400px){.elite-hero-ring{display:none}.elite-match-result{align-items:start;flex-direction:column}.elite-tv-board{grid-template-columns:1fr}.elite-tv-card{min-height:132px}.elite-tv-card b{font-size:55px}}
+@media(prefers-reduced-motion:reduce){.elite-tv-overlay *,#view-elite *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Elite section: don't let the mobile sticky brand intercept action buttons in landscape. */
+body.elite-view-on .dart-brand-showcase{position:relative!important;top:auto!important}
+
+.elite-rank-row{width:100%;text-align:left;font:inherit}

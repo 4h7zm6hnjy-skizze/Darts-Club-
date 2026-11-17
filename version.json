@@ -1,5 +1,5 @@
 {
-  "version": "3.1.1",
+  "version": "3.2.0",
   "released": "2026-11-17",
-  "notes": "Fehlerbehebung: LAN-Wurf nach Koppelunterbrechung behalten, Rücknahmen vor erneuter Übertragung schützen, Doppelbuchungsprüfung und präzise Dart-Anzahl im Checkout-Training."
+  "notes": "Elite Center: nachvollziehbares Club-Elo, Form, echte Wurf-Heatmap, persönliche Trainingshinweise, direkter Duellvergleich, Checkout-Rechner, CSV/PDF-Partiebericht und TV-Scoreboard. Alle bisherigen Funktionen und Datenformate bleiben erhalten."
 }
