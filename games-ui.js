@@ -52,8 +52,8 @@ function checkoutText(remaining,dartsLeft,doubleOut,masterOut=false){
  if(doubleOut&&remaining===1)return 'Bust – 1 Restpunkt ist ungültig';
  const route=E.checkoutRoute(remaining,dartsLeft,doubleOut,masterOut);
  if(route)return route.map(E.dartLabel).join(' · ');
- if((doubleOut||masterOut)&&remaining>170)return 'Kein direktes Finish. Punkte herunterspielen.';
- return 'Kein direktes Finish mit den übrigen Darts';
+ if((doubleOut||masterOut)&&remaining>170)return 'Noch kein Finish · Punkte senken';
+ return 'Kein Finish mit übrigen Darts';
 }
 function draftStatus(match,p){
  let left=p.remaining,score=0,bust=false,win=false;
@@ -203,7 +203,7 @@ function renderScores(match,r){
   const report=E.playerReport(match,id);
   const topMetric=E.isX01(match.mode)?`PPR ${fmt(report.average3)}`:E.isCricket(match.mode)?`MPR ${fmt(report.mpr)}`:`${p.visits} Runden`;
   const subMetric=E.isX01(match.mode)?`Legs ${p.legs} · Sets ${p.sets||0}`:E.isCricket(match.mode)?`${p.cricketMarks} Marks`:`${p.darts} Darts`;
-  const extra=E.isX01(match.mode)&&report.highFinish?`Best Finish ${report.highFinish}`:E.isCricket(match.mode)?`Punkte ${report.score}`:`Punkte ${p.score||0}`;
+  const extra=E.isX01(match.mode)&&report.highFinish?`Best Finish ${report.highFinish}`:E.isCricket(match.mode)?`Punkte ${report.score}`:E.isX01(match.mode)?`Darts ${p.darts} · Legs ${p.legs}`:`Punkte ${p.score||0}`;
   return `<article class="game-score-card ${selected?'active':''} ${r.winnerId===id?'winner':''}"><div class="game-score-top"><div class="game-score-name">${avatar(photo)}<div><strong>${esc(playerName(id))}</strong><small>${esc(subMetric)}</small></div></div><span class="game-score-badge">${esc(topMetric)}</span></div><div class="game-score-number">${esc(showValue(p))}</div><div class="game-score-caption"><span>${esc(extra)}</span>${selected?'<b>Am Zug</b>':(r.winnerId===id?'<b>Sieger</b>':'')}</div></article>`;
  }).join('');
  if(E.isCricket(match.mode)){
@@ -235,7 +235,7 @@ function renderLiveMeta(match,r){
   cards.push(['Runden',p.visits]); cards.push(['Punkte',p.score]); cards.push([avg.label,avg.value]); cards.push(['Aufnahme',stagedPoints]);
  }
  cards.push(['Aufnahme',staged.length?staged.map(E.dartLabel).join(' · '):'–']);
- box.innerHTML=cards.map(([label,val])=>`<div class="live-meta-card"><small>${esc(label)}</small><strong>${esc(String(val))}</strong></div>`).join('');
+ box.innerHTML=cards.map(([label,val])=>`<div class="live-meta-card ${label==='Checkout'?'live-meta-checkout':''}"><small>${esc(label)}</small><strong>${esc(String(val))}</strong></div>`).join('');
 }
 function renderSpecialButtons(){
  const root=$('dartsSpecialBooking'); if(!root)return;
@@ -269,7 +269,7 @@ function renderDartPad(match,r){
  }).join('');
  $('dartsDraftScore').textContent=staged.length?`${staged.reduce((a,d)=>a+E.dartValue(d),0)} Punkte`:'0 Punkte';
  $('dartsRingButtons').querySelectorAll('[data-ring]').forEach(b=>b.classList.toggle('active',Number(b.dataset.ring)===ring));
- $('dartsConfirmTurn').disabled=!staged.length; $('dartsRemoveStaged').disabled=!staged.length;
+ $('dartsConfirmTurn').disabled=!staged.length; $('dartsConfirmTurn').textContent=staged.length?'Nächster Spieler':'Wurf eingeben'; $('dartsRemoveStaged').disabled=!staged.length;
  renderSpecialButtons();
  $('dartsTargetButtons').innerHTML=Array.from({length:20},(_,i)=>20-i).map(n=>`<button class="dart-target" data-number="${n}">${n}</button>`).join('')+
  `<button class="dart-target bull25" data-number="25" data-force-m="1">25</button><button class="dart-target bull50" data-number="25" data-force-m="2">Bull</button><button class="dart-target miss" data-number="0" data-force-m="0">Miss</button><button class="dart-target miss" data-number="0" data-force-m="0" data-aim="double">D-Miss</button>`;
@@ -308,6 +308,13 @@ function syncFocusUI(){
  const open=$('dartsFocusEnter'), close=$('dartsFocusExit'), undo=$('dartsFocusUndo');
  if(!game && focusActive)focusActive=false;
  panel.classList.toggle('focus-active',focusActive);
+ // On very narrow phones show the meaningful score and leg instead of truncating "X01 · ...".
+ if(game&&E.isX01(game.mode)){
+  const title=$('dartsCurrentTitle'),leg=E.replay(game).leg;
+  const fullTitle=`X01 · ${game.options.start} · Leg ${leg}`;
+  title.textContent=focusActive&&window.innerWidth<=350?String(game.options.start):focusActive&&window.innerWidth<380?`${game.options.start} · Leg ${leg}`:fullTitle;
+  title.title=fullTitle;
+ }
  document.body.classList.toggle('dart-focus-on',focusActive);
  document.documentElement.classList.toggle('dart-focus-on',focusActive);
  if(open)open.hidden=!game||focusActive;
@@ -521,6 +528,7 @@ function init(obj){ api=obj; const view=$('view-games');
   if(b.id==='dartsReplay'){const g=currentGame();if(!g)return;closeFocus();selectedPlayers=g.playerIds.filter(x=>x!==E.BOT_ID);if($('dartsBotEnabled'))$('dartsBotEnabled').checked=g.playerIds.includes(E.BOT_ID);$('dartsMode').value=g.mode;gameMenuOpen=true;renderSetup();$('dartsSetup').scrollIntoView({block:'start',behavior:'smooth'});return;}
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusActive){e.preventDefault();closeFocus();}});
+ window.addEventListener('resize',()=>{if(focusActive)syncFocusUI();});
  $('dartsMode').addEventListener('change',renderSetup);
  const playersView=$('view-players');
  playersView?.addEventListener('change',e=>{

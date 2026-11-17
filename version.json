@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0",
+  "version": "3.4.1",
   "released": "2026-11-17",
-  "notes": "Dartabend LIVE: verständlicher Verbindungsstatus und Gerätecheck, sichere Vormerkung nicht bestätigter Würfe über einen App-Neustart, Statusabgleich nach Wiederverbindung, identische Wurf-ID beim erneuten Senden, verbesserte iPhone/Android-Anleitung."
+  "notes": "Lesbarkeit im Vollbild-Spielmodus: Checkout-Text ohne Abschneiden, größere Spielerbeschriftungen, aussagekräftige X01-Zeile, deutlich erkennbare aktive/deaktivierte Schaltflächen. Keine Änderung der Kassen- und Spielregeln."
 }

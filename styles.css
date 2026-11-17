@@ -1356,3 +1356,84 @@ body.dart-spectator-on #liveGuestConnectionMini{display:none!important}
 #view-live .live-local-result,#view-live .live-safety-panel p{font-size:14px}
 #view-live .live-peer{font-size:14px}
 #view-live .live-code-box .game-muted{font-size:15px}
+
+
+/* v3.4.1 – iPhone dart focus legibility. No changes to score/kassa logic. */
+body.dart-focus-on .game-current.focus-active .game-score-name strong{
+  font-size:clamp(13px,3.5vw,16px)!important;
+  line-height:1.2!important;color:#fff!important;
+}
+body.dart-focus-on .game-current.focus-active .game-score-badge{
+  font-size:clamp(10px,2.8vw,12px)!important;
+  line-height:1.2!important;color:#fff7d6!important;
+}
+body.dart-focus-on .game-current.focus-active .game-score-caption{
+  font-size:clamp(10px,2.75vw,12px)!important;
+  line-height:1.22!important;color:#fff4d8!important;
+  overflow:visible!important;white-space:normal!important;
+}
+body.dart-focus-on .game-current.focus-active .game-score-caption span{
+  min-width:0;overflow:visible!important;white-space:normal!important;
+  text-overflow:clip!important;
+}
+body.dart-focus-on .game-current.focus-active .game-score-caption b{
+  flex:none;font-size:clamp(9px,2.5vw,11px)!important;
+  line-height:1.2!important;padding:3px 6px!important;
+  color:#fff!important;background:#6a2525!important;
+}
+body.dart-focus-on .game-current.focus-active .game-score-card.active{
+  border-color:#ffe4ac!important;
+}
+body.dart-focus-on .game-current.focus-active .game-leg-set-board .leg-set-title{
+  color:#ffe8b2!important;font-size:clamp(10px,2.75vw,12px)!important;
+}
+body.dart-focus-on .game-current.focus-active .game-live-meta .live-meta-card{
+  max-height:none!important;
+}
+body.dart-focus-on .game-current.focus-active .game-live-meta .live-meta-card small{
+  font-size:clamp(10px,2.6vw,11px)!important;color:#c6e9ee!important;
+}
+body.dart-focus-on .game-current.focus-active .game-live-meta .live-meta-card strong{
+  font-size:clamp(12px,3.4vw,14px)!important;color:#fff!important;
+}
+/* The checkout is useful only if its entire text can be read. Never ellipsize it. */
+body.dart-focus-on .game-current.focus-active .game-live-meta.x01-live .live-meta-checkout{
+  max-height:none!important;overflow:visible!important;
+  padding:5px 7px!important;
+}
+body.dart-focus-on .game-current.focus-active .game-live-meta.x01-live .live-meta-checkout strong{
+  display:block!important;max-height:none!important;
+  white-space:normal!important;overflow:visible!important;
+  text-overflow:clip!important;overflow-wrap:break-word!important;
+  line-height:1.2!important;font-size:clamp(11px,3.15vw,13px)!important;
+}
+body.dart-focus-on .game-current.focus-active .game-action-row button:disabled{
+  opacity:1!important;cursor:not-allowed!important;
+  background:#243749!important;border:1px solid #748b9b!important;
+  color:#e2edf5!important;
+}
+body.dart-focus-on .game-current.focus-active .game-next-btn:not(:disabled){
+  background:linear-gradient(180deg,#f8cb67,#e6a92f)!important;
+  color:#211804!important;border:1px solid #ffe3a0!important;
+}
+body.dart-focus-on .game-current.focus-active .game-special-booking .special-toggle{
+  color:#f6f7ff!important;border-color:#7990a4!important;
+}
+body.dart-focus-on .game-current.focus-active .game-special-booking .special-toggle.active{
+  color:#fff!important;border-color:#e4ca80!important;
+}
+body.dart-focus-on .game-current.focus-active #dartsFocusUndo,
+body.dart-focus-on .game-current.focus-active #dartsFocusExit{
+  color:#fff!important;font-size:clamp(11px,2.8vw,13px)!important;
+  border-width:1px!important;
+}
+@media(max-height:600px) and (orientation:landscape){
+  /* Landscape has two columns; keep the compact score cards readable. */
+  body.dart-focus-on .game-current.focus-active .game-score-name strong{font-size:11px!important}
+  body.dart-focus-on .game-current.focus-active .game-score-caption{font-size:9px!important}
+  body.dart-focus-on .game-current.focus-active .game-score-badge{font-size:9px!important}
+}
+@media(max-height:680px) and (orientation:portrait){
+  body.dart-focus-on .game-current.focus-active .game-live-meta.x01-live .live-meta-checkout strong{font-size:11px!important}
+  body.dart-focus-on .game-current.focus-active .game-score-name strong{font-size:12px!important}
+}
