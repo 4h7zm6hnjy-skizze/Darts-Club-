@@ -1,5 +1,5 @@
 {
-  "version": "3.6.0",
+  "version": "3.6.1",
   "released": "2026-11-17",
-  "notes": "Vereinsmodus mit echtem 2-gegen-2-X01, Teamturnier-Verknüpfung, Saisons mit Terminplanung und persönlichen Wochen-Trainingszielen; bestehende Kassenbuchungen bleiben unverändert."
+  "notes": "Vollbild-Spieloberflächen für alle 11 regulären Dartmodi, 2-gegen-2, 4 Trainingsarten, Jürgen-Zähler und LAN-Mitspielansicht. Reine UI-Änderung ohne Änderungen an Spiel- oder Kassenlogik."
 }

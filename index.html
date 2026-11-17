@@ -11,22 +11,23 @@
   <link rel="icon" type="image/png" href="./favicon-64.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css?v=3.6.0">
+  <link rel="stylesheet" href="./styles.css?v=3.6.1">
   <title>Jürgen – Dartkasse</title>
-  <script src="./games-engine.js?v=3.6.0" defer></script>
-  <script src="./pro-engine.js?v=3.6.0" defer></script>
-  <script src="./dart-caller.js?v=3.6.0" defer></script>
-  <script src="./games-ui.js?v=3.6.0" defer></script>
-  <script src="./pro-ui.js?v=3.6.0" defer></script>
-  <script src="./camera-assist.js?v=3.6.0" defer></script>
-  <script src="./qr-offline.js?v=3.6.0" defer></script>
-  <script src="./live-lan.js?v=3.6.0" defer></script>
-  <script src="./elite-engine.js?v=3.6.0" defer></script>
-  <script src="./stats-35.js?v=3.6.0" defer></script>
-  <script src="./elite-ui.js?v=3.6.0" defer></script>
-  <script src="./club-next-engine.js?v=3.6.0" defer></script>
-  <script src="./club-next-ui.js?v=3.6.0" defer></script>
-  <script src="./app.js?v=3.6.0" defer></script>
+  <script src="./games-engine.js?v=3.6.1" defer></script>
+  <script src="./pro-engine.js?v=3.6.1" defer></script>
+  <script src="./dart-caller.js?v=3.6.1" defer></script>
+  <script src="./games-ui.js?v=3.6.1" defer></script>
+  <script src="./pro-ui.js?v=3.6.1" defer></script>
+  <script src="./camera-assist.js?v=3.6.1" defer></script>
+  <script src="./qr-offline.js?v=3.6.1" defer></script>
+  <script src="./live-lan.js?v=3.6.1" defer></script>
+  <script src="./elite-engine.js?v=3.6.1" defer></script>
+  <script src="./stats-35.js?v=3.6.1" defer></script>
+  <script src="./elite-ui.js?v=3.6.1" defer></script>
+  <script src="./club-next-engine.js?v=3.6.1" defer></script>
+  <script src="./club-next-ui.js?v=3.6.1" defer></script>
+  <script src="./play-focus.js?v=3.6.1" defer></script>
+  <script src="./app.js?v=3.6.1" defer></script>
 </head>
 <body>
   <div class="app-layout">
@@ -44,7 +45,7 @@
         <button class="nav-btn" data-view="cash"><span class="nav-icon">€</span> Kassenbuch</button>
         <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span> Einstellungen</button>
       </nav>
-      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.6.0</span><br>© Marcel Hentschel 2026</small></div>
+      <div class="side-foot"><div class="privacy-indicator"><span class="privacy-dot"></span> Lokal gespeichert</div><small>Kein Konto · Keine Werbung<br>Version <span class="version-value">3.6.1</span><br>© Marcel Hentschel 2026</small></div>
     </aside>
     <div class="main-wrap">
       <header class="topbar" hidden></header>
@@ -60,7 +61,7 @@
             <small id="storageStatus" class="brand-status">Daten werden lokal gesichert</small>
           </div>
           <div class="dart-brand-showcase-actions">
-            <span class="version-pill">v<span class="version-value">3.6.0</span></span>
+            <span class="version-pill">v<span class="version-value">3.6.1</span></span>
             <button id="headerBackup" class="icon-button" title="Backup herunterladen" aria-label="Backup herunterladen">⇩</button>
           </div>
         </div>
@@ -73,8 +74,9 @@
             <div class="metric-card"><span class="metric-label">Punkte am Spieltag</span><strong id="playHits">0</strong><span class="metric-sub" id="playSessionName">Aktueller Spieltag</span></div>
           </div>
           <div class="two-col">
-            <div class="panel count-panel">
-              <div class="panel-header"><div><span class="eyebrow">WERFEN</span><h2>Jürgen erfassen</h2></div><div class="live-pill"><span></span> LIVE</div></div>
+            <div class="panel count-panel" id="juergenFocusPanel">
+              <div class="panel-header"><div><span class="eyebrow">WERFEN / KASSENBUCHUNG</span><h2>Jürgen erfassen</h2></div><div class="all-focus-toolbar"><button type="button" id="juergenFocusEnter" class="primary-btn small" data-all-focus-enter="juergen" aria-label="Jürgen-Erfassung im Vollbild öffnen">⛶ Vollbild</button><button type="button" id="juergenFocusExit" class="outline-btn small" data-all-focus-exit hidden aria-label="Jürgen-Vollbild schließen">✕ Schließen</button></div></div>
+              <p class="all-focus-cash-hint">Hinweis: Hier erfasste Jürgen werden sofort in der Kasse verbucht.</p>
               <div class="row-head"><span class="small-label">WER WIRFT?</span><button id="quickAddPlayer" class="text-btn">+ Hinzufügen</button></div>
               <div id="playerChips" class="player-chips"></div>
               <div class="pad-title"><div><h3>Jürgen auswählen</h3><p>Wähle zuerst den Werfer und danach einen der beiden Buttons.</p></div></div>
@@ -173,7 +175,7 @@
             <section class="game-panel pro-tourney-details" id="proTournamentDetails"><p class="game-muted">Hier erscheinen Turnierplan und Ergebnisse.</p></section>
           </div>
           <div data-pro-section="training" hidden>
-            <section class="game-panel"><div class="game-section-head"><div><h2>Dart-Trainingszentrum</h2><p class="game-muted">Eigene Ziele und Trainingsergebnisse – getrennt von der Jürgen-Kasse.</p></div></div><div class="pro-training-options"><label>Spieler<select id="proTrainPlayer"></select></label><label>Training<select id="proTrainMode"><option value="checkout121">121 Checkout · 9 Darts</option><option value="checkoutRandom">Zufalls-Checkout · 9 Darts</option><option value="double">Doppeltraining · 3 Darts</option><option value="scoring">Präzision T20 · 3 Darts</option></select></label><button id="proTrainStart" type="button" class="primary-btn">Training starten</button></div><div id="proTrainingActive" class="pro-training-active"></div></section>
+            <section class="game-panel" id="proTrainingFocusPanel"><div class="game-section-head"><div><h2>Dart-Trainingszentrum</h2><p class="game-muted">Eigene Ziele und Trainingsergebnisse – getrennt von der Jürgen-Kasse.</p></div><div class="all-focus-toolbar"><button type="button" id="proTrainingFocusEnter" data-all-focus-enter="training" class="primary-btn small" hidden aria-label="Training im Vollbild öffnen">⛶ Vollbild spielen</button><button type="button" id="proTrainingFocusExit" data-all-focus-exit class="outline-btn small" hidden aria-label="Trainings-Vollbild schließen">✕ Schließen</button></div></div><div class="pro-training-options"><label>Spieler<select id="proTrainPlayer"></select></label><label>Training<select id="proTrainMode"><option value="checkout121">121 Checkout · 9 Darts</option><option value="checkoutRandom">Zufalls-Checkout · 9 Darts</option><option value="double">Doppeltraining · 3 Darts</option><option value="scoring">Präzision T20 · 3 Darts</option></select></label><button id="proTrainStart" type="button" class="primary-btn">Training starten</button></div><div id="proTrainingActive" class="pro-training-active"></div></section>
             <section class="game-panel pro-training-history-panel"><h3>Trainingsverlauf</h3><div id="proTrainingHistory"></div><p class="game-muted">121 und Zufalls-Checkout erfordern ein Double-Out; die Trainingswerte zählen nicht automatisch als Turnierpartie oder Jürgen.</p></section>
           </div>
           <div data-pro-section="reports" hidden>
@@ -204,7 +206,7 @@
                 <label>Legs<select id="clubTeamLegs"><option value="1">1 Leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option><option value="7">Best of 7</option></select></label>
               </div><button id="clubTeamCreate" type="button" class="primary-btn">Teamduell starten</button>
             </section>
-            <div class="club-duel-layout"><section class="game-panel club-panel"><h2>Gespeicherte Teamduelle</h2><div id="clubDuels" class="club-choices"></div></section><section class="game-panel club-panel"><h2>Team-Scoreboard</h2><div id="clubBoard"></div></section></div>
+            <div class="club-duel-layout"><section class="game-panel club-panel"><h2>Gespeicherte Teamduelle</h2><div id="clubDuels" class="club-choices"></div></section><section class="game-panel club-panel" id="clubTeamFocusPanel"><div class="all-focus-heading"><h2>Team-Scoreboard</h2><div class="all-focus-toolbar"><button id="clubTeamFocusEnter" type="button" class="primary-btn small" data-all-focus-enter="team" hidden aria-label="2 gegen 2 im Vollbild öffnen">⛶ Vollbild spielen</button><button id="clubTeamFocusExit" type="button" class="outline-btn small" data-all-focus-exit hidden aria-label="Teamduell-Vollbild schließen">✕ Schließen</button></div></div><div id="clubBoard"></div></section></div>
           </div>
           <div data-club-panel="seasons" hidden>
             <section class="game-panel club-panel"><h2>Neue Vereinssaison</h2><p class="game-muted">Turniere über mehrere Dartabende organisieren, ohne bestehende Turniere zu verschieben oder ihre Ergebnisse zu ändern.</p>
@@ -243,7 +245,7 @@
     <div id="liveGuestState" class="live-status" aria-live="polite">Nicht verbunden.</div>
     <div class="live-wizard-guide" aria-label="Verbindungsschritte Mitspieler"><span>1 · Einladung scannen</span><span>2 · Antwort zeigen</span><span>3 · Profil wählen</span><span>4 · Freigabe abwarten</span></div>
     <div id="liveGuestClaimBox" hidden><label class="field-label" for="liveGuestPlayer">Dein Spielerprofil</label><select id="liveGuestPlayer"></select><button type="button" id="liveGuestClaim" class="primary-btn">Profil beim Spielleiter anfragen</button><p class="game-muted">Der Spielleiter muss die Zuordnung bestätigen.</p></div>
-    <div id="liveGuestGame" hidden><div class="live-spectator-top"><h3>Live-Spielstand</h3><button id="liveSpectatorEnter" type="button" class="outline-btn small">▣ Zuschauer-Vollbild</button><button id="liveSpectatorExit" type="button" class="outline-btn small">✕ Schließen</button></div><div id="liveGuestBoard" class="live-scoreboard"></div><p id="liveGuestTurnInfo" class="live-status"></p>
+    <div id="liveGuestGame" hidden><div class="live-spectator-top"><h3>Live-Spielstand</h3><button id="liveGuestPlayFocusEnter" data-all-focus-enter="live" type="button" class="primary-btn small" hidden aria-label="Mitspielen im Vollbild">⛶ Vollbild spielen</button><button id="liveGuestPlayFocusExit" data-all-focus-exit type="button" class="outline-btn small" hidden aria-label="Live-Mitspiel-Vollbild schließen">✕ Schließen</button><button id="liveSpectatorEnter" type="button" class="outline-btn small">▣ Zuschauer-Vollbild</button><button id="liveSpectatorExit" type="button" class="outline-btn small">✕ Schließen</button></div><div id="liveGuestBoard" class="live-scoreboard"></div><p id="liveGuestTurnInfo" class="live-status"></p>
       <div id="liveGuestPad" hidden><div class="dart-input-title">Trefferart</div><div class="live-rings" id="liveGuestRings"><button type="button" data-lring="1" class="active">Single</button><button type="button" data-lring="2">Double</button><button type="button" data-lring="3">Triple</button></div><div class="dart-input-title">Feld</div><div class="game-target-buttons" id="liveGuestTargets"></div><div id="liveGuestDarts" class="live-dart-list">Noch kein Dart</div><div class="live-row"><button type="button" id="liveGuestUndo" class="outline-btn">Letzten Dart entfernen</button><button type="button" id="liveGuestSend" class="primary-btn">Wurf senden</button></div><label class="live-juergen-label"><input type="checkbox" id="liveGuestJuergen"> Jürgen aus den drei getroffenen Feldern 1, 5, 20 mitbuchen</label></div>
           </div>
     <div id="livePendingWarning" class="live-pending-warning" role="status" aria-live="polite" hidden></div>
@@ -278,7 +280,7 @@
             <div class="settings-side">
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">02 / SPIELTAGE</span><h2>Spieltag wählen</h2></div></div><p class="panel-intro">Wähle ein Datum. Für bereits erfasste Spieltage werden die vorhandenen Punkte angezeigt. Neue Daten erhalten einen eigenen Spieltag; Zahlungen und der Kassenstand bleiben erhalten.</p><div id="currentSessionInfo" class="boxed-info"></div><button id="newSession" class="outline-btn full">Datum auswählen</button></div>
               <div class="panel"><div class="panel-header"><div><span class="eyebrow">03 / SICHERUNG</span><h2>Backup & Export</h2></div></div><p class="panel-intro">Alle Daten bleiben auf diesem Gerät. Sichere sie regelmäßig als Datei, insbesondere vor Updates oder einem Gerätewechsel.</p><div class="button-stack"><button id="exportBackup" class="primary-btn full">↓ Vollständiges JSON-Backup</button><button id="importBackup" class="outline-btn full">↑ Backup wiederherstellen</button><button id="importPaper" class="outline-btn full">↑ Papierliste 2026 importieren</button><button id="restorePrevious" class="outline-btn full" hidden>↶ Stand vor letztem Import zurückholen</button><button id="exportCsvSettings" class="outline-btn full">↓ Buchungen als CSV</button></div><div class="storage-recovery"><h3>Lokale Sicherheit & Wiederherstellung</h3><p class="game-muted">Zusätzliche Sicherungspunkte werden maximal alle 30 Minuten lokal erzeugt und auf fünf Stände begrenzt. Sie ersetzen kein JSON-Backup außerhalb des Geräts.</p><div class="storage-actions"><button id="storageSnapshotCreate" type="button" class="outline-btn">Sicherungspunkt jetzt erstellen</button><button id="storageSnapshotList" type="button" class="outline-btn">Sicherungspunkte anzeigen</button><button id="storageDiagButton" type="button" class="outline-btn">Offline- und Speicherdaten anzeigen</button></div><div id="storageRecoveryList" aria-live="polite"></div><pre id="storageDiagOutput" class="storage-diagnostics"></pre></div><input type="file" id="backupFile" accept="application/json,.json" hidden><input type="file" id="paperFile" accept="application/json,.json" hidden></div>
-              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.6.0</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
+              <div class="panel"><div class="panel-header"><div><span class="eyebrow">04 / SOFTWARE</span><h2>Version & Update</h2></div></div><div class="version-box"><div><span>Installierte Version</span><strong>v<span class="version-value">3.6.1</span></strong></div><span id="networkStatus" class="status-tag">Offlinefähig</span></div><p class="panel-intro" id="updateStatus">Neue Versionen werden über die veröffentlichte Website bereitgestellt.</p><button id="checkUpdate" class="outline-btn full">↻ Auf Update prüfen</button><button id="forceUpdate" class="primary-btn full" style="margin-top:9px">Aktualisierte App-Dateien neu laden</button><p class="subdued" style="margin-top:10px">Bei fehlendem Update-Button: Diese Schaltfläche lädt die neueste App-Oberfläche direkt, ohne Spieler- oder Kassendaten zu löschen.</p><button id="installUpdate" class="primary-btn full" hidden>Update installieren</button><div id="installHint" class="subdued install-hint">iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.</div></div>
             </div>
           </div>
           <div class="footer-warning">Hinweis: Offline-Speicher auf Mobilgeräten kann vom Betriebssystem gelöscht werden. Das JSON-Backup ist deine zusätzliche Sicherung.<br>© Marcel Hentschel 2026</div>

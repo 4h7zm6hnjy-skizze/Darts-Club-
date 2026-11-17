@@ -1,6 +1,6 @@
 /* JÜRGEN DARTKASSE — offline-first app, v3.5.0: Dart Elite Analytics */
 'use strict';
-const APP_VERSION = '3.6.0';
+const APP_VERSION = '3.6.1';
 const STORAGE_KEY = 'juergen-dartkasse-state-v1';
 const RESTORE_KEY = 'juergen-dartkasse-before-import-v1';
 const DB_NAME = 'juergen-dartkasse';
@@ -96,8 +96,10 @@ function localGet(key){try{return localStorage.getItem(key);}catch{return null;}
 function localSet(key,val){try{localStorage.setItem(key,val);return true;}catch{return false;}}
 function goView(view){
   if(!['play','games','live','players','pro','elite','club','cash','settings'].includes(view))return;
+  window.DartAllFocus?.exit?.();
+  if(view!=='games')window.DartsGameUI?.exitFocus?.();
   currentView=view;
-  document.body.classList.toggle('elite-view-on',view==='elite');
+  document.body.classList.toggle('elite-view-on' ,view==='elite');
   document.body.classList.toggle('club-view-on',view==='club');
   document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===`view-${view}`));
   document.querySelectorAll('[data-view]').forEach(el=>{const active=el.dataset.view===view;el.classList.toggle('active',active);active?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current');});

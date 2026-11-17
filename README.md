@@ -1,8 +1,21 @@
-# Darts-Club 3.6.0 – Verein & Teams
+# Darts-Club 3.6.1 – Vollbild für alle Spiele
 
-**Vollständiges Offline-Web-App-Update** auf Basis der veröffentlichten Darts-Club-Version 3.5.0. Das Paket enthält keine Spieler-, Kassen- oder Profildaten. Kostenlose PWA für iPhone, Android und Desktop; bestehende URL bleibt unverändert.
 
-## Neu in 3.6.0
+**Vollständiges Offline-Web-App-Update** auf Basis der veröffentlichten Darts-Club-Version 3.6.0. Das Paket enthält keine Spieler-, Kassen- oder Profildaten. Kostenlose PWA für iPhone, Android und Desktop; bestehende URL bleibt unverändert.
+
+## Änderungen 3.6.1
+
+- Alle elf regulären Dartspiele (X01, Cricket, No-Score, Cut-Throat, Tactics, Count-Up, Around the Clock, Shanghai, Half-It, Bob’s 27 und 170 Checkout) nutzen weiterhin ihren vorhandenen Vollbild-Score, mit sichtbarer Cricket-Tabelle.
+- Teamduelle 2 gegen 2 haben einen eigenen Vollbild-Scorer mit gemeinsamem Punktestand, aktuellem Werfer, Eingabe, Undo und Schließen.
+- Alle vier Profi-Trainingsarten erhalten Vollbild-Eingabe mit Abschluss und Schließen.
+- Jürgen-Erfassung erhält Vollbild mit Spielerwahl und klarer Warnung vor der sofortigen Kassenbuchung.
+- Im LAN-Mitspielmodus steht für den aktiven Werfer ebenfalls ein Vollbild mit Eingabefeldern bereit; die bestehende Zuschaueransicht bleibt erhalten.
+- Vollbild ist ein CSS-App-Modus (kein erzwungenes OS-Browser-Fullscreen auf iOS). Schließen über sichtbare Schaltfläche; zusätzlich Escape auf Tastatur.
+- Keine Änderung an Spielregeln, Geldbuchungen, Backup-Schema oder gespeicherten Daten.
+
+Vor Upload: JSON-Backup außerhalb des Geräts erstellen. ZIP-Inhalt vollständig ins Repository-Stammverzeichnis hochladen.
+
+## Bereits seit 3.6.0 vorhanden
 
 1. **Echter 2-gegen-2-X01-Scorer:** Vier unterschiedliche Spieler, gemeinsame Team-Punktstände, wechselnde Werfer, 301/501/701, Double-Out/Master-Out/Straight-Out, Best of 1/3/5/7 Legs, legweiser Wechsel des Anwurfs, gespeicherte Aufnahmen, Rückgängig und CSV-Wurfprotokoll. Diese Mannschaftspartien sind **getrennt** von Einzelpartien, Elo und Jürgen-Gebühren.
 2. **Profi-Center-Verknüpfung:** Ein bestehendes *Teamduell*-Turnier kann direkt mit dem neuen 2v2-Scorer gespielt werden. Der Sieger wird nach dem letzten Leg übernommen. Wird der entscheidende Wurf rückgängig gemacht, wird die automatisch zugehörige Turnierwertung ebenfalls zurückgenommen. Die bisherige manuelle Teamwertung bleibt als Alternative erhalten.
@@ -29,7 +42,7 @@
 
 1. **Vorher** die bereits installierte Darts-Club-App öffnen und ein komplettes JSON-Backup erstellen, sicher außerhalb der App ablegen.
 2. Dieses ZIP entpacken, alle enthaltenen Dateien in das Repository-Root `4h7zm6hnjy-skizze/Darts-Club-` auf Branch `main` hochladen; Dateien überschreiben und auf GitHub „Commit changes“ bestätigen.
-3. Die bestehende Website öffnen: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=3.6.0`.
+3. Die bestehende Website öffnen: `https://4h7zm6hnjy-skizze.github.io/Darts-Club-/?app-refresh=3.6.1`.
 4. Im Menü **Verein & Teams** aufrufen (auf einem schmalen iPhone über **Dart spielen → Verein & Teams**). Version prüfen, vorhandene Spieler und Kasse kontrollieren, mit Testduell beginnen.
 5. Offlinebetrieb und das Wiederöffnen einer Teamaufnahme auf dem eigenen Gerät testen. Zwei-Geräte-LAN-Beta erst prüfen, wenn ein zweites Handy vorhanden ist.
 
@@ -39,3 +52,4 @@
 - Regeltests: Werferwechsel, 501/301, Checkout, Bust, Double-/Straight-Out, Legs, Undo, ungültige Würfe, Alt-Daten-Validierung, Saisontermine und Wochenziele.
 - Chromium-Browsertests mit eingebetteten Quelltexten: alter 3.5-Datenstand, gespeicherter Team-Checkout, Undo, Neustart-Simulation, Termine und Ziele, automatisches Teamturnierergebnis inkl. Rücknahme, unveränderte Kassenbuchungen, Gerätecheck und vollständiger JSON-Export.
 - Layouttests mit 320, 390 und 844 Pixel Bildschirmbreite. Ein echter iOS-PWA- oder WebRTC-Zwei-Geräte-Test konnte in dieser Umgebung nicht durchgeführt werden.
+

@@ -445,6 +445,7 @@ function syncFocusUI(){
  const open=$('dartsFocusEnter'), close=$('dartsFocusExit'), undo=$('dartsFocusUndo');
  if(!game && focusActive)focusActive=false;
  panel.classList.toggle('focus-active',focusActive);
+ panel.dataset.focusGameMode=game?.mode||'';
  // On very narrow phones show the meaningful score and leg instead of truncating "X01 · ...".
  if(game&&E.isX01(game.mode)){
   const title=$('dartsCurrentTitle'),leg=E.replay(game).leg;
@@ -711,5 +712,5 @@ async function toggleWakeLock(){
  if(!('wakeLock' in navigator)){toast('Dieses Gerät unterstützt das Wachhalten des Bildschirms nicht.');return;}
  try{wakeLock=await navigator.wakeLock.request('screen');if(b)b.textContent='☀ Aktiv';wakeLock.addEventListener('release',()=>{wakeLock=null;if(b)b.textContent='☀ Bildschirm an'});}catch{toast('Bildschirm konnte nicht wach gehalten werden.');}
 }
-window.DartsGameUI={init,render,renderPlayerProfiles,activateMatch:loadGame,stagePhotoDart,toggleWakeLock};
+window.DartsGameUI={init,render,renderPlayerProfiles,activateMatch:loadGame,stagePhotoDart,toggleWakeLock,exitFocus:closeFocus,isFocusActive:()=>focusActive};
 })();

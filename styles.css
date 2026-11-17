@@ -1706,3 +1706,126 @@ body.club-view-on .dart-brand-showcase{position:relative!important;top:auto!impo
 #view-club .page-heading h1{color:#fff!important;font-size:clamp(28px,5vw,40px);line-height:1.2;overflow-wrap:anywhere}
 
 #view-club .club-device-result{white-space:pre-wrap;line-height:1.7;background:#102b3b;color:#e7faff;border:1px solid #6ac8c3;border-radius:12px;padding:16px;font-size:14px;margin:14px 0 18px}
+
+
+/* Darts-Club 3.6.1: every gameplay type supports app-fullscreen, iPhone-safe. */
+.all-focus-toolbar,.all-focus-heading{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.all-focus-toolbar{justify-content:flex-end}
+.all-focus-toolbar button{font-size:12px;font-weight:900;min-height:38px;padding:7px 11px}
+.all-focus-heading{margin-bottom:12px}
+.all-focus-heading h2{margin:0}
+.all-focus-cash-hint{font-size:11px;line-height:1.35;color:#ffdfa2;margin:0 0 8px}
+html.dart-all-focus-on,body.dart-all-focus-on{overflow:hidden!important;height:100%!important;overscroll-behavior:none!important}
+html.dart-all-focus-on .view.active{animation:none!important;transform:none!important;filter:none!important;opacity:1!important}
+body.dart-all-focus-on .sidebar,body.dart-all-focus-on .bottom-nav,body.dart-all-focus-on .dart-brand-showcase,body.dart-all-focus-on .topbar,body.dart-all-focus-on #updateBanner{display:none!important}
+body.dart-all-focus-on .all-focus-active{
+ position:fixed!important;inset:0!important;z-index:99999!important;
+ width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;
+ box-sizing:border-box!important;border:none!important;border-radius:0!important;margin:0!important;
+ padding:max(68px,calc(env(safe-area-inset-top,0px) + 15px)) max(10px,env(safe-area-inset-right,0px)) max(9px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))!important;
+ display:flex!important;flex-direction:column!important;gap:5px!important;
+ background:#081725!important;color:#f0f9ff!important;overflow:hidden!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ touch-action:manipulation;overscroll-behavior:contain;
+}
+body.dart-all-focus-on .all-focus-active .all-focus-heading,body.dart-all-focus-on .all-focus-active>.panel-header,body.dart-all-focus-on .all-focus-active>.game-section-head{
+ flex:0 0 auto!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+ margin:0 0 3px!important;padding:0!important;gap:6px!important;min-height:38px!important;
+}
+body.dart-all-focus-on .all-focus-active h2{font-size:clamp(15px,4vw,20px)!important;line-height:1.2!important;color:#fff7dd!important;white-space:normal!important}
+body.dart-all-focus-on .all-focus-active .all-focus-toolbar{flex-wrap:nowrap!important;flex:0 0 auto!important}
+body.dart-all-focus-on .all-focus-active [data-all-focus-exit]{display:inline-flex!important;justify-content:center;align-items:center;background:#61333c!important;border:1px solid #d99da8!important;color:#fff!important;min-height:36px!important;white-space:nowrap!important}
+body.dart-all-focus-on .all-focus-active button:focus-visible{outline:3px solid #ffe7a2!important;outline-offset:2px}
+body.dart-all-focus-on .toast{top:max(140px,calc(env(safe-area-inset-top,0px) + 45px))!important;bottom:auto!important;max-width:60%!important;padding:6px 9px!important;font-size:11px!important;pointer-events:none!important}
+
+/* Team duel: compact team points and full 23-target keypad. */
+body.dart-all-focus-on #clubTeamFocusPanel.all-focus-active #clubBoard{min-height:0!important;flex:1!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;overscroll-behavior:contain}
+body.dart-all-focus-on #clubTeamFocusPanel .club-teams-board{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;gap:4px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-duel-title,body.dart-all-focus-on #clubTeamFocusPanel .club-history{display:none!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-scores{gap:5px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-score{padding:4px 6px!important;gap:2px!important;border-radius:9px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-score small{font-size:10px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-score b{min-height:0!important;font-size:clamp(10px,3vw,14px)!important;line-height:1.15!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.dart-all-focus-on #clubTeamFocusPanel .club-score strong{font-size:clamp(23px,7vw,38px)!important;line-height:1!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-score span{font-size:10px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-current{font-size:clamp(12px,3vw,15px)!important;margin:2px 0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-staged{margin:1px 0!important;min-height:29px!important;padding:4px!important;font-size:12px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-rings{margin:2px 0!important;gap:5px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-rings span{font-size:11px!important;margin-right:auto}
+body.dart-all-focus-on #clubTeamFocusPanel .club-rings button{min-height:32px!important;padding:3px 8px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-numbers{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(37px,1fr))!important;gap:4px!important;margin:2px 0!important;flex:1 1 auto!important;min-height:190px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-numbers button{min-height:0!important;height:100%!important;font-size:clamp(15px,4vw,24px)!important;border-radius:7px!important;padding:0!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-actions{gap:5px!important;margin:2px 0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-actions button{min-height:36px!important;padding:5px 6px!important;font-size:clamp(10px,2.8vw,13px)!important;flex:1 1 130px!important}
+body.dart-all-focus-on #clubTeamFocusPanel .club-team-winner{margin:5px 0!important;padding:12px!important}
+
+/* Training: all four drill kinds share one focus keypad. */
+body.dart-all-focus-on #proTrainingFocusPanel .game-section-head .game-muted{display:none!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-options{display:none!important}
+body.dart-all-focus-on #proTrainingFocusPanel #proTrainingActive{flex:1!important;min-height:0!important;padding:0!important;display:flex!important;flex-direction:column!important;gap:5px!important;overflow-y:auto!important;overscroll-behavior:contain}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-top{margin:0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-top h3{font-size:clamp(15px,4vw,21px)!important;line-height:1.2!important;margin:0!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-top p{display:none!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-top>span{padding:4px!important;font-size:11px!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-staged{gap:4px!important;margin:0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-staged>div{padding:3px!important;border-radius:7px!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-staged small{font-size:9px!important;margin:0!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-staged strong{font-size:clamp(15px,4.4vw,22px)!important}
+body.dart-all-focus-on #proTrainingFocusPanel #proTrainRings{margin:0!important;gap:4px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #proTrainingFocusPanel #proTrainRings button{min-height:34px!important;padding:2px 6px!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-train-targets{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(37px,1fr))!important;gap:4px!important;margin:0!important;flex:1 1 auto!important;min-height:190px!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-train-targets .dart-target{min-height:0!important;height:100%!important;padding:0!important;font-size:clamp(15px,4vw,24px)!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-actions button{min-height:36px!important;min-width:0!important;padding:5px!important;font-size:clamp(10px,2.8vw,13px)!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-training-actions button:last-child{grid-column:1/-1;min-height:29px!important}
+body.dart-all-focus-on #proTrainingFocusPanel .pro-practice-notice{font-size:12px!important;margin:2px!important}
+
+/* Jürgen: full score pad, selected player and visible instant-booking warning. */
+body.dart-all-focus-on #juergenFocusPanel .panel-header{margin-bottom:3px!important}
+body.dart-all-focus-on #juergenFocusPanel .panel-header .eyebrow{font-size:9px!important;letter-spacing:.2px!important}
+body.dart-all-focus-on #juergenFocusPanel .row-head{margin:0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #juergenFocusPanel #playerChips{flex:0 0 auto!important;max-height:30%!important;overflow-y:auto!important;gap:4px!important}
+body.dart-all-focus-on #juergenFocusPanel .player-chip{min-height:37px!important;padding:5px 9px!important}
+body.dart-all-focus-on #juergenFocusPanel .pad-title{display:none!important}
+body.dart-all-focus-on #juergenFocusPanel #hitPad{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;margin:3px 0!important;min-height:0!important;flex:1 1 auto!important}
+body.dart-all-focus-on #juergenFocusPanel .juergen-action{min-height:100px!important;padding:8px!important}
+body.dart-all-focus-on #juergenFocusPanel .pad-bottom{flex:0 0 auto!important;flex-wrap:wrap!important;gap:6px!important;margin:3px 0!important}
+body.dart-all-focus-on #juergenFocusPanel .pad-bottom button{min-height:36px!important}
+body.dart-all-focus-on #juergenFocusPanel #priceWarn{flex:0 0 auto!important;margin:0!important;padding:4px!important}
+
+/* Network guest: existing spectator fullscreen remains separate; this one has a keypad. */
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-spectator-top{display:flex!important;flex:0 0 auto!important;gap:5px!important;justify-content:space-between!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-spectator-top h3{font-size:15px!important;margin:0!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestBoard{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;flex:0 0 auto!important;margin:0!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-score-person{padding:5px!important;min-height:0!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-score-person strong{font-size:clamp(21px,6vw,37px)!important;margin:0!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-score-person small{font-size:9px!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestTurnInfo{font-size:12px!important;padding:4px!important;margin:2px 0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestPad:not([hidden]){display:flex!important;flex-direction:column!important;min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important;gap:4px!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .dart-input-title{display:none!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestRings{margin:0!important;gap:4px!important;flex:0 0 auto!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestRings button{min-height:33px!important;min-width:0!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestTargets{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(36px,1fr))!important;gap:4px!important;min-height:190px!important;flex:1 1 auto!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestTargets button{min-height:0!important;height:100%!important;padding:0!important;font-size:clamp(15px,4vw,23px)!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveGuestDarts{flex:0 0 auto!important;margin:0!important;padding:3px!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-row{flex:0 0 auto!important;margin:0!important;gap:5px!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-row button{min-height:38px!important;padding:4px!important;font-size:12px!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active .live-juergen-label{font-size:10px!important;margin:0!important;flex:0 0 auto!important}
+body.dart-all-focus-on #liveGuestGame.all-focus-active #liveSpectatorEnter,body.dart-all-focus-on #liveGuestGame.all-focus-active #liveSpectatorExit{display:none!important}
+
+/* Make Cricket marks visible in the standard X01-style fullscreen too. */
+body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] #dartsCricketTable:not([hidden]){
+ display:block!important;max-height:min(19dvh,154px)!important;overflow:auto!important;flex:0 0 auto!important;
+ margin:1px 0 4px!important;border:1px solid #3a586b!important;border-radius:8px!important;
+}
+body.dart-focus-on .game-current.focus-active[data-focus-game-mode="cricket-tactics"] #dartsCricketTable:not([hidden]){max-height:min(20dvh,164px)!important}
+body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] #dartsCricketTable table{width:100%!important;font-size:clamp(10px,2.4vw,13px)!important;border-collapse:collapse}
+body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] #dartsCricketTable td,body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] #dartsCricketTable th{padding:1px 3px!important;line-height:1.1!important}
+body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .game-target-buttons{min-height:115px!important}
+@media (orientation:portrait) and (min-height:760px){body.dart-all-focus-on .all-focus-active{padding-top:max(94px,calc(env(safe-area-inset-top,0px) + 16px))!important}}
+@media (orientation:portrait) and (max-height:620px){body.dart-all-focus-on .all-focus-active{padding-top:max(62px,env(safe-area-inset-top,0px))!important}}
+@media (orientation:landscape){body.dart-all-focus-on .all-focus-active{padding-top:max(12px,env(safe-area-inset-top,0px))!important}}
+@media (max-height:450px) and (orientation:landscape){
+ body.dart-all-focus-on #clubTeamFocusPanel .club-teams-board,body.dart-all-focus-on #proTrainingFocusPanel #proTrainingActive,body.dart-all-focus-on #liveGuestGame #liveGuestPad{overflow-y:auto!important}
+ body.dart-all-focus-on #clubTeamFocusPanel .club-numbers,body.dart-all-focus-on #proTrainingFocusPanel .pro-train-targets,body.dart-all-focus-on #liveGuestGame #liveGuestTargets{min-height:190px!important;flex:none!important}
+ body.dart-all-focus-on .all-focus-active{padding-bottom:6px!important}
+}
