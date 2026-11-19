@@ -1830,7 +1830,7 @@ body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .
  body.dart-all-focus-on .all-focus-active{padding-bottom:6px!important}
 }
 
-/* 3.8.1 Dartabend-Zentrale – mobile-first cards, no changes to gameplay focus. */
+/* 3.8.2 Dartabend-Zentrale – mobile-first cards, no changes to gameplay focus. */
 .evening-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:10px 0 18px}
 .evening-person{display:flex;align-items:center;gap:9px;padding:12px;background:rgba(255,255,255,.045);border:1px solid rgba(173,195,224,.2);border-radius:12px;color:#f2f6ff;font-weight:650;min-width:0;overflow-wrap:anywhere}
 .evening-person input{width:19px;height:19px;flex:none;accent-color:#6edbb4}
@@ -1854,10 +1854,10 @@ body.dart-focus-on .game-current.focus-active[data-focus-game-mode^="cricket"] .
 /* Dated champion stars */
 .champion-star{display:inline-block;font-size:1.3em;font-weight:900;white-space:nowrap;vertical-align:middle}.champion-star.undisputed{color:#ffda63;text-shadow:0 0 10px #dbac2855}.champion-star.summerslam{color:#ff9149;text-shadow:0 0 10px #ff710055}#starAwardForm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}#starAwardForm label{display:grid;gap:6px;min-width:0}#starAwardForm input,#starAwardForm select{width:100%;min-width:0}#starAwardForm button{grid-column:1/-1}.star-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #ffffff22}.star-history-row small{display:block;color:#a8bbce}.star-profile{padding:12px;margin:10px 0;border:1px solid #d4ad4b66;border-radius:12px}.star-profile summary{cursor:pointer}.star-profile p{font-size:.9rem}#championAwardsPanel{margin-top:18px}@media(max-width:600px){#starAwardForm{grid-template-columns:1fr}.star-history-row{align-items:flex-start;flex-direction:column}}
 
-/* 3.8.1: scoring-accurate dartboard illustrations behind the booking buttons. */
+/* 3.8.2: scoring-accurate dartboard illustrations behind the booking buttons. */
 #hitPad .juergen-action{isolation:isolate;justify-content:flex-end;min-height:310px;padding:165px 14px 20px;background:#091b2b;gap:8px}
-#hitPad .juergen-action::before{inset:0;width:100%;height:210px;border:0;border-radius:0;background:url('./dart-juergen.svg') center top / cover no-repeat;pointer-events:none;z-index:0;opacity:1}
-#hitPad .juergen-action.action-perfect::before{background-image:url('./dart-perfect.svg')}
+#hitPad .juergen-action::before{inset:0;width:100%;height:210px;border:0;border-radius:0;background:url('./dart-juergen-photo.png') center top / cover no-repeat;pointer-events:none;z-index:0;opacity:1}
+#hitPad .juergen-action.action-perfect::before{background-image:url('./dart-perfect-photo.png')}
 #hitPad .juergen-action::after{background:linear-gradient(180deg,transparent 95px,rgba(9,27,43,.12) 140px,#091b2b 205px);pointer-events:none;z-index:0}
 #hitPad .juergen-action.action-perfect{border-color:#b78c3b}
 #hitPad .juergen-action .action-icon{display:none}

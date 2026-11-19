@@ -1,5 +1,5 @@
 {
-  "version": "3.8.1",
+  "version": "3.8.2",
   "released": "2026-11-19",
-  "notes": "Neue Dart-Hintergründe: Jürgen mit Single 5/20/1; Perfekter Jürgen mit Triple 5/20/1."
+  "notes": "Fotorealistische Dartboard-Hintergründe mit größeren Dartpfeilen: Single 5/20/1 und Triple 5/20/1, auch offline."
 }
