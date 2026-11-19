@@ -1,5 +1,5 @@
 {
-  "version": "3.8.0",
-  "released": "2026-11-17",
-  "notes": "Champion-Turniervorlagen, unterschiedliche Siegersterne, automatische Vergabe und manuelle Vergabe mit Datum."
+  "version": "3.8.1",
+  "released": "2026-11-19",
+  "notes": "Neue Dart-Hintergründe: Jürgen mit Single 5/20/1; Perfekter Jürgen mit Triple 5/20/1."
 }

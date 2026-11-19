@@ -1,4 +1,4 @@
-/* Darts-Club 3.8.0 — offline Dartabend planner: creates no cash or thrown scores. */
+/* Darts-Club 3.8.1 — offline Dartabend planner: creates no cash or thrown scores. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.DartsEveningEngine=api;})(typeof globalThis!=='undefined'?globalThis:null,function(){'use strict';
 const idOk=id=>typeof id==='string'&&id.length>0&&id.length<=120;
 const isoOk=v=>typeof v==='string'&&v.length<=50&&!Number.isNaN(Date.parse(v));
